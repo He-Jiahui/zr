@@ -1,0 +1,58 @@
+module("math");
+
+// basic types:
+
+// int = i32
+// i8
+// i16
+// i32
+// i64
+// u8
+// u16
+// u32
+// u64
+
+// float = f32
+// f16
+// f32
+// f64
+
+// bool true&false
+
+// str
+
+// buffer (array/struct/tuple)
+
+// object (ptr)
+
+// type:object
+
+
+// buffer: [x,y,z]
+
+
+// 
+
+// buffer size<T>
+// size = 4*T
+// <> means compile time
+struct Vector<T:int>:buffer<T*(sizeof(int)/(sizeof(byte)))>{
+
+}
+// size = 12
+struct Vector3{
+    pub var x:float;
+    pub var y:float;
+    pub var z:float;
+
+    pub @constructor(x:float, y:float, z:float){
+
+    }
+    pub @destructor(){
+
+    }
+
+    pub @add(){
+
+    }
+}

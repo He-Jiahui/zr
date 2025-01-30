@@ -1,0 +1,76 @@
+module // declare a module for a file
+
+
+struct // declare a structure
+class // declare a class
+interface // declare a interface
+enum // declare a enum
+
+var // declare a variable
+
+pub // public access
+pri // private access
+pro // protected access
+inm // in-module access
+
+get
+set
+
+static // static access
+
+break
+continue
+new
+return
+
+for
+while
+if
+else
+switch
+
+this
+super
+
+:
+;
+,
+.
+~
+@
++=
+-=
+*=
+/=
+%=
++
+-
+*
+/
+%
+++
+--
+<=
+<
+>=
+>
+==
+!=
+!
+&&
+&=
+&
+||
+|=
+|
+(
+)
+{
+}
+[
+]
+=
+
+
+// basic types
+//

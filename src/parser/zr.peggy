@@ -37,16 +37,16 @@ StructDeclaration
   }
 
 StructMember
-  = _ dec:(VarDeclaration / StructMethod / StructConstructor) _ {
+  = _ dec:(VarDeclaration / StructMethod / StructMetaFunction) _ {
     return dec; 
   }
 
-StructConstructor
-  = access:AccessModifier? _ staticSymbol:STATIC? _ decorator:DecoratorIdentifier _ LPAREN params:ParameterList? RPAREN _ body:Block {
+StructMetaFunction
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN params:ParameterList? RPAREN _ body:Block {
       return { 
-        type: "Constructor",
+        type: "MetaFunction",
         static: staticSymbol,
-        decorator, 
+        meta, 
         params: params || [], 
         body, 
         access,
@@ -70,7 +70,7 @@ VarDeclaration
 
 // 结构体方法
 StructMethod
-  = decorator:DecoratorIdentifier? _ access:AccessModifier? _ name:IDENTIFIER 
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ name:IDENTIFIER 
     _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
         type: "Method",
@@ -86,7 +86,7 @@ StructMethod
 
 // === 类系统 ===
 ClassDeclaration
-  = CLASS _ name:IDENTIFIER _ 
+  = decorator: DecoratorExpression* CLASS _ name:IDENTIFIER _ 
     superPart:(COLON _ Type _ (COMMA _ TypeList)? )? 
     LBRACE _ members:ClassMember* _ RBRACE {
       return { 
@@ -95,21 +95,22 @@ ClassDeclaration
         extends: superPart?superPart[2] : null, 
         implements: superPart?(superPart[4]?superPart[4][2]:[]) : [],
         members,
+        decorator,
         location: location()
       }
     }
 
 ClassMember
-  = _ dec:(Method / Property / Constructor / Field) _ {
+  = _ dec:(Method / Property / MetaFunction / Field) _ {
     return dec;
   }
 
-Constructor
-  = access:AccessModifier? _ decorator:DecoratorIdentifier _ LPAREN params:ParameterList? RPAREN _ 
+MetaFunction
+  = access:AccessModifier? _ meta:MetaIdentifier _ LPAREN params:ParameterList? RPAREN _ 
     argsPart:(SUPER LPAREN ArgumentList? RPAREN)? _ body:Block {
       return { 
-        type: "Constructor", 
-        decorator, 
+        type: "MetaFunction", 
+        meta, 
         params: params || [], 
         superArgs: argsPart? argsPart[2] : [], 
         body: body,
@@ -120,7 +121,7 @@ Constructor
 
 // 类字段
 Field
-  = decorator:DecoratorIdentifier? _ access:AccessModifier? _ staticSymbol:STATIC? _ VAR _ name:IDENTIFIER 
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ VAR _ name:IDENTIFIER 
     _ typePart:(COLON _ Type)? _ initPart:(EQUALS _ Expression)? _ SEMICOLON {
       return {
         type: "Field",
@@ -135,7 +136,7 @@ Field
     }
 // 类方法
 Method
-  = decorator:DecoratorIdentifier? _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER 
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER 
     _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
         type: "Method",
@@ -152,11 +153,12 @@ Method
 
 // 类属性（getter/setter）
 Property
-  = access:AccessModifier? _ modifier:(GetProperty / SetProperty) {
+  = decorator:DecoratorExpression* access:AccessModifier? _ modifier:(GetProperty / SetProperty) {
     return {
       type: "GetSetProperty",
       access,
       modifier,
+      decorator,
       location: location()
     }
   }
@@ -490,7 +492,7 @@ AdditiveExpression
   }
 
 MultiplicativeExpression
-  = left:UnaryExpression parts:(_ op:MultiplicativeOperator _ right:UnaryExpression)* { 
+  = left:FunctionCall parts:(_ op:MultiplicativeOperator _ right:FunctionCall)* { 
     return parts.reduce((acc, [,op,,right]) => ({ 
       type: "Binary", 
       op, 
@@ -499,7 +501,17 @@ MultiplicativeExpression
       location: location()
     }), left) 
   }
-
+FunctionCall
+  = callee:UnaryExpression _ LPAREN args:ArgumentList? RPAREN _ right:FunctionCall*{
+    return {
+      type: "FunctionCall",
+      callee,
+      args,
+      right,
+      location: location()
+    }
+  }
+  / UnaryExpression
 UnaryExpression
   = op:UnaryOperator _ argument:UnaryExpression { 
     return { 
@@ -509,11 +521,11 @@ UnaryExpression
       location: location()
     } 
   }
-  / property: PrimaryExpression member:MemberAccess?{
+  / property: PrimaryExpression members:MemberAccess*{
     return {
       type: "PrimaryExpression",
       property,
-      member,
+      members,
       location: location()
     }
   }
@@ -535,12 +547,14 @@ MemberAccess
       computed: true,
       location: location(), 
     } 
-  }
+  } 
+
+
 PrimaryExpression
   = value:Literal {return {type: "Literal", value, location: location()}}
   / ObjectLiteral
   / ArrayLiteral
-  / FunctionCall
+  / LambdaExpression
   / IfExpression
   / SwitchExpression
   / IDENTIFIER
@@ -569,19 +583,28 @@ KeyValuePair
       return { 
         key, 
         value,
-        location: location(),
+        location: location()
       }
     }
 ComputedKey = LBRACKET _ expr:Expression _ RBRACKET { return expr }
-
+// lambda 表达式
+LambdaExpression
+  = LPAREN _ args:(ParameterList)? _ RPAREN _ RIGHT_ARROW _ block:Block _ {
+    return {
+      type: "LambdaExpression",
+      args: args ? args : [],
+      block,
+      location: location()
+    }
+  }
 // if 表达式（支持三元运算）
 IfExpression
-  = IF _ condition:Expression _ thenExpr:Block (_ ELSE _ elseExpr:(Block / IfExpression))? {
+  = IF _ condition:Expression _ thenExpr:Block elseExpr:(_ ELSE _ (Block / IfExpression))? {
       return {
         type: "IfExpression",
         condition,
         then: thenExpr,
-        else: elseExpr ? elseExpr[1] : null,
+        else: elseExpr ? elseExpr[3] : null,
         location: location()
       }
     }
@@ -630,15 +653,7 @@ FunctionDeclaration
     }
   }
 
-FunctionCall
-  = callee:IDENTIFIER _ LPAREN args:ArgumentList? RPAREN {
-    return {
-      type: "FunctionCall",
-      callee,
-      args,
-      location: location()
-    }
-  }
+
 
 // === 工具规则 ===
 AccessModifier = PUB / PRI / PRO
@@ -668,10 +683,10 @@ ArrayType = name:IDENTIFIER dimensions:(LBRACKET RBRACKET)+ {
 }
 // 辅助规则补充
 Parameter
-  = name:IDENTIFIER _ COLON _ type:Type { 
+  = name:IDENTIFIER _ typePart:(COLON _ Type)? { 
     return { 
       name, 
-      type,
+      type: typePart? typePart[2] : null,
       location: location(),
     } 
   }
@@ -686,10 +701,18 @@ ArgumentList = head:Expression _ tail:(COMMA _ Expression)* {
 TypeList = head:Type _ tail:(COMMA _ Type)* {
     return [head].concat(tail.map(t => t[2])) 
   }
-DecoratorIdentifier = AT name:IDENTIFIER {
+MetaIdentifier = AT name:IDENTIFIER {
   return {
-    type: "Decorator",
+    type: "Meta",
     name,
+    location: location()
+  }
+}
+
+DecoratorExpression = SHARP _ expr:FunctionCall _ SHARP _ {
+  return {
+    type: "DecoratorExpression",
+    expr,
     location: location()
   }
 }
@@ -753,6 +776,7 @@ COMMA = ","
 DOT = "."
 TILDE = "~"
 AT = "@"
+SHARP = "#"
 DOLLAR = "$"
 LPAREN = "("
 RPAREN = ")"
@@ -780,6 +804,7 @@ SLASH = "/"
 PERCENT = "%"
 AMPERSAND_AMPERSAND = "&&"
 PIPE_PIPE = "||"
+RIGHT_ARROW = "=>"
 // 字面量
 Literal
   = BOOLEAN
@@ -791,7 +816,7 @@ Literal
   / CHAR
   / VALUENULL
 
-BOOLEAN = "true" / "false" {
+BOOLEAN = ("true" / "false") {
   return {
     type: "Boolean",
     value: text() == "true",

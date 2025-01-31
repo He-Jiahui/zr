@@ -1,8 +1,13 @@
-import { ZLangParser } from "./parser/parser";
-import fs from "fs";
+import { ScriptInfo } from "./common/scriptInfo";
+import { ZrCompiler } from "./zrCompiler";
 function main(){
-    const f = fs.readFileSync("./test/simple.zr",{encoding:"utf-8"});
-    const zl = ZLangParser.parse(f);
-    console.log(JSON.stringify(zl));
+    const info: ScriptInfo = {
+        compilingDirectory: process.cwd(),
+        fileRelativePath: process.argv[2],
+        encoding: "utf-8"
+    };
+    const compiler = new ZrCompiler(info);
+    compiler.compile();
+    
 }
 main();

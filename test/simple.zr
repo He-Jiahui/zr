@@ -1,4 +1,4 @@
-module sample;
+module "sample";
 // 命名模块同文件名 走标识符规则  如果包含特殊符号则需要当做字符串
 // 也可以写作 module "sample";
 // 可以在任意地方引入和使用模块
@@ -9,7 +9,6 @@ var math2 = import(1.0);
 var math3 = import(0xff);
 var math4 = import(0777);
 var math5 = import(123);
-
 var result = 1 + (5 - 1) * 4; 
 
 // 也可以以这样的方式引入
@@ -87,15 +86,18 @@ interface Man: arr{
     // 访问器可以让getter 和 setter 返回不同的类型
     pub get set address:int;
 }
-
+#singleton#
 class Person{
+    # header("Person Info") #
+    # serializable #
     pub var id:string;
     pri var _address:string;
+    # editor.input #
     pro var telephone: string;
 
     pub @constructor(id: string){
     }
-
+    # editor.input #
     pub set address(val:string){
         this._address = val;
     }
@@ -130,7 +132,19 @@ class Student:Person, Man{
 
     pub test():void{
         // 函数
+        key.register(()=>{
+            var i = 1;
+            return null;
+        });
+        key.register((k:int,b:float)=>{
+
+        });
+        key.register((k,b)=>{
+
+        });
+        key["reg"].member["sant"]();
+        var temp = $(key["Vector3"].revert(mam)("kanji")["minify"] + val)(s);
     }
 }
 // 声明外动作加载脚本时立刻执行
-var s = new Student();
+new Student();

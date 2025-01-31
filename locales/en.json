@@ -1,0 +1,10 @@
+{
+    
+    "commonError" : "code:{{errCode}} \n{{message}}\n  at {{file}}:{{line}}:{{column}}",
+    "commonError2" : "code:{{errCode}} \n{{message}}\n  at {{file}}",
+    "syntaxError" : "SyntaxError: {{message}}\n  from {{fromLine}}:{{fromColumn}} to {{toLine}}:{{toColumn}}",
+    "syntaxError2" : "SyntaxError: {{message}}",
+    "noHandlerError" : "There is no handler for {{type}}",
+    "parserError": "Parser error: {{message}}"
+    
+}

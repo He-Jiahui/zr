@@ -15,6 +15,8 @@ TopLevelStatement
   / FunctionDeclaration
   / ExpressionStatement
 
+
+
 // === 模块声明 ===
 ModuleDeclaration
   = MODULE _ name:(IDENTIFIER / STRING) _ SEMICOLON {
@@ -27,24 +29,25 @@ ModuleDeclaration
 
 // === 结构体 ===
 StructDeclaration
-  = STRUCT _ name:IDENTIFIER _ LBRACE _ members:StructMember* _ RBRACE {
+  = STRUCT _ name:IDENTIFIER _ generic:GenericDeclaration? _ LBRACE _ members:StructMember* _ RBRACE {
       return { 
-        type: "Struct", 
+        type: "StructDeclaration", 
         name, 
         members,
+        generic,
         location: location()
       }
   }
 
 StructMember
-  = _ dec:(VarDeclaration / StructMethod / StructMetaFunction) _ {
+  = _ dec:(StructField / StructMethod / StructMetaFunction) _ {
     return dec; 
   }
 
 StructMetaFunction
-  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN params:ParameterList? RPAREN _ body:Block {
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ RPAREN _ body:Block {
       return { 
-        type: "MetaFunction",
+        type: "StructMetaFunction",
         static: staticSymbol,
         meta, 
         params: params || [], 
@@ -55,10 +58,10 @@ StructMetaFunction
     }
 
 // 结构体变量声明
-VarDeclaration
+StructField
   = access:AccessModifier? _ staticSymbol:STATIC? _ VAR _ name:IDENTIFIER _ typePart:(COLON _ Type)? _ initPart:(EQUALS _ Expression)? _ SEMICOLON {
       return {
-        type: "Field",
+        type: "StructField",
         access,
         static: staticSymbol,
         name,
@@ -70,12 +73,14 @@ VarDeclaration
 
 // 结构体方法
 StructMethod
-  = decorator:DecoratorExpression* _ access:AccessModifier? _ name:IDENTIFIER 
-    _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
+    _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
-        type: "Method",
+        type: "StructMethod",
         decorator,
         access: access,
+        static: staticSymbol,
+        generic,
         name,
         params: params || [],
         returnType: returnPart? returnPart[2] : null,
@@ -86,16 +91,16 @@ StructMethod
 
 // === 类系统 ===
 ClassDeclaration
-  = decorator: DecoratorExpression* CLASS _ name:IDENTIFIER _ 
-    superPart:(COLON _ Type _ (COMMA _ TypeList)? )? 
+  = decorator: DecoratorExpression* CLASS _ name:IDENTIFIER _ generic:GenericDeclaration? _ 
+    superPart:(COLON _ TypeList _)? 
     LBRACE _ members:ClassMember* _ RBRACE {
       return { 
-        type: "Class", 
-        name, 
-        extends: superPart?superPart[2] : null, 
-        implements: superPart?(superPart[4]?superPart[4][2]:[]) : [],
+        type: "ClassDeclaration", 
+        name,  
+        inherits: superPart?superPart[1] : [],
         members,
         decorator,
+        generic,
         location: location()
       }
     }
@@ -106,11 +111,12 @@ ClassMember
   }
 
 MetaFunction
-  = access:AccessModifier? _ meta:MetaIdentifier _ LPAREN params:ParameterList? RPAREN _ 
-    argsPart:(SUPER LPAREN ArgumentList? RPAREN)? _ body:Block {
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ RPAREN _ 
+    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ body:Block {
       return { 
-        type: "MetaFunction", 
+        type: "ClassMetaFunction", 
         meta, 
+        static: staticSymbol,
         params: params || [], 
         superArgs: argsPart? argsPart[2] : [], 
         body: body,
@@ -121,13 +127,13 @@ MetaFunction
 
 // 类字段
 Field
-  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ VAR _ name:IDENTIFIER 
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ VAR _ name:IDENTIFIER
     _ typePart:(COLON _ Type)? _ initPart:(EQUALS _ Expression)? _ SEMICOLON {
       return {
-        type: "Field",
+        type: "ClassField",
         decorator,
         access: access,
-        static: !!staticSymbol,
+        static: staticSymbol,
         name,
         typeInfo: typePart?typePart[2] : null,
         init: initPart?initPart[2] : null,
@@ -136,13 +142,14 @@ Field
     }
 // 类方法
 Method
-  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER 
-    _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+  = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
+    _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
-        type: "Method",
+        type: "ClassMethod",
         decorator,
+        generic,
         access: access,
-        static: !!staticSymbol,
+        static: staticSymbol,
         name,
         params: params || [],
         returnType: returnPart?returnPart[2] : null,
@@ -153,10 +160,11 @@ Method
 
 // 类属性（getter/setter）
 Property
-  = decorator:DecoratorExpression* access:AccessModifier? _ modifier:(GetProperty / SetProperty) {
+  = decorator:DecoratorExpression* access:AccessModifier? _ staticSymbol:STATIC? _ modifier:(GetProperty / SetProperty) {
     return {
-      type: "GetSetProperty",
+      type: "ClassProperty",
       access,
+      static: staticSymbol,
       modifier,
       decorator,
       location: location()
@@ -169,79 +177,83 @@ GetProperty
         type: "Property",
         kind: "get",
         name,
-        returnType: returnPart?returnPart[2] : null,
+        targetType: returnPart?returnPart[2] : null,
+        param: null,
         body,
         location: location()
       }
     }
 
 SetProperty
-  = SET _ name:IDENTIFIER _ LPAREN param:IDENTIFIER _ paramTypePart:(COLON _ Type _) RPAREN _ body:Block {
+  = SET _ name:IDENTIFIER _ LPAREN param:IDENTIFIER _ paramTypePart:(COLON _ Type _)? RPAREN _ body:Block {
       return {
         type: "Property",
         kind: "set",
         name,
-        paramType:paramTypePart?paramTypePart[2]:null,
+        param,
+        targetType:paramTypePart?paramTypePart[2]:null,
         body,
         location: location()
       }
     }
 // === 接口 ===
 InterfaceDeclaration
-  = INTERFACE _ name:IDENTIFIER _ extendsPart:(COLON _ TypeList)? _ LBRACE _ members:InterfaceMember* _ RBRACE {
+  = INTERFACE _ name:IDENTIFIER _ generic:GenericDeclaration? _ extendsPart:(COLON _ TypeList)? _ LBRACE _ members:InterfaceMember* _ RBRACE {
       return { 
-        type: "Interface", 
+        type: "InterfaceDeclaration", 
         name, 
         members,
-        extends: extendsPart?extendsPart[2]:[],
+        generic,
+        inherits: extendsPart?extendsPart[2]:[],
         location: location()
       }
     }
 // ====================== 接口成员 ======================
 InterfaceMember
-  = _ dec:(MethodSignature / PropertySignature / FieldDeclaration) _ {
+  = _ dec:(InterfaceMethodSignature / InterfacePropertySignature / InterfaceFieldDeclaration) _ {
     return dec;
   }
 
 // 接口方法签名
-MethodSignature
-  = access:AccessModifier? _ name:IDENTIFIER _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON {
+InterfaceMethodSignature
+  = access:AccessModifier? _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON {
       return {
-        type: "MethodSignature",
+        type: "InterfaceMethodSignature",
         name,
         params: params || [],
         returnType: returnPart?returnPart[2] : null,
         access,
+        generic,
         location: location()
       }
     }
 
 // 接口属性签名
-PropertySignature
-  = access:AccessModifier? _ getset:(GetSetModifier)? _ name:IDENTIFIER _ typePart:(COLON _ Type)? _ SEMICOLON {
+InterfacePropertySignature
+  = access:AccessModifier? _ propertyType:(GetSetModifier)? _ name:IDENTIFIER _ typePart:(COLON _ Type)? _ SEMICOLON {
       return {
-        type: "PropertySignature",
+        type: "InterfacePropertySignature",
         name,
         typeInfo: typePart?typePart[2] : null,
         access: access,
-        getset,
+        propertyType,
         location: location()
       }
     }
 
 GetSetModifier
-  = GET _ SET {return "GetSet"}
-  / SET _ GET {return "GetSet"}
-  / GET {return "Get"}
-  / SET {return "Set"}
+  = GET _ SET {return "get_set"}
+  / SET _ GET {return "get_set"}
+  / GET {return "get"}
+  / SET {return "set"}
 
 // 接口字段声明
-FieldDeclaration
+InterfaceFieldDeclaration
   = access:AccessModifier? _ VAR _ name:IDENTIFIER typePart:(_ COLON _ Type)? _ SEMICOLON {
       return {
-        type: "FieldDeclaration",
+        type: "InterfaceFieldDeclaration",
         name,
-        type: typePart? typePart[3] : null,
+        targetType: typePart? typePart[3] : null,
         access,
         location: location()
       }
@@ -250,7 +262,7 @@ FieldDeclaration
 EnumDeclaration
   = ENUM _ name:IDENTIFIER _ baseTypePart:(COLON _ Type)? _ LBRACE _ members:EnumMember+ _ RBRACE {
       return { 
-        type: "Enum", 
+        type: "EnumDeclaration", 
         name, 
         baseType: baseTypePart?baseTypePart[2]:null, 
         members,
@@ -260,12 +272,23 @@ EnumDeclaration
   // 枚举成员
 EnumMember
   = _ key:IDENTIFIER _ valuePart:(EQUALS _ Expression)? _ (COMMA / SEMICOLON)? _ {
-      return { 
-        key: key, 
+      return {
+        type: "EnumMember",
+        name: key, 
         value: valuePart?valuePart[2] : null,
         location: location()
       }
     }
+
+// 泛型声明
+GenericDeclaration
+  = LESS_THAN _ params:Parameter+ _ GREATER_THAN _ {
+    return {
+      type: "GenericDeclaration",
+      params,
+      location: location()
+    }
+  }
 
 Statement
   = _ dec:(ExpressionStatement
@@ -502,7 +525,7 @@ MultiplicativeExpression
     }), left) 
   }
 FunctionCall
-  = callee:UnaryExpression _ LPAREN args:ArgumentList? RPAREN _ right:FunctionCall*{
+  = callee:UnaryExpression _ LPAREN _ args:ArgumentList? _ RPAREN _ right:FunctionCall*{
     return {
       type: "FunctionCall",
       callee,
@@ -521,7 +544,7 @@ UnaryExpression
       location: location()
     } 
   }
-  / property: PrimaryExpression members:MemberAccess*{
+  / property: PrimaryExpression _ members:MemberAccess*{
     return {
       type: "PrimaryExpression",
       property,
@@ -532,7 +555,7 @@ UnaryExpression
 
 // ====================== 成员访问表达式规则 ======================
 MemberAccess
-  = DOT property:IDENTIFIER { 
+  = DOT property:IDENTIFIER _ { 
     return { 
       type: "MemberExpression", 
       property, 
@@ -642,11 +665,12 @@ UnaryOperator
 
 // === 函数系统 ===
 FunctionDeclaration
-  = _ name:IDENTIFIER _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ block:Block{
+  = _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ block:Block{
     return {
       type: "FunctionDeclaration",
       name,
       params,
+      generic,
       returns: returnPart? returnPart[2] : null,
       block,
       location: location
@@ -657,8 +681,14 @@ FunctionDeclaration
 
 // === 工具规则 ===
 AccessModifier = PUB / PRI / PRO
-Type = GenericType / TupleType / ArrayType / IDENTIFIER
-GenericType = name:IDENTIFIER LBRACKET _ params:TypeList _ RBRACKET {
+Type = GenericType / TupleType / ArrayType / IDENTIFIER {
+  return {
+    type: "Type",
+    name: text(),
+    location: location()
+  }
+}
+GenericType = name:IDENTIFIER _ LESS_THAN _ params:TypeList _ GREATER_THAN _ {
   return{
     type: "GenericType",
     name,
@@ -666,14 +696,14 @@ GenericType = name:IDENTIFIER LBRACKET _ params:TypeList _ RBRACKET {
     location: location()
   }
 }
-TupleType = LBRACKET _ types:TypeList _ RBRACKET {
+TupleType = LBRACKET _ types:TypeList _ RBRACKET _ {
   return{
     type: "TupleType",
-    types,
+    elements: types,
     location: location()
   }
 }
-ArrayType = name:IDENTIFIER dimensions:(LBRACKET RBRACKET)+ {
+ArrayType = name:IDENTIFIER dimensions:(LBRACKET RBRACKET)+ _ {
   return{
     type: "ArrayType",
     name,
@@ -683,25 +713,27 @@ ArrayType = name:IDENTIFIER dimensions:(LBRACKET RBRACKET)+ {
 }
 // 辅助规则补充
 Parameter
-  = name:IDENTIFIER _ typePart:(COLON _ Type)? { 
-    return { 
+  = name:IDENTIFIER _ typePart:(COLON _ Type)? _ defaultValuePart:(EQUALS _ Expression)? { 
+    return {
+      type: "Parameter",
       name, 
-      type: typePart? typePart[2] : null,
+      typeInfo: typePart? typePart[2] : null,
+      defaultValue: defaultValuePart? defaultValuePart[2] : null,
       location: location(),
     } 
   }
 
 ParameterList
-  = head:Parameter _ tail:(COMMA _ Parameter)* { 
+  = head:Parameter _ tail:(COMMA _ Parameter _)* { 
       return [head].concat(tail.map(t => t[2])) 
     }
-ArgumentList = head:Expression _ tail:(COMMA _ Expression)* {
+ArgumentList = head:Expression _ tail:(COMMA _ Expression _)* {
     return [head].concat(tail.map(t => t[2])) 
   }
-TypeList = head:Type _ tail:(COMMA _ Type)* {
+TypeList = head:Type _ tail:(COMMA _ Type _)* {
     return [head].concat(tail.map(t => t[2])) 
   }
-MetaIdentifier = AT name:IDENTIFIER {
+MetaIdentifier = AT _ name:IDENTIFIER _ {
   return {
     type: "Meta",
     name,
@@ -718,7 +750,7 @@ DecoratorExpression = SHARP _ expr:FunctionCall _ SHARP _ {
 }
 // 辅助规则
 DestructuringPattern
-  = LBRACE _ keys:IdentifierList _ RBRACE { 
+  = LBRACE _ keys:IdentifierList _ RBRACE _ { 
     return {
       type: "Destructuring",
       keys,
@@ -726,7 +758,7 @@ DestructuringPattern
     } 
   }
 DestructuringArrayPattern
-  = LBRACKET _ keys:IdentifierList _ LBRACKET { 
+  = LBRACKET _ keys:IdentifierList _ LBRACKET _ { 
     return {
       type: "DestructuringArray",
       keys,
@@ -735,7 +767,7 @@ DestructuringArrayPattern
   }
 
 IdentifierList
-  = head:IDENTIFIER _ tail:(COMMA _ IDENTIFIER)* { 
+  = head:IDENTIFIER _ tail:(COMMA _ IDENTIFIER _)* { 
     return [head].concat(tail.map(t => t[2])) 
   }
 // ====================== 词法规则 ======================

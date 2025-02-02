@@ -23,12 +23,17 @@ export class Handler{
         return h;
     }
     public context: ScriptContext;
+    public value: any;
+
+    public location: FileRange;
     public constructor(context: ScriptContext){
         this.context = context;
     }
 
     protected handle(node: AnyNode|any):void{
-        this.context.location = node.location;
+        const { location } = node;
+        this.location = location;
+        this.context.location = location;
     }
 }
 

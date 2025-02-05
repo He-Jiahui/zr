@@ -433,7 +433,9 @@ Block
     }
 // ====================== 修复后的表达式系统 ======================
 Expression
-  = AssignmentExpression
+  = _ exp:AssignmentExpression _ {
+    return exp; 
+  }
 
 AssignmentExpression
   = left:ConditionalExpression _ op:AssignmentOperator _ right:AssignmentExpression { 
@@ -515,7 +517,7 @@ AdditiveExpression
   }
 
 MultiplicativeExpression
-  = left:FunctionCall parts:(_ op:MultiplicativeOperator _ right:FunctionCall)* { 
+  = left:UnaryExpression parts:(_ op:MultiplicativeOperator _ right:UnaryExpression)* { 
     return parts.reduce((acc, [,op,,right]) => ({ 
       type: "Binary", 
       op, 
@@ -524,17 +526,7 @@ MultiplicativeExpression
       location: location()
     }), left) 
   }
-FunctionCall
-  = callee:UnaryExpression _ LPAREN _ args:ArgumentList? _ RPAREN _ right:FunctionCall*{
-    return {
-      type: "FunctionCall",
-      callee,
-      args,
-      right,
-      location: location()
-    }
-  }
-  / UnaryExpression
+
 UnaryExpression
   = op:UnaryOperator _ argument:UnaryExpression { 
     return { 
@@ -552,10 +544,12 @@ UnaryExpression
       location: location()
     }
   }
+  
+
 
 // ====================== 成员访问表达式规则 ======================
 MemberAccess
-  = DOT property:IDENTIFIER _ { 
+  = DOT _ property:IDENTIFIER _ { 
     return { 
       type: "MemberExpression", 
       property, 
@@ -563,7 +557,7 @@ MemberAccess
       location: location()
     } 
   }
-  / LBRACKET _ property:Expression _ RBRACKET { 
+  / LBRACKET _ property:Expression _ RBRACKET _ { 
     return { 
       type: "MemberExpression", 
       property, 
@@ -571,6 +565,13 @@ MemberAccess
       location: location(), 
     } 
   } 
+  / LPAREN _ args:ArgumentList? _ RPAREN _{
+    return {
+      type: "FunctionCall",
+      args: args || [],
+      location: location()
+    }
+  }
 
 
 PrimaryExpression
@@ -741,7 +742,7 @@ MetaIdentifier = AT _ name:IDENTIFIER _ {
   }
 }
 
-DecoratorExpression = SHARP _ expr:FunctionCall _ SHARP _ {
+DecoratorExpression = SHARP _ expr:Expression _ SHARP _ {
   return {
     type: "DecoratorExpression",
     expr,

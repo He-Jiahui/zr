@@ -3,4 +3,4 @@ import type { GenericType } from "./genericHandler";
 import type { TupleType } from "./tupleHandler";
 import type { TypeType } from "./typeHandler";
 
-export type Type = TypeType | GenericType |  TupleType | ArrayType;
+export type AllType = TypeType | GenericType |  TupleType | ArrayType;

@@ -20,8 +20,8 @@ export class AssignmentHandler extends Handler{
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {
             type: "AssignmentExpression",
-            left: this.leftHandler.value,
-            right: this.rightHandler.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }

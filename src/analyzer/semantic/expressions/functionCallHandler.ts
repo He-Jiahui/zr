@@ -21,7 +21,7 @@ export class FunctionCallHandler extends Handler{
         }
         this.value = {
             type: "FunctionCall",
-            args: this.argsHandler.map(handler=>handler.value),
+            args: this.argsHandler.map(handler=>handler?.value),
         };
     }
 }

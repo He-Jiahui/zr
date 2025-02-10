@@ -1,13 +1,14 @@
 import { Handler } from "../../common/handler";
 import { ClassDeclaration } from "../../../../parser/generated/parser";
-import { ClassFieldType } from "./fieldHandler";
-import { ClassPropertyType } from "./propertyHandler";
-import { ClassMethodType } from "./methodHandler";
-import { ClassMetaFunctionType } from "./metaFunctionHandler";
+import type { ClassFieldType } from "./fieldHandler";
+import type { ClassPropertyType } from "./propertyHandler";
+import type { ClassMethodType } from "./methodHandler";
+import type { ClassMetaFunctionType } from "./metaFunctionHandler";
+import type { IdentifierType } from "../identifierHandler";
 
 export type ClassType ={
     type: "Class";
-    name: string;
+    name: IdentifierType;
     inherits?: any[];
     decorators?: any[];
     generic: any[];
@@ -19,6 +20,8 @@ export type ClassType ={
 
 export class ClassDeclarationHandler extends Handler{
     public value: ClassType;
+    private nameHandler: Handler | null = null;
+
     public readonly membersHandler: Handler[] = [];
 
     public readonly inheritsHandler: Handler[] = [];
@@ -33,6 +36,7 @@ export class ClassDeclarationHandler extends Handler{
         this.membersHandler.length = 0;
         this.inheritsHandler.length = 0;
         this.decoratorsHandler.length = 0;
+        this.nameHandler = Handler.handle(node.name, this.context);
         if(node.inherits){
             for(const inherit of node.inherits){
                 const handler = Handler.handle(inherit, this.context);
@@ -58,7 +62,7 @@ export class ClassDeclarationHandler extends Handler{
         for(const member of members){
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler.value as (ClassFieldType|ClassMethodType|ClassMetaFunctionType|ClassPropertyType);
+            const value = handler?.value as (ClassFieldType|ClassMethodType|ClassMetaFunctionType|ClassPropertyType);
             if(!value){
                 continue;
             }
@@ -79,9 +83,9 @@ export class ClassDeclarationHandler extends Handler{
         }
         this.value = {
             type: "Class",
-            name: node.name,
-            inherits: this.inheritsHandler.map(handler=>handler.value),
-            decorators: this.decoratorsHandler.map(handler=>handler.value),
+            name: this.nameHandler?.value,
+            inherits: this.inheritsHandler.map(handler=>handler?.value),
+            decorators: this.decoratorsHandler.map(handler=>handler?.value),
             generic: this.genericHandler?.value,
             fields,
             methods,

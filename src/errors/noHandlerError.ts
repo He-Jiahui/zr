@@ -4,7 +4,7 @@ import { ZrSemanticError } from "./zrSemanticError";
 
 export class NoHandlerError extends ZrSemanticError{
     public get isFault(): boolean{
-        return true;
+        return false;
     }
 
     public constructor(handleType: string, context: ScriptContext){

@@ -66,6 +66,9 @@ var value = {
     b: 2,
     c: 3
 };
+var valueX = {
+    a: 1;
+};
 // 可以通过[]对键进行动态运算生成
 var value2 = {
     ["a"]: "a";

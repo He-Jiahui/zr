@@ -1,11 +1,18 @@
 import { Handler } from "../common/handler";
 import { BOOLEAN } from "../../../parser/generated/parser";
+export type BooleanType = {
+    type: "BooleanLiteral",
+    value: boolean
+}
 export class BooleanHandler extends Handler{
-    public value: boolean;
+    public value: BooleanType;
     
     public handle(node: BOOLEAN) {
         super.handle(node);
-        this.value = node.value;
+        this.value = {
+            type: "BooleanLiteral",
+            value: node.value
+        };
     }
 }
 

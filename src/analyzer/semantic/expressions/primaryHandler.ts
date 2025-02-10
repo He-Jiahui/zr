@@ -2,11 +2,12 @@ import { UnaryExpression } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import { Exp } from "./expression";
 import type { FunctionCallType } from "./functionCallHandler";
+import type { LiteralExpressionType } from "./literalHandler";
 import type { MemberAccessType } from "./memberAccessHandler";
 
 export type PrimaryType = {
     type: "PrimaryExpression";
-    property: any;
+    property: LiteralExpressionType;
     members: (MemberAccessType | FunctionCallType)[];
 }
 
@@ -16,6 +17,7 @@ export class PrimaryHandler extends Handler{
     private readonly memberHandlers: Handler[] = [];
 
     public handle(node: Exp<UnaryExpression, "PrimaryExpression">) {
+        super.handle(node);
         this.memberHandlers.length = 0;
         this.propertyHandler = Handler.handle(node.property, this.context);
         if(node.members){
@@ -28,7 +30,7 @@ export class PrimaryHandler extends Handler{
         this.value = {
             type: "PrimaryExpression",
             property: this.propertyHandler?.value,
-            members: this.memberHandlers.map(handler=>handler.value),
+            members: this.memberHandlers.map(handler=>handler?.value),
         }
     }
 }

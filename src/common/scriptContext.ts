@@ -1,4 +1,4 @@
-import { Location } from "peggy";
+
 import { ScriptInfo } from "./scriptInfo";
 import { FileRange, Start } from "../parser/generated/parser";
 

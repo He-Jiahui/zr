@@ -3,10 +3,11 @@ import { StructDeclaration } from "../../../../parser/generated/parser";
 import { StructMethodType } from "./methodHandler";
 import { StructFieldType } from "./fieldHandler";
 import { StructMetaFunctionType } from "./metaFunctionHandler";
+import type { IdentifierType } from "../identifierHandler";
 
 export type StructType ={
     type: "Struct";
-    name: string;
+    name: IdentifierType;
     fields: StructFieldType[];
     methods: StructMethodType[];
     metaFunctions: StructMetaFunctionType[];
@@ -14,10 +15,12 @@ export type StructType ={
 
 export class StructDeclarationHandler extends Handler{
     public value: StructType;
+    private nameHandler: Handler|null = null;
     public readonly membersHandler: Handler[] = [];
     
     public handle(node: StructDeclaration) {
         super.handle(node);
+        this.nameHandler = Handler.handle(node.name, this.context);
         const members = node.members;
         this.membersHandler.length = 0;
         const fields:StructFieldType[] = [];
@@ -26,7 +29,7 @@ export class StructDeclarationHandler extends Handler{
         for(const member of members){
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler.value as (StructFieldType|StructMethodType|StructMetaFunctionType);
+            const value = handler?.value as (StructFieldType|StructMethodType|StructMetaFunctionType);
             if(!value){
                 continue;
             }
@@ -44,7 +47,7 @@ export class StructDeclarationHandler extends Handler{
         }
         this.value = {
             type: "Struct",
-            name: node.name,
+            name: this.nameHandler?.value,
             fields,
             methods,
             metaFunctions

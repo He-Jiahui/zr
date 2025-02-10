@@ -13,10 +13,11 @@ export class Handler{
     public static registerHandler(nodeType: string, handler: typeof Handler){
         Handler.handlers.set(nodeType, handler);
     }
-    public static handle(node: AnyNode|any, context: ScriptContext){
+    public static handle(node: AnyNode|any, context: ScriptContext): Handler{
         const handler = Handler.handlers.get(node.type)!;
         if(!handler){
             new NoHandlerError(node.type, context).report();
+            return null!;
         }
         const h = new handler(context);
         h.handle(node);

@@ -53,8 +53,8 @@ export class MetaFunctionHandler extends Handler{
             access: node.access as Access,
             static: !!node.static,
             meta: this.metaHandler?.value,
-            super: this.superHandlers.map(handler => handler.value),
-            parameters: this.parameterHandlers.map(handler => handler.value),
+            super: this.superHandlers.map(handler => handler?.value),
+            parameters: this.parameterHandlers.map(handler => handler?.value),
             body: this.bodyHandler?.value,
         };
     }

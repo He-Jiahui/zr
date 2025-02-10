@@ -1,23 +1,25 @@
 import { Handler } from "../../common/handler";
 import { StructField } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
+import type { IdentifierType } from "../identifierHandler";
 export type StructFieldType = {
     type: "StructField";
     access: Access,
     static: boolean,
-    name: string,
+    name: IdentifierType,
     typeInfo: any,
     init: any,
 };
 
 export class FieldHandler extends Handler{
     public value: StructFieldType;
-
+    private nameHandler: Handler|null = null;
     private typeInfoHandler: Handler|null = null;
     private initHandler: Handler|null = null;
     
     public handle(node: StructField) {
         super.handle(node);
+        this.nameHandler = Handler.handle(node.name, this.context);
         if(node.typeInfo){
             const typeInfoHandler = Handler.handle(node.typeInfo, this.context);
             this.typeInfoHandler = typeInfoHandler;
@@ -34,7 +36,7 @@ export class FieldHandler extends Handler{
             type: "StructField",
             access: node.access as Access,
             static: !!node.static,
-            name: node.name,
+            name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
             init: this.initHandler?.value,
         };

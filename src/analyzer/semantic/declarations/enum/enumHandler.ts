@@ -1,10 +1,11 @@
 import { EnumDeclaration } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
-import { EnumMemberType } from "./memberHandler";
+import type { IdentifierType } from "../identifierHandler";
+import type { EnumMemberType } from "./memberHandler";
 
 export type EnumType = {
     type: "Enum",
-    name: string,
+    name: IdentifierType,
     members: EnumMemberType[],
     baseType: any
 }
@@ -13,10 +14,12 @@ export class EnumDeclarationHandler extends Handler{
     public value: EnumType;
     private baseTypeHandler: Handler | null = null;
     private membersHandler: Handler[] = [];
+    private nameHandler: Handler | null = null;
 
     public handle(node: EnumDeclaration) {
         super.handle(node);
         const name = node.name;
+        this.nameHandler = Handler.handle(name, this.context);
         const members = node.members;
         const baseType = node.baseType;
         if(baseType){
@@ -31,8 +34,8 @@ export class EnumDeclarationHandler extends Handler{
         }
         this.value = {
             type: "Enum",
-            name,
-            members: this.membersHandler.map(handler=>handler.value),
+            name: this.nameHandler?.value,
+            members: this.membersHandler.map(handler=>handler?.value),
             baseType: this.baseTypeHandler?.value
         };
     }

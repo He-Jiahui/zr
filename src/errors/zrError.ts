@@ -1,14 +1,14 @@
-import { Location } from "peggy";
 import { Logger } from "../utils/logger";
+import { FileRange } from "../parser/generated/parser";
 
 export class ZrError extends Error{
     public errCode: number;
-    public location: Location | undefined;
+    public location: FileRange | undefined;
     public fileName: string;
     public get isFault(): boolean{
         return false;
     }
-    public constructor(errCode: number, fileName: string, location?: Location){
+    public constructor(errCode: number, fileName: string, location?: FileRange){
         super();
         this.errCode = errCode;
         this.location = location;
@@ -21,8 +21,8 @@ export class ZrError extends Error{
                 errCode: this.errCode.toFixed(),
                 message: this.message,
                 file: this.fileName,
-                line: this.location.line.toFixed(),
-                column: this.location.column.toFixed()
+                line: this.location?.start.line?.toFixed(),
+                column: this.location?.start.column?.toFixed()
             });
         }else{
             this.message = i("commonError2",{

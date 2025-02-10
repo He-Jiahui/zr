@@ -23,8 +23,8 @@ export class BinaryHandler extends Handler{
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {
             type: "BinaryExpression",
-            left: this.leftHandler.value,
-            right: this.rightHandler.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }

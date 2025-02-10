@@ -1,11 +1,12 @@
 import type { Expression } from ".";
 import { MemberAccess } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
+import type { IdentifierType } from "../declarations/identifierHandler";
 import { Exp } from "./expression";
 
 export type MemberAccessType = {
     type: "MemberExpression",
-    property: string | Expression,
+    property: IdentifierType | Expression,
     computed: boolean,
 }
 
@@ -14,7 +15,7 @@ export class MemberAccessHandler extends Handler{
     private propertyHandler: Handler | null = null;
 
     handle(node: Exp<MemberAccess, "MemberExpression">) {
-
+        super.handle(node);
         const computed = node.computed;
         if(computed){
             this.propertyHandler = Handler.handle(node.property, this.context);
@@ -24,7 +25,7 @@ export class MemberAccessHandler extends Handler{
 
         this.value = {
             type: "MemberExpression",
-            property: this.propertyHandler?.value || node.property as string,
+            property: this.propertyHandler?.value,
             computed,
         };
     }

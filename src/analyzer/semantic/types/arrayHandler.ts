@@ -15,7 +15,7 @@ export class ArrayImplementHandler extends Handler{
         this.elementTypeHandler = Handler.handle(node.type, this.context);
         this.value = {
             type: "Array",
-            elementType: this.elementTypeHandler.value,
+            elementType: this.elementTypeHandler?.value,
             dimensions: node.dimensions,
         };
     }

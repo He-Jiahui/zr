@@ -1,17 +1,21 @@
+import { IDENTIFIER } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
+import type { IdentifierType } from "../declarations/identifierHandler";
 
 export type TypeType = {
     type: "Type",
-    name: string
+    name: IdentifierType
 }
 
 export class TypeHandler extends Handler{
     public value: TypeType;
-    public handle(node: {type: "Type", name: string, location: any}) {
+    private nameHandler: Handler|null = null;
+    public handle(node: {type: "Type", name: IDENTIFIER, location: any}) {
         super.handle(node);
+        this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
             type: "Type",
-            name: node.name,
+            name: this.nameHandler?.value,
         };
     }
 }

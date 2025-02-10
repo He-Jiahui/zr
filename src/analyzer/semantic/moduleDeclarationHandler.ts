@@ -1,17 +1,23 @@
 import { ModuleDeclaration } from "../../parser/generated/parser";
 import { Handler } from "./common/handler";
-
+import type { IdentifierType } from "./declarations/identifierHandler";
+import type { StringType } from "./literals/stringHandler";
+export type ModuleDeclarationType = {
+    type: "ModuleDeclaration",
+    name: StringType | IdentifierType
+}
 export class ModuleDeclarationHandler extends Handler{
-    private name: string = "";
+    public value: ModuleDeclarationType;
     private nameHandler: Handler | null = null;
     public handle(node: ModuleDeclaration){
         super.handle(node);
         const name = node.name;
-        if(typeof name === "string"){
-            this.name = name;
-        }else{
-            const nameHandler = Handler.handle(name, this.context);
-            this.nameHandler = nameHandler;
+
+        this.nameHandler = Handler.handle(name, this.context);
+        
+        this.value = {
+            type: "ModuleDeclaration",
+            name: this.nameHandler?.value,
         }
     }
 }

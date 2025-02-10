@@ -1,19 +1,22 @@
 import { EnumMember } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
+import type { IdentifierType } from "../identifierHandler";
 
 export type EnumMemberType = {
     type: "EnumMember",
-    name: string,
+    name: IdentifierType,
     value: any
 }
 
 export class EnumMemberHandler extends Handler{
     public value: EnumMemberType;
+    private nameHandler: Handler | null = null;
     private valueHandler: Handler | null = null;
 
     public handle(node: EnumMember) {
         super.handle(node);
         const name = node.name;
+        this.nameHandler = Handler.handle(name, this.context);
         if(node.value){
             this.valueHandler = Handler.handle(node.value, this.context);
         }else{
@@ -21,7 +24,7 @@ export class EnumMemberHandler extends Handler{
         }
         this.value = {
             type: "EnumMember",
-            name,
+            name: this.nameHandler?.value,
             value: this.valueHandler?.value,
         };
     }

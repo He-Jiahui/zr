@@ -1,8 +1,13 @@
 // import {buildBinaryExpression, buildLogicalExpression} from "utils";
 
 // ====================== 语法规则 ======================
-start = _ moduleName:(ModuleDeclaration _)? statements:(TopLevelStatement _)* { 
-  return moduleName ? [moduleName[0]].concat(statements.map(v=>v[0])) : statements.map(v=>v[0])
+start = _ moduleName:ModuleDeclaration? _ statements:(TopLevelStatement _)* { 
+  return {
+    type: "Script",
+    moduleName,
+    statements: statements? statements.map(s=>s[0]) : [],
+    location: location()
+  }
 }
 
 // === 顶层语句 ===
@@ -575,20 +580,20 @@ MemberAccess
 
 
 PrimaryExpression
-  = value:Literal {return {type: "Literal", value, location: location()}}
+  = value:Literal {return {type: "ValueLiteral", value, location: location()}}
   / ObjectLiteral
   / ArrayLiteral
   / LambdaExpression
   / IfExpression
   / SwitchExpression
-  / IDENTIFIER
+  / value:IDENTIFIER {return {type: "IdentifierLiteral", value, location: location()}}
   / LPAREN _ expr:Expression _ RPAREN { return expr }
 // --- 数组字面量 ---
 ArrayLiteral
   = LBRACKET _ elements:(Expression (_ (COMMA / SEMICOLON) _ Expression)* _ (COMMA / SEMICOLON)?)? _ RBRACKET
   { 
     return { 
-      type: 'Array', 
+      type: 'ArrayLiteral', 
       elements: elements? ([elements[0], ...(elements[1]?elements[1].map(v=>v[3]):[])]) :[], 
       location: location()
     } 
@@ -597,7 +602,7 @@ ArrayLiteral
 ObjectLiteral
   = LBRACE _ pairs:(KeyValuePair (_ (COMMA / SEMICOLON)? _ KeyValuePair)* _ (COMMA / SEMICOLON)?)? _ RBRACE { 
       return { 
-        type: "Object", 
+        type: "ObjectLiteral", 
         properties: pairs ? [pairs[0], ...(pairs[1]?pairs[1].map(v=>v[3]):[])] : [],
         location: location() 
       } 
@@ -605,6 +610,7 @@ ObjectLiteral
 KeyValuePair
   = key:(STRING / ComputedKey / IDENTIFIER) _ COLON _ value:Expression {
       return { 
+        type: "KeyValuePair",
         key, 
         value,
         location: location()
@@ -637,9 +643,9 @@ IfExpression
 SwitchExpression
   = SWITCH _ LPAREN _ expr:Expression? _ RPAREN _ LBRACE _ cases:SwitchCase* defaultCase:SwitchDefault? _ RBRACE {
       return {
-        type: "Switch",
+        type: "SwitchExpression",
         expr,
-        cases,
+        cases: cases? cases : [],
         default: defaultCase,
         location: location()
       }
@@ -682,10 +688,10 @@ FunctionDeclaration
 
 // === 工具规则 ===
 AccessModifier = PUB / PRI / PRO
-Type = GenericType / TupleType / ArrayType / IDENTIFIER {
+Type = GenericType / TupleType / ArrayType / id:IDENTIFIER {
   return {
     type: "Type",
-    name: text(),
+    name: id,
     location: location()
   }
 }
@@ -773,7 +779,13 @@ IdentifierList
   }
 // ====================== 词法规则 ======================
 // 标识符
-IDENTIFIER = [A-Za-z_][A-Za-z0-9_]* { return text() }
+IDENTIFIER = [A-Za-z_][A-Za-z0-9_]* { 
+  return {
+    type: "Identifier",
+    name: text(),
+    location: location()
+  }   
+}
 
 // 关键字
 MODULE = "module"

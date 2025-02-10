@@ -1,12 +1,18 @@
 import { Handler } from "../common/handler";
 import { DECIMAL } from "../../../parser/generated/parser";
-
+export type IntegerType = {
+    type: "IntegerLiteral",
+    value: number
+};
 export class IntegerHandler extends Handler{
-    public value: number;
+    public value: IntegerType;
     
     public handle(node: DECIMAL) {
         super.handle(node);
-        this.value = node.value;
+        this.value = {
+            type: "IntegerLiteral",
+            value: node.value
+        };
     }
 }
 

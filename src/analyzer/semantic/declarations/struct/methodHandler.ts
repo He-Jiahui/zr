@@ -1,11 +1,12 @@
 import { Handler } from "../../common/handler";
 import { StructMethod } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
+import type { IdentifierType } from "../identifierHandler";
 export type StructMethodType = {
     type: "StructMethod";
     access: Access;
     static: boolean;
-    name: string;
+    name: IdentifierType;
     returnType: any;
     parameters: any[];
     generic: any;
@@ -15,6 +16,7 @@ export type StructMethodType = {
 
 export class MethodHandler extends Handler{
     public value: StructMethodType;
+    private nameHandler: Handler | null = null;
     private readonly decoratorHandlers: Handler[] = [];
     private returnTypeHandler: Handler | null = null;
     private readonly parameterHandlers: Handler[] = [];
@@ -24,7 +26,7 @@ export class MethodHandler extends Handler{
     public handle(node: StructMethod) {
         super.handle(node);
         const access = node.access;
-        const name = node.name;
+        this.nameHandler = Handler.handle(node.name, this.context);
         if(node.generic){
             this.genericHandler = Handler.handle(node.generic, this.context);
         }else{
@@ -57,11 +59,11 @@ export class MethodHandler extends Handler{
             type: "StructMethod",
             access: access as Access,
             static: !!node.static,
-            name: name,
+            name: this.nameHandler?.value,
             returnType: this.returnTypeHandler?.value,
-            parameters: this.parameterHandlers.map(handler => handler.value),
+            parameters: this.parameterHandlers.map(handler => handler?.value),
             generic: this.genericHandler?.value,
-            decorators: this.decoratorHandlers.map(handler => handler.value),
+            decorators: this.decoratorHandlers.map(handler => handler?.value),
             body: this.bodyHandler
         };
     }

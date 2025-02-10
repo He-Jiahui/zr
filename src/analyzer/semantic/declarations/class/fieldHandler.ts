@@ -1,11 +1,12 @@
 import { Handler } from "../../common/handler";
 import { Field } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
+import type { IdentifierType } from "../identifierHandler";
 export type ClassFieldType = {
     type: "ClassField";
     access: Access,
     static: boolean,
-    name: string,
+    name: IdentifierType,
     decorators: any[],
     typeInfo: any,
     init: any,
@@ -13,7 +14,7 @@ export type ClassFieldType = {
 
 export class FieldHandler extends Handler{
     public value: ClassFieldType;
-
+    private nameHandler: Handler|null = null;
     private typeInfoHandler: Handler|null = null;
     private initHandler: Handler|null = null;
     private readonly decoratorsHandlers: Handler[] = [];
@@ -39,14 +40,15 @@ export class FieldHandler extends Handler{
                 this.decoratorsHandlers.push(decoratorHandler);
             }
         }
+        this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
             type: "ClassField",
             access: node.access as Access,
             static: !!node.static,
-            name: node.name,
+            name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
             init: this.initHandler?.value,
-            decorators: this.decoratorsHandlers.map(handler=>handler.value),
+            decorators: this.decoratorsHandlers.map(handler=>handler?.value),
         };
     }
 }

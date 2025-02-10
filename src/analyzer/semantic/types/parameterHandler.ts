@@ -1,21 +1,26 @@
 import { Parameter } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
+import type { IdentifierType } from "../declarations/identifierHandler";
+import type { Expression } from "../expressions";
+import { AllType } from "./types";
 
 export type ParameterType = {
     type: "Parameter",
-    name: string,
-    typeInfo: any,
-    defaultValue: any | null
+    name: IdentifierType,
+    typeInfo: AllType,
+    defaultValue: Expression | null
 }
 
 export class ParameterHandler extends Handler{
     public value: ParameterType;
+    private nameHandler: Handler | null = null;
     private typeInfoHandler: Handler | null = null;
     private defaultValueHandler: Handler | null = null;
 
     public handle(node: Parameter) {
         super.handle(node);
         const name = node.name;
+        this.nameHandler = Handler.handle(name, this.context);
         const typeInfo = node.typeInfo;
         if(typeInfo){
             this.typeInfoHandler = Handler.handle(typeInfo, this.context);
@@ -29,7 +34,7 @@ export class ParameterHandler extends Handler{
         }
         this.value = {
             type: "Parameter",
-            name,
+            name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
             defaultValue: this.defaultValueHandler?.value,
         };

@@ -21,8 +21,8 @@ export class LogicalHandler extends Handler{
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {
             type: "LogicalExpression",
-            left: this.leftHandler.value,
-            right: this.rightHandler.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }

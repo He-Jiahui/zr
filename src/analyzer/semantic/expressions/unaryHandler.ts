@@ -1,12 +1,13 @@
 import { UnaryExpression } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import { Exp } from "./expression";
+import type { PrimaryType } from "./primaryHandler";
 
 export type UnaryType = {
     type: "UnaryExpression",
     operator: string,
     arguments: UnaryType
-};
+} | PrimaryType;
 
 
 export class UnaryHandler extends Handler{
@@ -15,12 +16,13 @@ export class UnaryHandler extends Handler{
     private argumentHandler: Handler | null = null;
 
     handle(node: Exp<UnaryExpression, "Unary">) {
+        super.handle(node);
         this.operatorHandler = Handler.handle(node.op, this.context);
         this.argumentHandler = Handler.handle(node.argument, this.context);
         this.value = {
             type: "UnaryExpression",
-            operator: this.operatorHandler.value,
-            arguments: this.argumentHandler.value
+            operator: this.operatorHandler?.value,
+            arguments: this.argumentHandler?.value
         };
     }
 }

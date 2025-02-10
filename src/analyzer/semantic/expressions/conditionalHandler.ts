@@ -23,9 +23,9 @@ export class ConditionalHandler extends Handler{
         this.alternateHandler = Handler.handle(node.alternate, this.context);
         this.value = {
             type: "ConditionalExpression",
-            condition: this.conditionHandler.value,
-            consequent: this.consequentHandler.value,
-            alternate: this.alternateHandler.value
+            condition: this.conditionHandler?.value,
+            consequent: this.consequentHandler?.value,
+            alternate: this.alternateHandler?.value
         };
     }
 }

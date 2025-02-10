@@ -1,10 +1,11 @@
 import { InterfaceMethodSignature } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import { Handler } from "../../common/handler";
+import type { IdentifierType } from "../identifierHandler";
 
 export type InterfaceMethodSignatureType = {
     type: "InterfaceMethodSignature",
-    name: string,
+    name: IdentifierType,
     returnType: any,
     parameters: any[],
     generic: any,
@@ -16,10 +17,12 @@ export class InterfaceMethodSignatureHandler extends Handler{
     private returnTypeHandler: Handler | null = null;
     private readonly parameterHandlers: Handler[] = [];
     private genericHandler: Handler | null = null;
+    private nameHandler: Handler | null = null;
 
     public handle(node: InterfaceMethodSignature) {
         super.handle(node);
         const name = node.name;
+        this.nameHandler = Handler.handle(name, this.context);
         const access = node.access;
         if(node.generic){
             this.genericHandler = Handler.handle(node.generic, this.context);
@@ -39,10 +42,10 @@ export class InterfaceMethodSignatureHandler extends Handler{
         }
         this.value = {
             type: "InterfaceMethodSignature",
-            name,
+            name: this.nameHandler?.value,
             access: access as Access,
             returnType: this.returnTypeHandler?.value,
-            parameters: this.parameterHandlers.map(handler => handler.value),
+            parameters: this.parameterHandlers.map(handler => handler?.value),
             generic: this.genericHandler?.value,
         };
     }

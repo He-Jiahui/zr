@@ -21,7 +21,7 @@ export class GenericDeclarationHandler extends Handler{
         }
         this.value = {
             type: "Generic",
-            typeArguments: this.typeArgumentsHandler.map(handler=>handler.value),
+            typeArguments: this.typeArgumentsHandler.map(handler=>handler?.value),
         };
     }
 }

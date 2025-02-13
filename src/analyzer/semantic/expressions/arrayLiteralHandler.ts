@@ -1,10 +1,10 @@
-import type { Expression } from "."
+import type { ExpressionType } from "."
 import { ArrayLiteral } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler"
 
 export type ArrayLiteralType = {
     type: "ArrayLiteralExpression",
-    elements: Expression[]
+    elements: ExpressionType[]
 }
 
 export class ArrayLiteralHandler extends Handler{

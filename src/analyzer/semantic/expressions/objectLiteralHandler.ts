@@ -1,4 +1,4 @@
-import type { Expression } from ".";
+import type { ExpressionType } from ".";
 import { KeyValuePair, ObjectLiteral } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler"
 import type { IdentifierType } from "../declarations/identifierHandler";
@@ -32,8 +32,8 @@ Handler.registerHandler("ObjectLiteral", ObjectLiteralHandler);
 
 export type KeyValuePairType = {
     type: 'KeyValuePairExpression',
-    key: IdentifierType | StringType | Expression,
-    value: Expression
+    key: IdentifierType | StringType | ExpressionType,
+    value: ExpressionType
 }
 
 

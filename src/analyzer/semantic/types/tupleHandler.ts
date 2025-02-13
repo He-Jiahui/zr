@@ -8,7 +8,7 @@ export type TupleType = {
 }
 
 export class TupleImplementHandler extends Handler {
-    private readonly elementsHandler: Handler[];
+    private readonly elementsHandler: Handler[] = [];
     public handle(node: TupleImplementType){
         super.handle(node);
         this.elementsHandler.length = 0;

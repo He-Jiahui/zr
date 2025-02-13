@@ -21,8 +21,8 @@ export class ZrError extends Error{
                 errCode: this.errCode.toFixed(),
                 message: this.message,
                 file: this.fileName,
-                line: this.location?.start.line?.toFixed(),
-                column: this.location?.start.column?.toFixed()
+                line: this.location?.start?.line?.toFixed(),
+                column: this.location?.start?.column?.toFixed()
             });
         }else{
             this.message = i("commonError2",{

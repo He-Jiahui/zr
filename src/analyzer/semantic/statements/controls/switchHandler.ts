@@ -1,4 +1,6 @@
-import type { Expression } from "../../expressions"
+import { SwitchCase, SwitchStatement } from "../../../../parser/generated/parser"
+import { Handler } from "../../common/handler"
+import type { ExpressionType } from "../../expressions"
 import type { BlockType } from "../blockHandler"
 
 export type SwitchStatementType = {
@@ -7,13 +9,86 @@ export type SwitchStatementType = {
     default: SwitchDefaultType | null
 }
 
+export class SwitchStatementHandler extends Handler{
+    public value: SwitchStatementType;
+
+    private readonly caseHandlers: Handler[] = [];
+    private defaultHandler: Handler | null = null;
+
+    public handle(node: SwitchStatement): void {
+        super.handle(node);
+
+        this.caseHandlers.length = 0;
+        for(const caseNode of node.cases){
+            const handler = Handler.handle(caseNode, this.context);
+            this.caseHandlers.push(handler);
+        }
+
+        if(node.default){
+            this.defaultHandler = Handler.handle(node.default, this.context);
+        }else{
+            this.defaultHandler = null;
+        }
+
+        this.value = {
+            type: "SwitchStatement",
+            cases: this.caseHandlers.map(handler => handler?.value as SwitchCaseType),
+            default: this.defaultHandler?.value as SwitchDefaultType | null
+        }
+    }
+
+}
+
+Handler.registerHandler("SwitchStatement", SwitchStatementHandler);
+
 export type SwitchCaseType = {
     type: "SwitchCase",
-    test: Expression,
+    test: ExpressionType,
     block: BlockType
 }
+
+export class SwitchCaseHandler extends Handler{
+    public value: SwitchCaseType;
+
+    private testHandler: Handler| null = null;
+    private blockHandler: Handler | null = null;
+
+    public handle(node: SwitchCase): void {
+        super.handle(node);
+
+        this.testHandler = Handler.handle(node.value, this.context);
+        this.blockHandler = Handler.handle(node.block, this.context);
+
+        this.value = {
+            type: "SwitchCase",
+            test: this.testHandler.value,
+            block: this.blockHandler.value
+        }
+    }
+}
+
+Handler.registerHandler("SwitchCase", SwitchCaseHandler);
 
 export type SwitchDefaultType = {
     type: "SwitchDefault",
     block: BlockType
 }
+
+export class SwitchDefaultHandler extends Handler{
+    public value: SwitchDefaultType;
+
+    private blockHandler: Handler | null = null;
+
+    public handle(node: SwitchDefaultType): void {
+        super.handle(node);
+
+        this.blockHandler = Handler.handle(node.block, this.context);
+
+        this.value = {
+            type: "SwitchDefault",
+            block: this.blockHandler?.value
+        }
+    }
+}
+
+Handler.registerHandler("SwitchDefault", SwitchDefaultHandler);

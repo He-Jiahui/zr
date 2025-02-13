@@ -1,11 +1,11 @@
-import type { Expression } from "."
+import type { ExpressionType } from "."
 import { SwitchExpression } from "../../../parser/generated/parser"
 import { Handler } from "../common/handler"
 import type { SwitchCaseType, SwitchDefaultType } from "../statements/controls/switchHandler"
 
 export type SwitchExpressionType = {
     type: "SwitchExpression",
-    expr: Expression,
+    expr: ExpressionType,
     cases: SwitchCaseType[],
     default: SwitchDefaultType | null
 }

@@ -1,23 +1,25 @@
-import type { ExpressionType } from ".";
-import { IfExpression } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import type { BlockType } from "../statements/blockHandler";
+import { IfStatement } from "../../../../parser/generated/parser";
+import { AnyNode, Handler } from "../../common/handler";
+import type { ExpressionType } from "../../expressions";
+import type { BlockType } from "../blockHandler";
 
-export type IfExpressionType = {
-    type: "IfExpression",
+export type IfStatementType = {
+    type: "IfStatement",
     condition: ExpressionType,
     then: BlockType,
-    else: BlockType | IfExpressionType | null
+    else: BlockType | IfStatementType | null
 }
 
-export class IfExpressionHandler extends Handler{
-    public value: IfExpressionType;
+export class IfStatementHandler extends Handler{
+    public value: IfStatementType;
+
     private conditionHandler: Handler | null = null;
     private thenHandler: Handler | null = null;
     private elseHandler: Handler | null = null;
 
-    public handle(node: IfExpression): void {
+    public handle(node: IfStatement): void {
         super.handle(node);
+
         this.conditionHandler = Handler.handle(node.condition, this.context);
         this.thenHandler = Handler.handle(node.then, this.context);
         if(node.else){
@@ -27,12 +29,12 @@ export class IfExpressionHandler extends Handler{
         }
 
         this.value = {
-            type: "IfExpression",
+            type: "IfStatement",
             condition: this.conditionHandler?.value as ExpressionType,
             then: this.thenHandler?.value as BlockType,
-            else: this.elseHandler?.value as BlockType | IfExpressionType | null
+            else: this.elseHandler?.value as BlockType | IfStatementType | null
         }
     }
 }
 
-Handler.registerHandler("IfExpression", IfExpressionHandler);
+Handler.registerHandler("IfStatement", IfStatementHandler);

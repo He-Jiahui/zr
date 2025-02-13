@@ -3,6 +3,6 @@ import "./literals/index";
 import "./types/index";
 import "./statements/index";
 import "./declarations/index";
-
+import "./expressions/index";
 import "./scriptHandler";
 import "./moduleDeclarationHandler";

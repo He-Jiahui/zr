@@ -1,7 +1,25 @@
-import { UnaryExpression } from "../../../parser/generated/parser";
+import { UnaryExpression, UnaryOperator } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import { Exp } from "./expression";
 import type { PrimaryType } from "./primaryHandler";
+
+export type UnaryOperatorType = {
+    type : "UnaryOperator",
+    operator: "!"|"~"|"+"|"-"|"$"|"new"| string
+}
+
+export class UnaryOperatorHandler extends Handler{
+    public value: UnaryOperatorType;
+    handle(node: UnaryOperator) {
+        super.handle(node);
+        this.value = {
+            type: "UnaryOperator",
+            operator: node.operator
+        };
+    }
+}
+
+Handler.registerHandler("UnaryOperator", UnaryOperatorHandler);
 
 export type UnaryType = {
     type: "UnaryExpression",

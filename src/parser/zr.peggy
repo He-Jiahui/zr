@@ -296,9 +296,9 @@ GenericDeclaration
   }
 
 Statement
-  = _ dec:(ExpressionStatement
+  = _ dec:(ControlStatement
   / VariableDeclaration
-  / ControlStatement
+  / ExpressionStatement
   / ReturnStatement
   / BreakContinueStatement
   / Block) _  {
@@ -317,7 +317,7 @@ ExpressionStatement
 
 // 变量声明（带分号）
 VariableDeclaration
-  = VAR _ pattern:(DestructuringPattern / DestructuringArrayPattern / IDENTIFIER) typePart:(_ COLON _ Type)? _ EQUALS _ value:Expression _ SEMICOLON { 
+  = VAR _ pattern:(DestructuringPattern / DestructuringArrayPattern / IDENTIFIER) typePart:(COLON _ Type)? _ EQUALS _ value:Expression _ SEMICOLON { 
       return { 
         type: "VariableDeclaration", 
         pattern, 
@@ -345,8 +345,13 @@ ReturnStatement
   }
 
 BreakContinueStatement
-  = ctrl:(BREAK / CONTINUE) _ SEMICOLON {
-    return ctrl;
+  = ctrl:(BREAK / CONTINUE) _ expr:Expression? _ SEMICOLON {
+    return {
+      type: "BreakContinueStatement",
+      isBreak: ctrl === "break",
+      expr,
+      location: location()
+    }
   }
 
 IfStatement
@@ -375,7 +380,7 @@ SwitchStatement
 SwitchCase
   = _ LPAREN _ value:Expression _ RPAREN _ block:Block _ { 
     return { 
-      type: "Case", 
+      type: "SwitchCase", 
       value, 
       block,
       location: location() 
@@ -385,7 +390,7 @@ SwitchCase
 SwitchDefault
   = _ LPAREN _ RPAREN _ block:Block _ { 
     return { 
-      type: "DefaultCase", 
+      type: "SwitchDefault", 
       block,
       location: location()
     } 
@@ -417,7 +422,7 @@ ForLoop
   }
 
 ForeachLoop
-  = FOR _ LPAREN _ VAR _ pattern:(DestructuringPattern / DestructuringArrayPattern / IDENTIFIER) typePart:(_ COLON _ Type)? _ IN _ expr:Expression RPAREN _ block:Block{
+  = FOR _ LPAREN _ VAR _ pattern:(DestructuringPattern / DestructuringArrayPattern / IDENTIFIER) typePart:(COLON _ Type)? _ IN _ expr:Expression RPAREN _ block:Block{
     return {
       type:"ForeachLoop",
       pattern,
@@ -668,7 +673,13 @@ MultiplicativeOperator
   = STAR / SLASH / PERCENT
 
 UnaryOperator
-  = BANG / TILDE / PLUS / MINUS / DOLLAR / NEW 
+  = (BANG / TILDE / PLUS / MINUS / DOLLAR / NEW) {
+    return {
+      type: "UnaryOperator",
+      operator:text(),
+      location: location()
+    }
+  }
 
 // === 函数系统 ===
 FunctionDeclaration
@@ -688,10 +699,11 @@ FunctionDeclaration
 
 // === 工具规则 ===
 AccessModifier = PUB / PRI / PRO
-Type = GenericType / TupleType / ArrayType / id:IDENTIFIER {
+Type = name:(GenericType / TupleType / IDENTIFIER) _ dimensions:(LBRACKET RBRACKET)* {
   return {
     type: "Type",
-    name: id,
+    name,
+    dimensions: dimensions.length,
     location: location()
   }
 }
@@ -707,14 +719,6 @@ TupleType = LBRACKET _ types:TypeList _ RBRACKET _ {
   return{
     type: "TupleType",
     elements: types,
-    location: location()
-  }
-}
-ArrayType = name:IDENTIFIER dimensions:(LBRACKET RBRACKET)+ _ {
-  return{
-    type: "ArrayType",
-    name,
-    dimensions: dimensions.length,
     location: location()
   }
 }
@@ -759,7 +763,7 @@ DecoratorExpression = SHARP _ expr:Expression _ SHARP _ {
 DestructuringPattern
   = LBRACE _ keys:IdentifierList _ RBRACE _ { 
     return {
-      type: "Destructuring",
+      type: "DestructuringObject",
       keys,
       location: location()
     } 

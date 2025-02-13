@@ -1,4 +1,4 @@
-import type { Expression } from ".";
+import type { ExpressionType } from ".";
 import { ConditionalExpression } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import { Exp } from "./expression";
@@ -7,7 +7,7 @@ import type { LogicalType } from "./logicalHandler";
 export type ConditionalType = {
     type: "ConditionalExpression",
     condition: LogicalType,
-    consequent: Expression,
+    consequent: ExpressionType,
     alternate: ConditionalType
 } | LogicalType;
 

@@ -32,6 +32,9 @@ export class Handler{
     }
 
     protected handle(node: AnyNode|any):void{
+        // clear previous value
+        this.value = null;
+        // set location
         const { location } = node;
         this.location = location;
         this.context.location = location;

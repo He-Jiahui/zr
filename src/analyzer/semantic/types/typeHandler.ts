@@ -1,21 +1,25 @@
-import { IDENTIFIER } from "../../../parser/generated/parser";
+import { Type } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import type { IdentifierType } from "../declarations/identifierHandler";
+import { GenericType } from "./genericHandler";
+import { TupleType } from "./tupleHandler";
 
 export type TypeType = {
     type: "Type",
-    name: IdentifierType
+    name: IdentifierType | GenericType | TupleType,
+    dimensions: number
 }
 
 export class TypeHandler extends Handler{
     public value: TypeType;
     private nameHandler: Handler|null = null;
-    public handle(node: {type: "Type", name: IDENTIFIER, location: any}) {
+    public handle(node: Type) {
         super.handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
             type: "Type",
             name: this.nameHandler?.value,
+            dimensions: node.dimensions
         };
     }
 }

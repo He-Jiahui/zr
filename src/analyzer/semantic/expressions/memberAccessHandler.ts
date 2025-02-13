@@ -1,4 +1,4 @@
-import type { Expression } from ".";
+import type { ExpressionType } from ".";
 import { MemberAccess } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import type { IdentifierType } from "../declarations/identifierHandler";
@@ -6,7 +6,7 @@ import { Exp } from "./expression";
 
 export type MemberAccessType = {
     type: "MemberExpression",
-    property: IdentifierType | Expression,
+    property: IdentifierType | ExpressionType,
     computed: boolean,
 }
 

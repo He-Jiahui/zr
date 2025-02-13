@@ -81,6 +81,7 @@ var {a, b, c} = value2;
 var arr = [1, 2, 3];
 var arr2:int[] = [1;2;3;];
 var arr3:[string, int, bool, object] = ["root", 1, true, null];
+var [x] = arr3;
 // interface只能当做类型声明 只能声明方法和成员而不实现 会忽略访问性检查
 interface Man: arr{
     pub var id:string;
@@ -124,7 +125,21 @@ class Student:Person, Man{
         }
         for(var i:int=0;i<100;i+=1){}
         for(;;){}
-        for(var i in arr){}
+        for(var i in arr){
+            var h = if(i){
+                1;
+            }else{
+                2;
+            };
+
+            var j = switch(i){
+                (1){1;}
+                (2){2;}
+                (){3;}
+            };
+
+
+        }
     }
     pub get a:int{
         return 0;

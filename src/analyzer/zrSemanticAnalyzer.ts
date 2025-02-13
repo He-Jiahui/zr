@@ -3,11 +3,13 @@ import { Handler } from "./semantic/common/handler";
 import "./semantic/index";
 export class ZrSemanticAnalyzer{
     private context: ScriptContext;
+    private scriptHandler: Handler;
     public constructor(context: ScriptContext){
-            this.context = context;
+        this.context = context;
     }
     public analyze(){
-        Handler.handle(this.context.ast, this.context);
+        this.scriptHandler = Handler.handle(this.context.ast, this.context);
+        
     }
 }
 

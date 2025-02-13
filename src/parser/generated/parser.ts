@@ -911,9 +911,18 @@ return "set"};// @ts-ignore
     }
   };// @ts-ignore
 
-  var peg$f31 = function(ctrl) {
+  var peg$f31 = function(ctrl, expr) {
 // @ts-ignore
-    return ctrl;
+    return {
+// @ts-ignore
+      type: "BreakContinueStatement",
+// @ts-ignore
+      isBreak: ctrl === "break",
+// @ts-ignore
+      expr,
+// @ts-ignore
+      location: location()
+    }
   };// @ts-ignore
 
   var peg$f32 = function(cond, thenBlock, elseBlock) {
@@ -952,7 +961,7 @@ return "set"};// @ts-ignore
 // @ts-ignore
     return { 
 // @ts-ignore
-      type: "Case", 
+      type: "SwitchCase", 
 // @ts-ignore
       value, 
 // @ts-ignore
@@ -966,7 +975,7 @@ return "set"};// @ts-ignore
 // @ts-ignore
     return { 
 // @ts-ignore
-      type: "DefaultCase", 
+      type: "SwitchDefault", 
 // @ts-ignore
       block,
 // @ts-ignore
@@ -1339,7 +1348,19 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
       }
     };// @ts-ignore
 
-  var peg$f64 = function(name, generic, params, returnPart, block) {
+  var peg$f64 = function() {
+// @ts-ignore
+    return {
+// @ts-ignore
+      type: "UnaryOperator",
+// @ts-ignore
+      operator:text(),
+// @ts-ignore
+      location: location()
+    }
+  };// @ts-ignore
+
+  var peg$f65 = function(name, generic, params, returnPart, block) {
 // @ts-ignore
     return {
 // @ts-ignore
@@ -1359,19 +1380,21 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
     }
   };// @ts-ignore
 
-  var peg$f65 = function(id) {
+  var peg$f66 = function(name, dimensions) {
 // @ts-ignore
   return {
 // @ts-ignore
     type: "Type",
 // @ts-ignore
-    name: id,
+    name,
+// @ts-ignore
+    dimensions: dimensions.length,
 // @ts-ignore
     location: location()
   }
 };// @ts-ignore
 
-  var peg$f66 = function(name, params) {
+  var peg$f67 = function(name, params) {
 // @ts-ignore
   return{
 // @ts-ignore
@@ -1385,27 +1408,13 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
   }
 };// @ts-ignore
 
-  var peg$f67 = function(types) {
+  var peg$f68 = function(types) {
 // @ts-ignore
   return{
 // @ts-ignore
     type: "TupleType",
 // @ts-ignore
     elements: types,
-// @ts-ignore
-    location: location()
-  }
-};// @ts-ignore
-
-  var peg$f68 = function(name, dimensions) {
-// @ts-ignore
-  return{
-// @ts-ignore
-    type: "ArrayType",
-// @ts-ignore
-    name,
-// @ts-ignore
-    dimensions: dimensions.length,
 // @ts-ignore
     location: location()
   }
@@ -1470,7 +1479,7 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
 // @ts-ignore
     return {
 // @ts-ignore
-      type: "Destructuring",
+      type: "DestructuringObject",
 // @ts-ignore
       keys,
 // @ts-ignore
@@ -4394,7 +4403,7 @@ peg$parseStatement() {
 // @ts-ignore
     s1 = peg$parse_();
 // @ts-ignore
-    s2 = peg$parseExpressionStatement();
+    s2 = peg$parseControlStatement();
 // @ts-ignore
     if (s2 === peg$FAILED) {
 // @ts-ignore
@@ -4402,7 +4411,7 @@ peg$parseStatement() {
 // @ts-ignore
       if (s2 === peg$FAILED) {
 // @ts-ignore
-        s2 = peg$parseControlStatement();
+        s2 = peg$parseExpressionStatement();
 // @ts-ignore
         if (s2 === peg$FAILED) {
 // @ts-ignore
@@ -4695,7 +4704,7 @@ peg$parseReturnStatement() {
   function // @ts-ignore
 peg$parseBreakContinueStatement() {
 // @ts-ignore
-    var s0, s1, s2, s3;
+    var s0, s1, s2, s3, s4, s5;
 
 // @ts-ignore
     s0 = peg$currPos;
@@ -4711,13 +4720,22 @@ peg$parseBreakContinueStatement() {
 // @ts-ignore
       s2 = peg$parse_();
 // @ts-ignore
-      s3 = peg$parseSEMICOLON();
+      s3 = peg$parseExpression();
 // @ts-ignore
-      if (s3 !== peg$FAILED) {
+      if (s3 === peg$FAILED) {
+// @ts-ignore
+        s3 = null;
+      }
+// @ts-ignore
+      s4 = peg$parse_();
+// @ts-ignore
+      s5 = peg$parseSEMICOLON();
+// @ts-ignore
+      if (s5 !== peg$FAILED) {
 // @ts-ignore
         peg$savedPos = s0;
 // @ts-ignore
-        s0 = peg$f31(s1);
+        s0 = peg$f31(s1, s3);
 // @ts-ignore
       } else {
 // @ts-ignore
@@ -7460,35 +7478,46 @@ peg$parseMultiplicativeOperator() {
   function // @ts-ignore
 peg$parseUnaryOperator() {
 // @ts-ignore
-    var s0;
+    var s0, s1;
 
 // @ts-ignore
-    s0 = peg$parseBANG();
+    s0 = peg$currPos;
 // @ts-ignore
-    if (s0 === peg$FAILED) {
+    s1 = peg$parseBANG();
 // @ts-ignore
-      s0 = peg$parseTILDE();
+    if (s1 === peg$FAILED) {
 // @ts-ignore
-      if (s0 === peg$FAILED) {
+      s1 = peg$parseTILDE();
 // @ts-ignore
-        s0 = peg$parsePLUS();
+      if (s1 === peg$FAILED) {
 // @ts-ignore
-        if (s0 === peg$FAILED) {
+        s1 = peg$parsePLUS();
 // @ts-ignore
-          s0 = peg$parseMINUS();
+        if (s1 === peg$FAILED) {
 // @ts-ignore
-          if (s0 === peg$FAILED) {
+          s1 = peg$parseMINUS();
 // @ts-ignore
-            s0 = peg$parseDOLLAR();
+          if (s1 === peg$FAILED) {
 // @ts-ignore
-            if (s0 === peg$FAILED) {
+            s1 = peg$parseDOLLAR();
 // @ts-ignore
-              s0 = peg$parseNEW();
+            if (s1 === peg$FAILED) {
+// @ts-ignore
+              s1 = peg$parseNEW();
             }
           }
         }
       }
     }
+// @ts-ignore
+    if (s1 !== peg$FAILED) {
+// @ts-ignore
+      peg$savedPos = s0;
+// @ts-ignore
+      s1 = peg$f64();
+    }
+// @ts-ignore
+    s0 = s1;
 
 // @ts-ignore
     return s0;
@@ -7580,7 +7609,7 @@ peg$parseFunctionDeclaration() {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f64(s2, s4, s7, s10, s12);
+            s0 = peg$f65(s2, s4, s7, s10, s12);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -7641,35 +7670,99 @@ peg$parseAccessModifier() {
   function // @ts-ignore
 peg$parseType() {
 // @ts-ignore
-    var s0, s1;
+    var s0, s1, s2, s3, s4, s5, s6;
 
 // @ts-ignore
-    s0 = peg$parseGenericType();
+    s0 = peg$currPos;
 // @ts-ignore
-    if (s0 === peg$FAILED) {
+    s1 = peg$parseGenericType();
 // @ts-ignore
-      s0 = peg$parseTupleType();
+    if (s1 === peg$FAILED) {
 // @ts-ignore
-      if (s0 === peg$FAILED) {
+      s1 = peg$parseTupleType();
 // @ts-ignore
-        s0 = peg$parseArrayType();
+      if (s1 === peg$FAILED) {
 // @ts-ignore
-        if (s0 === peg$FAILED) {
+        s1 = peg$parseIDENTIFIER();
+      }
+    }
 // @ts-ignore
-          s0 = peg$currPos;
+    if (s1 !== peg$FAILED) {
 // @ts-ignore
-          s1 = peg$parseIDENTIFIER();
+      s2 = peg$parse_();
 // @ts-ignore
-          if (s1 !== peg$FAILED) {
+      s3 = [];
 // @ts-ignore
-            peg$savedPos = s0;
+      s4 = peg$currPos;
 // @ts-ignore
-            s1 = peg$f65(s1);
+      s5 = peg$parseLBRACKET();
+// @ts-ignore
+      if (s5 !== peg$FAILED) {
+// @ts-ignore
+        s6 = peg$parseRBRACKET();
+// @ts-ignore
+        if (s6 !== peg$FAILED) {
+// @ts-ignore
+          s5 = [s5, s6];
+// @ts-ignore
+          s4 = s5;
+// @ts-ignore
+        } else {
+// @ts-ignore
+          peg$currPos = s4;
+// @ts-ignore
+          s4 = peg$FAILED;
+        }
+// @ts-ignore
+      } else {
+// @ts-ignore
+        peg$currPos = s4;
+// @ts-ignore
+        s4 = peg$FAILED;
+      }
+// @ts-ignore
+      while (s4 !== peg$FAILED) {
+// @ts-ignore
+        s3.push(s4);
+// @ts-ignore
+        s4 = peg$currPos;
+// @ts-ignore
+        s5 = peg$parseLBRACKET();
+// @ts-ignore
+        if (s5 !== peg$FAILED) {
+// @ts-ignore
+          s6 = peg$parseRBRACKET();
+// @ts-ignore
+          if (s6 !== peg$FAILED) {
+// @ts-ignore
+            s5 = [s5, s6];
+// @ts-ignore
+            s4 = s5;
+// @ts-ignore
+          } else {
+// @ts-ignore
+            peg$currPos = s4;
+// @ts-ignore
+            s4 = peg$FAILED;
           }
 // @ts-ignore
-          s0 = s1;
+        } else {
+// @ts-ignore
+          peg$currPos = s4;
+// @ts-ignore
+          s4 = peg$FAILED;
         }
       }
+// @ts-ignore
+      peg$savedPos = s0;
+// @ts-ignore
+      s0 = peg$f66(s1, s3);
+// @ts-ignore
+    } else {
+// @ts-ignore
+      peg$currPos = s0;
+// @ts-ignore
+      s0 = peg$FAILED;
     }
 
 // @ts-ignore
@@ -7711,7 +7804,7 @@ peg$parseGenericType() {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f66(s1, s5);
+            s0 = peg$f67(s1, s5);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -7774,7 +7867,7 @@ peg$parseTupleType() {
 // @ts-ignore
           peg$savedPos = s0;
 // @ts-ignore
-          s0 = peg$f67(s3);
+          s0 = peg$f68(s3);
 // @ts-ignore
         } else {
 // @ts-ignore
@@ -7782,115 +7875,6 @@ peg$parseTupleType() {
 // @ts-ignore
           s0 = peg$FAILED;
         }
-// @ts-ignore
-      } else {
-// @ts-ignore
-        peg$currPos = s0;
-// @ts-ignore
-        s0 = peg$FAILED;
-      }
-// @ts-ignore
-    } else {
-// @ts-ignore
-      peg$currPos = s0;
-// @ts-ignore
-      s0 = peg$FAILED;
-    }
-
-// @ts-ignore
-    return s0;
-  }
-
-// @ts-ignore
-  function // @ts-ignore
-peg$parseArrayType() {
-// @ts-ignore
-    var s0, s1, s2, s3, s4, s5;
-
-// @ts-ignore
-    s0 = peg$currPos;
-// @ts-ignore
-    s1 = peg$parseIDENTIFIER();
-// @ts-ignore
-    if (s1 !== peg$FAILED) {
-// @ts-ignore
-      s2 = [];
-// @ts-ignore
-      s3 = peg$currPos;
-// @ts-ignore
-      s4 = peg$parseLBRACKET();
-// @ts-ignore
-      if (s4 !== peg$FAILED) {
-// @ts-ignore
-        s5 = peg$parseRBRACKET();
-// @ts-ignore
-        if (s5 !== peg$FAILED) {
-// @ts-ignore
-          s4 = [s4, s5];
-// @ts-ignore
-          s3 = s4;
-// @ts-ignore
-        } else {
-// @ts-ignore
-          peg$currPos = s3;
-// @ts-ignore
-          s3 = peg$FAILED;
-        }
-// @ts-ignore
-      } else {
-// @ts-ignore
-        peg$currPos = s3;
-// @ts-ignore
-        s3 = peg$FAILED;
-      }
-// @ts-ignore
-      if (s3 !== peg$FAILED) {
-// @ts-ignore
-        while (s3 !== peg$FAILED) {
-// @ts-ignore
-          s2.push(s3);
-// @ts-ignore
-          s3 = peg$currPos;
-// @ts-ignore
-          s4 = peg$parseLBRACKET();
-// @ts-ignore
-          if (s4 !== peg$FAILED) {
-// @ts-ignore
-            s5 = peg$parseRBRACKET();
-// @ts-ignore
-            if (s5 !== peg$FAILED) {
-// @ts-ignore
-              s4 = [s4, s5];
-// @ts-ignore
-              s3 = s4;
-// @ts-ignore
-            } else {
-// @ts-ignore
-              peg$currPos = s3;
-// @ts-ignore
-              s3 = peg$FAILED;
-            }
-// @ts-ignore
-          } else {
-// @ts-ignore
-            peg$currPos = s3;
-// @ts-ignore
-            s3 = peg$FAILED;
-          }
-        }
-// @ts-ignore
-      } else {
-// @ts-ignore
-        s2 = peg$FAILED;
-      }
-// @ts-ignore
-      if (s2 !== peg$FAILED) {
-// @ts-ignore
-        s3 = peg$parse_();
-// @ts-ignore
-        peg$savedPos = s0;
-// @ts-ignore
-        s0 = peg$f68(s1, s2);
 // @ts-ignore
       } else {
 // @ts-ignore
@@ -12039,9 +12023,9 @@ export type GenericDeclaration = {
   };
 };
 export type Statement =
-  | ExpressionStatement
-  | VariableDeclaration
   | ControlStatement
+  | VariableDeclaration
+  | ExpressionStatement
   | ReturnStatement
   | BreakContinueStatement
   | Block;
@@ -12080,7 +12064,16 @@ export type ReturnStatement = {
     end: { offset: number; line: number; column: number };
   };
 };
-export type BreakContinueStatement = BREAK | CONTINUE;
+export type BreakContinueStatement = {
+  type: "BreakContinueStatement";
+  isBreak: boolean;
+  expr: Expression | null;
+  location: {
+    source: string | undefined;
+    start: { offset: number; line: number; column: number };
+    end: { offset: number; line: number; column: number };
+  };
+};
 export type IfStatement = {
   type: "IfStatement";
   condition: Expression;
@@ -12104,7 +12097,7 @@ export type SwitchStatement = {
   };
 };
 export type SwitchCase = {
-  type: "Case";
+  type: "SwitchCase";
   value: Expression;
   block: Block;
   location: {
@@ -12114,7 +12107,7 @@ export type SwitchCase = {
   };
 };
 export type SwitchDefault = {
-  type: "DefaultCase";
+  type: "SwitchDefault";
   block: Block;
   location: {
     source: string | undefined;
@@ -12371,7 +12364,15 @@ export type RelationalOperator =
   | GREATERTHANEQUALS;
 export type AdditiveOperator = PLUS | MINUS;
 export type MultiplicativeOperator = STAR | SLASH | PERCENT;
-export type UnaryOperator = BANG | TILDE | PLUS | MINUS | DOLLAR | NEW;
+export type UnaryOperator = {
+  type: "UnaryOperator";
+  operator: string;
+  location: {
+    source: string | undefined;
+    start: { offset: number; line: number; column: number };
+    end: { offset: number; line: number; column: number };
+  };
+};
 export type FunctionDeclaration = {
   type: "FunctionDeclaration";
   name: IDENTIFIER;
@@ -12386,19 +12387,16 @@ export type FunctionDeclaration = {
   };
 };
 export type AccessModifier = PUB | PRI | PRO;
-export type Type =
-  | GenericType
-  | TupleType
-  | ArrayType
-  | {
-      type: "Type";
-      name: IDENTIFIER;
-      location: {
-        source: string | undefined;
-        start: { offset: number; line: number; column: number };
-        end: { offset: number; line: number; column: number };
-      };
-    };
+export type Type = {
+  type: "Type";
+  name: GenericType | TupleType | IDENTIFIER;
+  dimensions: number;
+  location: {
+    source: string | undefined;
+    start: { offset: number; line: number; column: number };
+    end: { offset: number; line: number; column: number };
+  };
+};
 export type GenericType = {
   type: "GenericType";
   name: IDENTIFIER;
@@ -12412,16 +12410,6 @@ export type GenericType = {
 export type TupleType = {
   type: "TupleType";
   elements: TypeList;
-  location: {
-    source: string | undefined;
-    start: { offset: number; line: number; column: number };
-    end: { offset: number; line: number; column: number };
-  };
-};
-export type ArrayType = {
-  type: "ArrayType";
-  name: IDENTIFIER;
-  dimensions: number;
   location: {
     source: string | undefined;
     start: { offset: number; line: number; column: number };
@@ -12461,7 +12449,7 @@ export type DecoratorExpression = {
   };
 };
 export type DestructuringPattern = {
-  type: "Destructuring";
+  type: "DestructuringObject";
   keys: IdentifierList;
   location: {
     source: string | undefined;

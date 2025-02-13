@@ -1,9 +1,9 @@
-import type { Expression } from ".";
+import type { ExpressionType } from ".";
 import { Handler } from "../common/handler";
 
 export type FunctionCallType = {
     type: "FunctionCall",
-    args: Expression[];
+    args: ExpressionType[];
 };
 
 export class FunctionCallHandler extends Handler{

@@ -1,6 +1,5 @@
-import type { ArrayType } from "./arrayHandler";
-import type { GenericType } from "./genericHandler";
-import type { TupleType } from "./tupleHandler";
+import "./genericHandler";
+import "./tupleHandler";
 import type { TypeType } from "./typeHandler";
 
-export type AllType = TypeType | GenericType |  TupleType | ArrayType;
+export type AllType = TypeType;

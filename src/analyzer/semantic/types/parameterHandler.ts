@@ -1,14 +1,14 @@
 import { Parameter } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import type { IdentifierType } from "../declarations/identifierHandler";
-import type { Expression } from "../expressions";
+import type { ExpressionType } from "../expressions";
 import { AllType } from "./types";
 
 export type ParameterType = {
     type: "Parameter",
     name: IdentifierType,
     typeInfo: AllType,
-    defaultValue: Expression | null
+    defaultValue: ExpressionType | null
 }
 
 export class ParameterHandler extends Handler{

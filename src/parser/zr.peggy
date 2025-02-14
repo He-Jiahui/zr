@@ -683,14 +683,15 @@ UnaryOperator
 
 // === 函数系统 ===
 FunctionDeclaration
-  = _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ block:Block{
+  = _ decorator:DecoratorExpression* _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block{
     return {
       type: "FunctionDeclaration",
       name,
-      params,
+      params: params || [],
       generic,
-      returns: returnPart? returnPart[2] : null,
-      block,
+      decorator,
+      returnType: returnPart? returnPart[2] : null,
+      body,
       location: location
     }
   }

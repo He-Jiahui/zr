@@ -39,5 +39,10 @@ export class Handler{
         this.location = location;
         this.context.location = location;
     }
+
+    // collects 
+    protected collectDeclarations(){
+
+    }
 }
 

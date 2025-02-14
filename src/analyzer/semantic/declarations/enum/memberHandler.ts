@@ -1,11 +1,12 @@
 import { EnumMember } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
+import type { ExpressionType } from "../../expressions";
 import type { IdentifierType } from "../identifierHandler";
 
 export type EnumMemberType = {
     type: "EnumMember",
     name: IdentifierType,
-    value: any
+    value: ExpressionType
 }
 
 export class EnumMemberHandler extends Handler{

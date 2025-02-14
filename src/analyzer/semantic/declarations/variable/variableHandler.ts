@@ -1,12 +1,13 @@
 import { VariableDeclaration } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
-import { ExpressionType } from "../../expressions";
-import { AllType } from "../../types/types";
-import { IdentifierType } from "../identifierHandler"
+import type { ExpressionType } from "../../expressions";
+import type { AllType } from "../../types/types";
+import type { IdentifierType } from "../identifierHandler"
+import type { DestructuringArrayType, DestructuringObjectType } from "./destructuringHandler";
 
 export type VariableType = {
     type: "VariableDeclaration",
-    pattern: IdentifierType | any;
+    pattern: IdentifierType | DestructuringArrayType | DestructuringObjectType;
     value: ExpressionType;
     typeInfo: AllType;
 }

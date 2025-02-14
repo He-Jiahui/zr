@@ -2,14 +2,17 @@ import { Handler } from "../../common/handler";
 import { Field } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import type { IdentifierType } from "../identifierHandler";
+import type { AllType } from "../../types/types";
+import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
+import type { ExpressionType } from "../../expressions";
 export type ClassFieldType = {
     type: "ClassField";
     access: Access,
     static: boolean,
     name: IdentifierType,
-    decorators: any[],
-    typeInfo: any,
-    init: any,
+    decorators: DecoratorExpressionType[],
+    typeInfo: AllType,
+    init: ExpressionType,
 };
 
 export class FieldHandler extends Handler{

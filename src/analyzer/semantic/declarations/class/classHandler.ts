@@ -5,13 +5,15 @@ import type { ClassPropertyType } from "./propertyHandler";
 import type { ClassMethodType } from "./methodHandler";
 import type { ClassMetaFunctionType } from "./metaFunctionHandler";
 import type { IdentifierType } from "../identifierHandler";
+import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
+import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
 
 export type ClassType ={
     type: "Class";
     name: IdentifierType;
-    inherits?: any[];
-    decorators?: any[];
-    generic: any[];
+    inherits?: IdentifierType[];
+    decorators?: DecoratorExpressionType[];
+    generic: GenericDeclarationType[];
     fields: ClassFieldType[];
     properties: ClassPropertyType[];
     methods: ClassMethodType[];

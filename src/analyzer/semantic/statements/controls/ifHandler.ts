@@ -1,5 +1,5 @@
 import { IfStatement } from "../../../../parser/generated/parser";
-import { AnyNode, Handler } from "../../common/handler";
+import { Handler } from "../../common/handler";
 import type { ExpressionType } from "../../expressions";
 import type { BlockType } from "../blockHandler";
 

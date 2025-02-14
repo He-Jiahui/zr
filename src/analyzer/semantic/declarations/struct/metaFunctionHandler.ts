@@ -1,13 +1,16 @@
 import { Handler } from "../../common/handler";
 import { StructMetaFunction } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
+import type { MetaType } from "../metaHandler";
+import type { ParameterType } from "../../types/parameterHandler";
+import type { BlockType } from "../../statements/blockHandler";
 export type StructMetaFunctionType = {
     type: "StructMetaFunction";
     access: Access,
     static: boolean,
-    meta: any,
-    parameters: any[],
-    body: any
+    meta: MetaType,
+    parameters: ParameterType[],
+    body: BlockType
 };
 
 export class MetaFunctionHandler extends Handler{

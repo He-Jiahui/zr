@@ -2,7 +2,7 @@ import { Parameter } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import type { IdentifierType } from "../declarations/identifierHandler";
 import type { ExpressionType } from "../expressions";
-import { AllType } from "./types";
+import type { AllType } from "./types";
 
 export type ParameterType = {
     type: "Parameter",

@@ -1,14 +1,17 @@
 import { InterfaceMethodSignature } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import { Handler } from "../../common/handler";
+import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
+import type { ParameterType } from "../../types/parameterHandler";
+import type { AllType } from "../../types/types";
 import type { IdentifierType } from "../identifierHandler";
 
 export type InterfaceMethodSignatureType = {
     type: "InterfaceMethodSignature",
     name: IdentifierType,
-    returnType: any,
-    parameters: any[],
-    generic: any,
+    returnType: AllType,
+    parameters: ParameterType[],
+    generic: GenericDeclarationType,
     access: Access,
 }
 

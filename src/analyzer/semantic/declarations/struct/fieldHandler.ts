@@ -2,13 +2,15 @@ import { Handler } from "../../common/handler";
 import { StructField } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import type { IdentifierType } from "../identifierHandler";
+import type { AllType } from "../../types/types";
+import type { ExpressionType } from "../../expressions";
 export type StructFieldType = {
     type: "StructField";
     access: Access,
     static: boolean,
     name: IdentifierType,
-    typeInfo: any,
-    init: any,
+    typeInfo: AllType,
+    init: ExpressionType,
 };
 
 export class FieldHandler extends Handler{

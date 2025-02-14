@@ -3,7 +3,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 module.exports = {
   entry: './src/index.ts', // 入口文件
-  devtool: 'inline-source-map', // 开发模式下方便查错
+  devtool: 'source-map', // 开发模式下方便查错
   devServer: {
     contentBase: './dist', // 告诉服务器从哪个文件夹提供内容
   },

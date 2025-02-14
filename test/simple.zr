@@ -13,6 +13,12 @@ var result = 1 + (5 - 1) * 4;
 
 // 也可以以这样的方式引入
 var {matrix, pi, e, ln} = import("math");
+
+// 测试方法
+test(){
+    return 1;
+}
+
 // struct 不允许继承
 struct Vector3{
     // 无论是struct 还是class中 声明变量都是明确类型的  不明确类型的就认为是object
@@ -21,6 +27,7 @@ struct Vector3{
     var y:float;
     var z:float = 0;
     var a;
+    static var ZERO = $Vector3(0, 0, 0);
     // 构造器等特殊函数会以@开头
     pub @constructor(){
         this.x = 0;
@@ -99,6 +106,9 @@ class Person{
     # editor.input #
     pro var telephone: string;
 
+    pro static var telephone2: string;
+
+
     pub @constructor(id: string){
     }
     # editor.input #
@@ -106,6 +116,10 @@ class Person{
         this._address = val;
     }
     pub get address{
+        return this._address;
+    }
+
+    pub static get address2{
         return this._address;
     }
 }

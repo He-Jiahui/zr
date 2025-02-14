@@ -1,5 +1,5 @@
 import { WhileLoop } from "../../../../parser/generated/parser";
-import { AnyNode, Handler } from "../../common/handler";
+import { Handler } from "../../common/handler";
 import { ExpressionType } from "../../expressions";
 import { BlockType } from "../blockHandler";
 

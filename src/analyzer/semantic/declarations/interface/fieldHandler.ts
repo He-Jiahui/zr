@@ -1,12 +1,13 @@
 import { InterfaceFieldDeclaration } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import { Handler } from "../../common/handler";
+import type { AllType } from "../../types/types";
 import type { IdentifierType } from "../identifierHandler";
 
 export type InterfaceFieldDeclarationType = {
     type: "InterfaceFieldDeclaration",
     name: IdentifierType,
-    targetType: any,
+    targetType: AllType,
     access: Access,
 }
 

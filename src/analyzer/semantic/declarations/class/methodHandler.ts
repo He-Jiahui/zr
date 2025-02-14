@@ -2,16 +2,21 @@ import { Handler } from "../../common/handler";
 import { Method } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
 import type { IdentifierType } from "../identifierHandler";
+import type { ParameterType } from "../../types/parameterHandler";
+import type { BlockType } from "../../statements/blockHandler";
+import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
+import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
+import type { AllType } from "../../types/types";
 export type ClassMethodType = {
     type: "ClassMethod";
     access: Access;
     static: boolean;
     name: IdentifierType;
-    returnType: any;
-    parameters: any[];
-    generic: any;
-    decorators: any[];
-    body: any;
+    returnType: AllType;
+    parameters: ParameterType[];
+    generic: GenericDeclarationType;
+    decorators: DecoratorExpressionType[];
+    body: BlockType;
 };
 
 export class MethodHandler extends Handler{
@@ -64,7 +69,7 @@ export class MethodHandler extends Handler{
             parameters: this.parameterHandlers.map(handler => handler?.value),
             generic: this.genericHandler?.value,
             decorators: this.decoratorHandlers.map(handler => handler?.value),
-            body: this.bodyHandler
+            body: this.bodyHandler?.value
         };
     }
 }

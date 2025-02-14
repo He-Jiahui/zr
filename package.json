@@ -11,7 +11,11 @@
     "lint": "npx eslint --fix src/**/*.ts",
     "generate-parser": "npx peggy --format es --plugin ts-pegjs --output src/parser/generated/parser.ts src/parser/zr.peggy",
     "format": "npx prettier --write \"src/**/*.ts\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bun_parser": "bun x peggy --format es --plugin ts-pegjs --output src/parser/generated/parser.ts src/parser/zr.peggy",
+    "bun_build": "bun x webpack --mode=production",
+    "bun_start": "bun run ./dist/bundle.js ./test/simple.zr",
+    "bun_full": "npm run bun_parser && npm run bun_build && npm run bun_start"
   },
   "author": "",
   "license": "ISC",

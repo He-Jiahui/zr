@@ -1,14 +1,18 @@
 import { Handler } from "../../common/handler";
 import { MetaFunction } from "../../../../parser/generated/parser";
 import { Access } from "../../../../types/access";
+import type { MetaType } from "../metaHandler";
+import type { ParameterType } from "../../types/parameterHandler";
+import type { ExpressionType } from "../../expressions";
+import type { BlockType } from "../../statements/blockHandler";
 export type ClassMetaFunctionType = {
     type: "ClassMetaFunction";
     access: Access,
     static: boolean,
-    meta: any,
-    parameters: any[],
-    super: any[],
-    body: any
+    meta: MetaType,
+    parameters: ParameterType[],
+    super: ExpressionType[],
+    body: BlockType
 };
 
 export class MetaFunctionHandler extends Handler{

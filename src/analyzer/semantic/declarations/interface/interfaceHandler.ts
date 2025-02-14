@@ -1,15 +1,19 @@
 import { InterfaceFieldDeclaration, InterfaceDeclaration, InterfaceMethodSignature, InterfacePropertySignature } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
+import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
 import type { IdentifierType } from "../identifierHandler";
+import type { InterfaceFieldDeclarationType } from "./fieldHandler";
+import type { InterfaceMethodSignatureType } from "./methodHandler";
+import type { InterfacePropertySignatureType } from "./propertyHandler";
 
 export type InterfaceType = {
     type: "Interface",
     name: IdentifierType,
-    methods: any[],
-    properties: any[],
-    fields: any[],
-    inherits: any[],
-    generic: any[],
+    methods: InterfaceMethodSignatureType[],
+    properties: InterfacePropertySignatureType[],
+    fields: InterfaceFieldDeclarationType[],
+    inherits: IdentifierType[],
+    generic: GenericDeclarationType[],
 }
 
 export class InterfaceDeclarationHandler extends Handler{

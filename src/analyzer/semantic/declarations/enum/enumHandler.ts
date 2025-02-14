@@ -1,5 +1,6 @@
 import { EnumDeclaration } from "../../../../parser/generated/parser";
 import { Handler } from "../../common/handler";
+import type { AllType } from "../../types/types";
 import type { IdentifierType } from "../identifierHandler";
 import type { EnumMemberType } from "./memberHandler";
 
@@ -7,7 +8,7 @@ export type EnumType = {
     type: "Enum",
     name: IdentifierType,
     members: EnumMemberType[],
-    baseType: any
+    baseType: AllType
 }
 
 export class EnumDeclarationHandler extends Handler{

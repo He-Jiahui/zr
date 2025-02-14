@@ -2,6 +2,9 @@ import { Handler } from "../../common/handler";
 import { Property, GetProperty, SetProperty } from "../../../../parser/generated/parser";
 import { Access, PropertyType } from "../../../../types/access";
 import type { IdentifierType } from "../identifierHandler";
+import type { AllType } from "../../types/types";
+import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
+import type { BlockType } from "../../statements/blockHandler";
 export type ClassPropertyType = {
     type: "ClassProperty";
     access: Access;
@@ -9,9 +12,9 @@ export type ClassPropertyType = {
     static: boolean;
     name: IdentifierType;
     param: IdentifierType;
-    targetType: any;
-    decorators: any[];
-    body: any;
+    targetType: AllType;
+    decorators: DecoratorExpressionType[];
+    body: BlockType;
 };
 
 export class PropertyHandler extends Handler{

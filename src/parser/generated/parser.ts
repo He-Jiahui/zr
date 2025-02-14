@@ -1360,7 +1360,7 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
     }
   };// @ts-ignore
 
-  var peg$f65 = function(name, generic, params, returnPart, block) {
+  var peg$f65 = function(decorator, name, generic, params, returnPart, body) {
 // @ts-ignore
     return {
 // @ts-ignore
@@ -1368,13 +1368,15 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
 // @ts-ignore
       name,
 // @ts-ignore
-      params,
+      params: params || [],
 // @ts-ignore
       generic,
 // @ts-ignore
-      returns: returnPart? returnPart[2] : null,
+      decorator,
 // @ts-ignore
-      block,
+      returnType: returnPart? returnPart[2] : null,
+// @ts-ignore
+      body,
 // @ts-ignore
       location: location
     }
@@ -4521,19 +4523,17 @@ peg$parseVariableDeclaration() {
 // @ts-ignore
         s4 = peg$currPos;
 // @ts-ignore
-        s5 = peg$parse_();
+        s5 = peg$parseCOLON();
 // @ts-ignore
-        s6 = peg$parseCOLON();
+        if (s5 !== peg$FAILED) {
 // @ts-ignore
-        if (s6 !== peg$FAILED) {
+          s6 = peg$parse_();
 // @ts-ignore
-          s7 = peg$parse_();
+          s7 = peg$parseType();
 // @ts-ignore
-          s8 = peg$parseType();
+          if (s7 !== peg$FAILED) {
 // @ts-ignore
-          if (s8 !== peg$FAILED) {
-// @ts-ignore
-            s5 = [s5, s6, s7, s8];
+            s5 = [s5, s6, s7];
 // @ts-ignore
             s4 = s5;
 // @ts-ignore
@@ -5371,19 +5371,17 @@ peg$parseForeachLoop() {
 // @ts-ignore
             s8 = peg$currPos;
 // @ts-ignore
-            s9 = peg$parse_();
+            s9 = peg$parseCOLON();
 // @ts-ignore
-            s10 = peg$parseCOLON();
+            if (s9 !== peg$FAILED) {
 // @ts-ignore
-            if (s10 !== peg$FAILED) {
+              s10 = peg$parse_();
 // @ts-ignore
-              s11 = peg$parse_();
+              s11 = peg$parseType();
 // @ts-ignore
-              s12 = peg$parseType();
+              if (s11 !== peg$FAILED) {
 // @ts-ignore
-              if (s12 !== peg$FAILED) {
-// @ts-ignore
-                s9 = [s9, s10, s11, s12];
+                s9 = [s9, s10, s11];
 // @ts-ignore
                 s8 = s9;
 // @ts-ignore
@@ -7527,89 +7525,102 @@ peg$parseUnaryOperator() {
   function // @ts-ignore
 peg$parseFunctionDeclaration() {
 // @ts-ignore
-    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15;
 
 // @ts-ignore
     s0 = peg$currPos;
 // @ts-ignore
     s1 = peg$parse_();
 // @ts-ignore
-    s2 = peg$parseIDENTIFIER();
+    s2 = [];
 // @ts-ignore
-    if (s2 !== peg$FAILED) {
+    s3 = peg$parseDecoratorExpression();
 // @ts-ignore
-      s3 = peg$parse_();
+    while (s3 !== peg$FAILED) {
 // @ts-ignore
-      s4 = peg$parseGenericDeclaration();
+      s2.push(s3);
 // @ts-ignore
-      if (s4 === peg$FAILED) {
+      s3 = peg$parseDecoratorExpression();
+    }
 // @ts-ignore
-        s4 = null;
-      }
+    s3 = peg$parse_();
+// @ts-ignore
+    s4 = peg$parseIDENTIFIER();
+// @ts-ignore
+    if (s4 !== peg$FAILED) {
 // @ts-ignore
       s5 = peg$parse_();
 // @ts-ignore
-      s6 = peg$parseLPAREN();
+      s6 = peg$parseGenericDeclaration();
 // @ts-ignore
-      if (s6 !== peg$FAILED) {
+      if (s6 === peg$FAILED) {
 // @ts-ignore
-        s7 = peg$parseParameterList();
+        s6 = null;
+      }
 // @ts-ignore
-        if (s7 === peg$FAILED) {
+      s7 = peg$parse_();
 // @ts-ignore
-          s7 = null;
+      s8 = peg$parseLPAREN();
+// @ts-ignore
+      if (s8 !== peg$FAILED) {
+// @ts-ignore
+        s9 = peg$parseParameterList();
+// @ts-ignore
+        if (s9 === peg$FAILED) {
+// @ts-ignore
+          s9 = null;
         }
 // @ts-ignore
-        s8 = peg$parseRPAREN();
+        s10 = peg$parseRPAREN();
 // @ts-ignore
-        if (s8 !== peg$FAILED) {
+        if (s10 !== peg$FAILED) {
 // @ts-ignore
-          s9 = peg$parse_();
+          s11 = peg$parse_();
 // @ts-ignore
-          s10 = peg$currPos;
+          s12 = peg$currPos;
 // @ts-ignore
-          s11 = peg$parseCOLON();
+          s13 = peg$parseCOLON();
 // @ts-ignore
-          if (s11 !== peg$FAILED) {
+          if (s13 !== peg$FAILED) {
 // @ts-ignore
-            s12 = peg$parse_();
+            s14 = peg$parse_();
 // @ts-ignore
-            s13 = peg$parseType();
+            s15 = peg$parseType();
 // @ts-ignore
-            if (s13 !== peg$FAILED) {
+            if (s15 !== peg$FAILED) {
 // @ts-ignore
-              s11 = [s11, s12, s13];
+              s13 = [s13, s14, s15];
 // @ts-ignore
-              s10 = s11;
+              s12 = s13;
 // @ts-ignore
             } else {
 // @ts-ignore
-              peg$currPos = s10;
+              peg$currPos = s12;
 // @ts-ignore
-              s10 = peg$FAILED;
+              s12 = peg$FAILED;
             }
 // @ts-ignore
           } else {
 // @ts-ignore
-            peg$currPos = s10;
+            peg$currPos = s12;
 // @ts-ignore
-            s10 = peg$FAILED;
+            s12 = peg$FAILED;
           }
 // @ts-ignore
-          if (s10 === peg$FAILED) {
+          if (s12 === peg$FAILED) {
 // @ts-ignore
-            s10 = null;
+            s12 = null;
           }
 // @ts-ignore
-          s11 = peg$parse_();
+          s13 = peg$parse_();
 // @ts-ignore
-          s12 = peg$parseBlock();
+          s14 = peg$parseBlock();
 // @ts-ignore
-          if (s12 !== peg$FAILED) {
+          if (s14 !== peg$FAILED) {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f65(s2, s4, s7, s10, s12);
+            s0 = peg$f65(s2, s4, s6, s9, s12, s14);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -12042,7 +12053,7 @@ export type VariableDeclaration = {
   type: "VariableDeclaration";
   pattern: DestructuringPattern | DestructuringArrayPattern | IDENTIFIER;
   value: Expression;
-  typeInfo: any;
+  typeInfo: null | undefined;
   location: {
     source: string | undefined;
     start: { offset: number; line: number; column: number };
@@ -12141,7 +12152,7 @@ export type ForLoop = {
 export type ForeachLoop = {
   type: "ForeachLoop";
   pattern: DestructuringPattern | DestructuringArrayPattern | IDENTIFIER;
-  typeInfo: any;
+  typeInfo: null | undefined;
   expr: Expression;
   block: Block;
   location: {
@@ -12376,10 +12387,11 @@ export type UnaryOperator = {
 export type FunctionDeclaration = {
   type: "FunctionDeclaration";
   name: IDENTIFIER;
-  params: ParameterList | null;
+  params: never[] | NonNullable<ParameterList | null>;
   generic: GenericDeclaration | null;
-  returns: any;
-  block: Block;
+  decorator: DecoratorExpression[];
+  returnType: any;
+  body: Block;
   location: () => {
     source: string | undefined;
     start: { offset: number; line: number; column: number };

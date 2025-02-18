@@ -5,5 +5,4 @@ export class VariableSymbol extends Symbol {
     public readonly type:string = "variable";
     public typeRef: TypeReference;
     public defaultValue: any;//TODO: type
-
 }

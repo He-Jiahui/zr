@@ -20,13 +20,15 @@ export class SymbolTable<T extends Symbol>{
         
     }
 
-    public addSymbol(symbol: T){
+    public addSymbol(symbol: T): boolean{
         const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
         if(duplicatedCheckIndex === -1){
             this.symbolTable.push(symbol);
+            return true;
         }else{
             // TODO: throw error
         }
+        return false;
     }
 
     public getSymbol(name: string){

@@ -1,7 +1,8 @@
-import { Location } from "peggy";
+
 import { ScriptContext } from "../common/scriptContext";
 import { ZrErrorCode } from "../configurations/zrErrorCode";
 import { ZrError } from "./zrError";
+import { FileRange } from "../parser/generated/parser";
 
 export class ZrSyntaxError extends ZrError{
     public get isFault(): boolean{
@@ -9,7 +10,7 @@ export class ZrSyntaxError extends ZrError{
     }
     public constructor(context: ScriptContext, message: string){
         const range = context.syntaxErrorRange;
-        const location:Location = context.syntaxErrorRange?.start;
+        const location:FileRange = context.syntaxErrorRange;
         
         super(ZrErrorCode.SyntaxError, context.filePath, location);
         if(range){

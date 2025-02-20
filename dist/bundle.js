@@ -37,6 +37,9 @@ class Handler {
         this.location = location;
         this.context.location = location;
     }
+    collectDeclaration() {
+        this.collectDeclarations();
+    }
     // collects 
     collectDeclarations() {
     }
@@ -2177,6 +2180,7 @@ class ScriptHandler extends handler_1.Handler {
         // 脚本模块
         this.moduleHandler = null;
         this.statementHandlers = [];
+        this._symbol = null;
     }
     handle(start) {
         var _a;
@@ -2198,6 +2202,30 @@ class ScriptHandler extends handler_1.Handler {
             module: (_a = this.moduleHandler) === null || _a === void 0 ? void 0 : _a.value,
             statements: this.statementHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
+    }
+    collectDeclarations() {
+        var _a, _b;
+        let moduleName = "module";
+        const moduleNameContainer = (_a = this.value.module) === null || _a === void 0 ? void 0 : _a.name;
+        if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === "Identifier") {
+            moduleName = moduleNameContainer.name;
+        }
+        else if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === "StringLiteral") {
+            moduleName = moduleNameContainer.value;
+        }
+        else {
+            moduleName = this.context.fileName;
+        }
+        const symbol = this.context.declare(moduleName, "Module", (_b = this.moduleHandler) === null || _b === void 0 ? void 0 : _b.location);
+        const scope = this.context.pushScope("Module");
+        scope.moduleInfo = symbol;
+        symbol.table = scope;
+        // 收集模块声明
+        for (const statement of this.statementHandlers) {
+            statement.collectDeclaration();
+        }
+        this.context.popScope();
+        this._symbol = symbol;
     }
 }
 exports.ScriptHandler = ScriptHandler;
@@ -2796,6 +2824,742 @@ __webpack_require__(/*! ./tupleHandler */ "./src/analyzer/semantic/types/tupleHa
 
 /***/ }),
 
+/***/ "./src/analyzer/static/index.ts":
+/*!**************************************!*\
+  !*** ./src/analyzer/static/index.ts ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./scope/index */ "./src/analyzer/static/scope/index.ts");
+__webpack_require__(/*! ./type/index */ "./src/analyzer/static/type/index.ts");
+__webpack_require__(/*! ./symbol/index */ "./src/analyzer/static/symbol/index.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/blockScope.ts":
+/*!*************************************************!*\
+  !*** ./src/analyzer/static/scope/blockScope.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BlockScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class BlockScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "BlockScope";
+        this.variables = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.variables];
+        this.subScopes = [];
+    }
+    addVariable(variable) {
+        const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
+        return success;
+    }
+    _getSymbol(_symbol) {
+        return this.variables.getSymbol(_symbol);
+    }
+}
+exports.BlockScope = BlockScope;
+scope_1.Scope.registerScope("Block", BlockScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/classScope.ts":
+/*!*************************************************!*\
+  !*** ./src/analyzer/static/scope/classScope.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ClassScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class ClassScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "ClassScope";
+        this.generics = new symbol_1.SymbolTable();
+        this.fields = new symbol_1.SymbolTable();
+        this.properties = new symbol_1.SymbolTable();
+        this.methods = new symbol_1.SymbolTable();
+        this.metaFunctions = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods];
+    }
+    addGeneric(generic) {
+        const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
+        return success;
+    }
+    addField(field) {
+        const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
+        return success;
+    }
+    addProperty(property) {
+        const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
+        return success;
+    }
+    addMethod(method) {
+        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+        return success;
+    }
+    addMetaFunction(metaFunction) {
+        const success = this.metaFunctions.addSymbol(metaFunction);
+        return success;
+    }
+    _getSymbol(name) {
+        const symbol = this.fields.getSymbol(name) || this.properties.getSymbol(name) || this.methods.getSymbol(name) || this.generics.getSymbol(name);
+        return symbol;
+    }
+}
+exports.ClassScope = ClassScope;
+scope_1.Scope.registerScope("Class", ClassScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/enumScope.ts":
+/*!************************************************!*\
+  !*** ./src/analyzer/static/scope/enumScope.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EnumScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class EnumScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "EnumScope";
+        // 枚举类型
+        this.enumMembers = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.enumMembers];
+    }
+    addMember(member) {
+        return this.checkSymbolUnique(member) && this.enumMembers.addSymbol(member);
+    }
+    _getSymbol(_symbol) {
+        return this.enumMembers.getSymbol(_symbol);
+    }
+}
+exports.EnumScope = EnumScope;
+scope_1.Scope.registerScope("Enum", EnumScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/functionScope.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/scope/functionScope.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FunctionScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+// 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
+class FunctionScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "FunctionScope";
+        this.parameters = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.parameters];
+    }
+    addParameter(parameter) {
+        const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
+        // todo: 这里预留了一个待办事项，可能用于后续添加更多的逻辑
+        return success;
+    }
+    _getSymbol(_symbol) {
+        return this.parameters.getSymbol(_symbol);
+    }
+}
+exports.FunctionScope = FunctionScope;
+scope_1.Scope.registerScope("Function", FunctionScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/index.ts":
+/*!********************************************!*\
+  !*** ./src/analyzer/static/scope/index.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+__webpack_require__(/*! ./blockScope */ "./src/analyzer/static/scope/blockScope.ts");
+__webpack_require__(/*! ./functionScope */ "./src/analyzer/static/scope/functionScope.ts");
+__webpack_require__(/*! ./enumScope */ "./src/analyzer/static/scope/enumScope.ts");
+__webpack_require__(/*! ./classScope */ "./src/analyzer/static/scope/classScope.ts");
+__webpack_require__(/*! ./interfaceScope */ "./src/analyzer/static/scope/interfaceScope.ts");
+__webpack_require__(/*! ./moduleScope */ "./src/analyzer/static/scope/moduleScope.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/interfaceScope.ts":
+/*!*****************************************************!*\
+  !*** ./src/analyzer/static/scope/interfaceScope.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InterfaceScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class InterfaceScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "InterfaceScope";
+        this.generics = new symbol_1.SymbolTable();
+        this.fields = new symbol_1.SymbolTable();
+        this.properties = new symbol_1.SymbolTable();
+        this.methods = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods];
+    }
+    addGeneric(generic) {
+        const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
+        return success;
+    }
+    addField(field) {
+        const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
+        return success;
+    }
+    addProperty(property) {
+        const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
+        return success;
+    }
+    addMethod(method) {
+        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+        return success;
+    }
+    _getSymbol(name) {
+        const symbol = this.fields.getSymbol(name) || this.properties.getSymbol(name) || this.methods.getSymbol(name) || this.generics.getSymbol(name);
+        return symbol;
+    }
+}
+exports.InterfaceScope = InterfaceScope;
+scope_1.Scope.registerScope("Interface", InterfaceScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/moduleScope.ts":
+/*!**************************************************!*\
+  !*** ./src/analyzer/static/scope/moduleScope.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ModuleScope = void 0;
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class ModuleScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "ModuleScope";
+        this.functions = new symbol_1.SymbolTable();
+        this.variables = new symbol_1.SymbolTable();
+        this.classes = new symbol_1.SymbolTable();
+        this.interfaces = new symbol_1.SymbolTable();
+        this.structs = new symbol_1.SymbolTable();
+        this.enums = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.functions, this.variables, this.classes, this.interfaces, this.structs, this.enums];
+    }
+    addFunction($function) {
+        const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
+        return success;
+    }
+    addVariable(variable) {
+        const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
+        return success;
+    }
+    addClass($class) {
+        const success = this.checkSymbolUnique($class) && this.classes.addSymbol($class);
+        return success;
+    }
+    addInterface($interface) {
+        const success = this.checkSymbolUnique($interface) && this.interfaces.addSymbol($interface);
+        return success;
+    }
+    addStruct($struct) {
+        const success = this.checkSymbolUnique($struct) && this.structs.addSymbol($struct);
+        return success;
+    }
+    addEnum($enum) {
+        const success = this.checkSymbolUnique($enum) && this.enums.addSymbol($enum);
+        return success;
+    }
+    _getSymbol(name) {
+        const symbol = this.variables.getSymbol(name) || this.functions.getSymbol(name) || this.classes.getSymbol(name) || this.interfaces.getSymbol(name) || this.structs.getSymbol(name) || this.enums.getSymbol(name);
+        return symbol;
+    }
+}
+exports.ModuleScope = ModuleScope;
+scope_1.Scope.registerScope("Module", ModuleScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/scope.ts":
+/*!********************************************!*\
+  !*** ./src/analyzer/static/scope/scope.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Scope = void 0;
+class Scope {
+    static registerScope(scopeType, scope) {
+        Scope.scopeMap.set(scopeType, scope);
+    }
+    static createScope(scopeType, parent = null) {
+        const scope = Scope.scopeMap.get(scopeType);
+        if (!scope) {
+            return null;
+        }
+        return new scope(parent);
+    }
+    constructor(parent = null) {
+        this.ownerSymbol = null;
+        this.symbolTableList = [];
+        this.parent = parent;
+    }
+    // 
+    // 定义一个公共方法 getSymbol，用于获取符号对象
+    getSymbol(symbol) {
+        // 调用私有方法 _getSymbol，尝试获取符号对象
+        const sym = this._getSymbol(symbol);
+        // 如果获取到了符号对象，则直接返回该符号对象
+        if (sym) {
+            return sym;
+        }
+        // 如果当前对象没有父对象，则返回 null
+        if (this.parent) {
+            // 如果当前对象有父对象，则递归调用父对象的 getSymbol 方法，尝试从父对象中获取符号对象
+            return this.parent.getSymbol(symbol);
+        }
+        // 如果当前对象及其父对象都没有找到符号对象，则返回 null
+        return null;
+    }
+    checkSymbolUnique(symbol) {
+        for (const table of this.symbolTableList) {
+            if (table.getSymbol(symbol.name)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    _getSymbol(_symbol) {
+        return undefined;
+    }
+}
+exports.Scope = Scope;
+Scope.scopeMap = new Map();
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/classSymbol.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/static/symbol/classSymbol.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ClassSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class ClassSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "class";
+        this.interfaces = [];
+        this.decorators = [];
+    }
+}
+exports.ClassSymbol = ClassSymbol;
+symbol_1.Symbol.registerSymbol("Class", ClassSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/enumSymbol.ts":
+/*!**************************************************!*\
+  !*** ./src/analyzer/static/symbol/enumSymbol.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EnumSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class EnumSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "enum";
+    }
+}
+exports.EnumSymbol = EnumSymbol;
+symbol_1.Symbol.registerSymbol("Enum", EnumSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/fieldSymbol.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/static/symbol/fieldSymbol.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FieldSymbol = void 0;
+const variableSymbol_1 = __webpack_require__(/*! ./variableSymbol */ "./src/analyzer/static/symbol/variableSymbol.ts");
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class FieldSymbol extends variableSymbol_1.VariableSymbol {
+    constructor() {
+        super(...arguments);
+        this.type = "field";
+        // 函数装饰器
+        this.decorators = [];
+    }
+}
+exports.FieldSymbol = FieldSymbol;
+symbol_1.Symbol.registerSymbol("Field", FieldSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/functionSymbol.ts":
+/*!******************************************************!*\
+  !*** ./src/analyzer/static/symbol/functionSymbol.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FunctionSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class FunctionSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "function";
+        // 函数调用
+        this.isStatic = false;
+        // 函数装饰器
+        this.decorators = [];
+    }
+}
+exports.FunctionSymbol = FunctionSymbol;
+symbol_1.Symbol.registerSymbol("Function", FunctionSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/genericSymbol.ts":
+/*!*****************************************************!*\
+  !*** ./src/analyzer/static/symbol/genericSymbol.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GenericSymbol = void 0;
+const fieldSymbol_1 = __webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class GenericSymbol extends fieldSymbol_1.FieldSymbol {
+    constructor() {
+        super(...arguments);
+        this.type = 'generic';
+    }
+}
+exports.GenericSymbol = GenericSymbol;
+symbol_1.Symbol.registerSymbol("Generic", GenericSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/index.ts":
+/*!*********************************************!*\
+  !*** ./src/analyzer/static/symbol/index.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+__webpack_require__(/*! ./variableSymbol */ "./src/analyzer/static/symbol/variableSymbol.ts");
+__webpack_require__(/*! ./propertySymbol */ "./src/analyzer/static/symbol/propertySymbol.ts");
+__webpack_require__(/*! ./functionSymbol */ "./src/analyzer/static/symbol/functionSymbol.ts");
+__webpack_require__(/*! ./parameterSymbol */ "./src/analyzer/static/symbol/parameterSymbol.ts");
+__webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
+__webpack_require__(/*! ./genericSymbol */ "./src/analyzer/static/symbol/genericSymbol.ts");
+__webpack_require__(/*! ./metaSymbol */ "./src/analyzer/static/symbol/metaSymbol.ts");
+__webpack_require__(/*! ./classSymbol */ "./src/analyzer/static/symbol/classSymbol.ts");
+__webpack_require__(/*! ./enumSymbol */ "./src/analyzer/static/symbol/enumSymbol.ts");
+__webpack_require__(/*! ./structSymbol */ "./src/analyzer/static/symbol/structSymbol.ts");
+__webpack_require__(/*! ./interfaceSymbol */ "./src/analyzer/static/symbol/interfaceSymbol.ts");
+__webpack_require__(/*! ./moduleSymbol */ "./src/analyzer/static/symbol/moduleSymbol.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/interfaceSymbol.ts":
+/*!*******************************************************!*\
+  !*** ./src/analyzer/static/symbol/interfaceSymbol.ts ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InterfaceSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class InterfaceSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "interface";
+        this.interfaces = [];
+        this.decorators = [];
+    }
+}
+exports.InterfaceSymbol = InterfaceSymbol;
+symbol_1.Symbol.registerSymbol("Interface", InterfaceSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/metaSymbol.ts":
+/*!**************************************************!*\
+  !*** ./src/analyzer/static/symbol/metaSymbol.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MetaSymbol = void 0;
+const functionSymbol_1 = __webpack_require__(/*! ./functionSymbol */ "./src/analyzer/static/symbol/functionSymbol.ts");
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class MetaSymbol extends functionSymbol_1.FunctionSymbol {
+    constructor() {
+        super(...arguments);
+        this.type = "meta";
+    }
+}
+exports.MetaSymbol = MetaSymbol;
+symbol_1.Symbol.registerSymbol("Meta", MetaSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/moduleSymbol.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/symbol/moduleSymbol.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ModuleSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class ModuleSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "module";
+    }
+}
+exports.ModuleSymbol = ModuleSymbol;
+symbol_1.Symbol.registerSymbol("Module", ModuleSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/parameterSymbol.ts":
+/*!*******************************************************!*\
+  !*** ./src/analyzer/static/symbol/parameterSymbol.ts ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ParameterSymbol = void 0;
+const variableSymbol_1 = __webpack_require__(/*! ./variableSymbol */ "./src/analyzer/static/symbol/variableSymbol.ts");
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class ParameterSymbol extends variableSymbol_1.VariableSymbol {
+    constructor() {
+        super(...arguments);
+        this.type = "parameter";
+    }
+}
+exports.ParameterSymbol = ParameterSymbol;
+symbol_1.Symbol.registerSymbol("Parameter", ParameterSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/propertySymbol.ts":
+/*!******************************************************!*\
+  !*** ./src/analyzer/static/symbol/propertySymbol.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PropertySymbol = void 0;
+const fieldSymbol_1 = __webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class PropertySymbol extends fieldSymbol_1.FieldSymbol {
+    constructor() {
+        super(...arguments);
+        this.type = 'property';
+    }
+}
+exports.PropertySymbol = PropertySymbol;
+symbol_1.Symbol.registerSymbol("Property", PropertySymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/structSymbol.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/symbol/structSymbol.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StructSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class StructSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "struct";
+    }
+}
+exports.StructSymbol = StructSymbol;
+symbol_1.Symbol.registerSymbol("Struct", StructSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/symbol.ts":
+/*!**********************************************!*\
+  !*** ./src/analyzer/static/symbol/symbol.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SymbolTable = exports.Symbol = void 0;
+class Symbol {
+    static registerSymbol(symbolType, symbol) {
+        Symbol.symbolMap.set(symbolType, symbol);
+    }
+    static createSymbol(symbolType, name) {
+        const symbol = Symbol.symbolMap.get(symbolType);
+        if (!symbol) {
+            return null;
+        }
+        return new symbol(name);
+    }
+    constructor(name) {
+        this.name = name;
+    }
+}
+exports.Symbol = Symbol;
+Symbol.symbolMap = new Map();
+class SymbolTable {
+    constructor() {
+        this.symbolTable = [];
+    }
+    addSymbol(symbol) {
+        const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
+        if (duplicatedCheckIndex === -1) {
+            this.symbolTable.push(symbol);
+            return true;
+        }
+        else {
+            // TODO: throw error
+        }
+        return false;
+    }
+    getSymbol(name) {
+        // todo:
+        return this.symbolTable.find(s => s.name === name);
+    }
+}
+exports.SymbolTable = SymbolTable;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/variableSymbol.ts":
+/*!******************************************************!*\
+  !*** ./src/analyzer/static/symbol/variableSymbol.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.VariableSymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+class VariableSymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = "variable";
+    }
+}
+exports.VariableSymbol = VariableSymbol;
+symbol_1.Symbol.registerSymbol("Variable", VariableSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/index.ts":
+/*!*******************************************!*\
+  !*** ./src/analyzer/static/type/index.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./type */ "./src/analyzer/static/type/type.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/type.ts":
+/*!******************************************!*\
+  !*** ./src/analyzer/static/type/type.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TypeReference = void 0;
+class TypeReference {
+}
+exports.TypeReference = TypeReference;
+
+
+/***/ }),
+
 /***/ "./src/analyzer/zrSemanticAnalyzer.ts":
 /*!********************************************!*\
   !*** ./src/analyzer/zrSemanticAnalyzer.ts ***!
@@ -2807,12 +3571,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZrSemanticAnalyzer = void 0;
 const handler_1 = __webpack_require__(/*! ./semantic/common/handler */ "./src/analyzer/semantic/common/handler.ts");
 __webpack_require__(/*! ./semantic/index */ "./src/analyzer/semantic/index.ts");
+__webpack_require__(/*! ./static/index */ "./src/analyzer/static/index.ts");
 class ZrSemanticAnalyzer {
     constructor(context) {
         this.context = context;
     }
     analyze() {
         this.scriptHandler = handler_1.Handler.handle(this.context.ast, this.context);
+        this.scriptHandler.collectDeclaration();
     }
 }
 exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
@@ -2824,17 +3590,55 @@ exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
 /*!*************************************!*\
   !*** ./src/common/scriptContext.ts ***!
   \*************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScriptContext = void 0;
+const scope_1 = __webpack_require__(/*! ../analyzer/static/scope/scope */ "./src/analyzer/static/scope/scope.ts");
+const symbol_1 = __webpack_require__(/*! ../analyzer/static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class ScriptContext {
+    get currentScope() {
+        return this._currentScope;
+    }
     constructor(info) {
         this.encoding = "utf-8";
+        this._scopeStack = [];
         this.compilingDirectory = info.compilingDirectory;
         this.fileRelativePath = info.fileRelativePath;
         this.encoding = info.encoding;
+    }
+    pushScope(scopeType) {
+        const scope = scope_1.Scope.createScope(scopeType, this._currentScope);
+        if (!scope) {
+            new zrInternalError_1.ZrInternalError(`Scope ${scopeType} is not registered`, this).report(); // TODO: throw
+            return null;
+        }
+        if (this._currentScope) {
+            this._scopeStack.push(this._currentScope);
+        }
+        this._currentScope = scope;
+        return scope;
+    }
+    popScope() {
+        if (this._scopeStack.length > 0) {
+            this._currentScope = this._scopeStack.pop();
+        }
+        else {
+            this._currentScope = undefined;
+        }
+    }
+    declare(symbolName, symbolType, location) {
+        const symbol = symbol_1.Symbol.createSymbol(symbolType, symbolName);
+        if (!symbol) {
+            new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, this).report(); // TODO: throw 
+            return null;
+        }
+        symbol.location = location;
+        symbol.ownerScope = this._currentScope;
+        this.currentSymbol = symbol;
+        return symbol;
     }
 }
 exports.ScriptContext = ScriptContext;
@@ -2937,6 +3741,31 @@ exports.ZrError = ZrError;
 
 /***/ }),
 
+/***/ "./src/errors/zrInternalError.ts":
+/*!***************************************!*\
+  !*** ./src/errors/zrInternalError.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrInternalError = void 0;
+const zrErrorCode_1 = __webpack_require__(/*! ../configurations/zrErrorCode */ "./src/configurations/zrErrorCode.ts");
+const zrSemanticError_1 = __webpack_require__(/*! ./zrSemanticError */ "./src/errors/zrSemanticError.ts");
+class ZrInternalError extends zrSemanticError_1.ZrSemanticError {
+    get isFault() {
+        return false;
+    }
+    constructor(message, context) {
+        super(zrErrorCode_1.ZrErrorCode.NoHandler, context);
+        this.message = i(`internalError`, { message });
+    }
+}
+exports.ZrInternalError = ZrInternalError;
+
+
+/***/ }),
+
 /***/ "./src/errors/zrParserError.ts":
 /*!*************************************!*\
   !*** ./src/errors/zrParserError.ts ***!
@@ -3001,9 +3830,8 @@ class ZrSyntaxError extends zrError_1.ZrError {
         return true;
     }
     constructor(context, message) {
-        var _a;
         const range = context.syntaxErrorRange;
-        const location = (_a = context.syntaxErrorRange) === null || _a === void 0 ? void 0 : _a.start;
+        const location = context.syntaxErrorRange;
         super(zrErrorCode_1.ZrErrorCode.SyntaxError, context.filePath, location);
         if (range) {
             this.message = i("syntaxError", {
@@ -14926,7 +15754,7 @@ module.exports = require("path");
   \*************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"commonError":"code:{{errCode}} \\n{{message}}\\n  at {{file}}:{{line}}:{{column}}","commonError2":"code:{{errCode}} \\n{{message}}\\n  at {{file}}","syntaxError":"SyntaxError: {{message}}\\n  from {{fromLine}}:{{fromColumn}} to {{toLine}}:{{toColumn}}","syntaxError2":"SyntaxError: {{message}}","noHandlerError":"There is no handler for {{type}}","parserError":"Parser error: {{message}}"}');
+module.exports = /*#__PURE__*/JSON.parse('{"commonError":"code:{{errCode}} \\n{{message}}\\n  at {{file}}:{{line}}:{{column}}","commonError2":"code:{{errCode}} \\n{{message}}\\n  at {{file}}","syntaxError":"SyntaxError: {{message}}\\n  from {{fromLine}}:{{fromColumn}} to {{toLine}}:{{toColumn}}","syntaxError2":"SyntaxError: {{message}}","noHandlerError":"There is no handler for {{type}}","parserError":"Parser error: {{message}}","internalError":"Internal error: {{message}}"}');
 
 /***/ }),
 

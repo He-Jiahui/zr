@@ -1,5 +1,5 @@
-import { Symbol, SymbolTable } from "../symbol/symbol";
-import { VariableSymbol } from "../symbol/variableSymbol";
+import { type Symbol, SymbolTable } from "../symbol/symbol";
+import type { VariableSymbol } from "../symbol/variableSymbol";
 import { Scope } from "./scope";
 
 export class BlockScope extends Scope{
@@ -7,6 +7,8 @@ export class BlockScope extends Scope{
 
     protected readonly variables: SymbolTable<VariableSymbol> = new SymbolTable();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.variables];
+
+    protected readonly subScopes: Scope[] = [];
     public addVariable(variable: VariableSymbol){
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;

@@ -1,6 +1,7 @@
-import { FunctionSymbol } from "../symbol/functionSymbol";
-import { ParameterSymbol } from "../symbol/parameterSymbol";
-import { Symbol, SymbolTable } from "../symbol/symbol";
+import type { FunctionSymbol } from "../symbol/functionSymbol";
+import type { ParameterSymbol } from "../symbol/parameterSymbol";
+import { type Symbol, SymbolTable } from "../symbol/symbol";
+import type { BlockScope } from "./blockScope";
 import { Scope } from "./scope";
 
 // 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
@@ -11,7 +12,7 @@ export class FunctionScope extends Scope {
 
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.parameters]; 
-    public body: Scope;
+    public body: BlockScope;
 
     public addParameter(parameter: ParameterSymbol): boolean {
         const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
@@ -26,3 +27,5 @@ export class FunctionScope extends Scope {
     }
 
 }
+
+Scope.registerScope("Function", FunctionScope);

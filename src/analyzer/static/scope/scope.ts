@@ -17,8 +17,7 @@ export class Scope{
 
 
     public readonly type: string;
-    protected readonly parent: Scope | null;
-    protected ownerSymbol: Symbol | null = null;
+    protected readonly parent: Scope | null; // 父作用域
     protected symbolTableList: SymbolTable<Symbol>[] = [];
     constructor(parent: Scope | null = null){
         this.parent = parent;

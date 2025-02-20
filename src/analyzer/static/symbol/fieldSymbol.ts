@@ -1,5 +1,6 @@
 import type { Access } from "../../../types/access";
 import { VariableSymbol } from "./variableSymbol";
+import { Symbol } from "./symbol";
 
 export class FieldSymbol extends VariableSymbol{
     public readonly type:string = "field";
@@ -10,3 +11,5 @@ export class FieldSymbol extends VariableSymbol{
     public readonly decorators: any[] = [];
 
 }
+
+Symbol.registerSymbol("Field", FieldSymbol);

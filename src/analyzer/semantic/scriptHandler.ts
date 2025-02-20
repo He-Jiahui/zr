@@ -1,4 +1,6 @@
 import * as parser from "../../parser/generated/parser";
+import { ModuleScope } from "../static/scope/moduleScope";
+import { ModuleSymbol } from "../static/symbol/moduleSymbol";
 
 import { Handler } from "./common/handler";
 import { ModuleDeclarationHandler, ModuleDeclarationType } from "./moduleDeclarationHandler";
@@ -33,6 +35,32 @@ export class ScriptHandler extends Handler{
             module: this.moduleHandler?.value,
             statements: this.statementHandlers.map(handler => handler?.value)
         }
+    }
+    private _symbol: ModuleSymbol | null = null;
+    protected collectDeclarations(): void {
+        let moduleName = "module";
+        const moduleNameContainer = this.value.module?.name;
+        if(moduleNameContainer?.type === "Identifier"){
+            moduleName = moduleNameContainer.name;
+        }else if (moduleNameContainer?.type === "StringLiteral"){
+            moduleName = moduleNameContainer.value;
+        }else{
+            moduleName = this.context.fileName;
+        }
+
+        const symbol = this.context.declare<ModuleSymbol>(moduleName, "Module", this.moduleHandler?.location);
+        const scope = this.context.pushScope<ModuleScope>("Module");
+        scope.moduleInfo = symbol;
+        symbol.table = scope;
+
+        // 收集模块声明
+        for(const statement of this.statementHandlers){
+            statement.collectDeclaration();
+        }
+
+        this.context.popScope();
+
+        this._symbol = symbol;
     }
 }
 

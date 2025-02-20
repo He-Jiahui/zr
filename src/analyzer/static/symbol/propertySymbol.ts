@@ -1,7 +1,7 @@
-import { PropertyType } from '../../../types/access';
-import { FunctionScope } from '../scope/functionScope';
+import type { PropertyType } from '../../../types/access';
+import type { FunctionScope } from '../scope/functionScope';
 import { FieldSymbol } from './fieldSymbol';
-
+import { Symbol } from './symbol';
 export class PropertySymbol extends FieldSymbol {
     public readonly type:string = 'property';
     
@@ -11,3 +11,5 @@ export class PropertySymbol extends FieldSymbol {
     public setterBody: FunctionScope;
 
 }
+
+Symbol.registerSymbol("Property", PropertySymbol);

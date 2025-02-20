@@ -6,3 +6,5 @@ export class VariableSymbol extends Symbol {
     public typeRef: TypeReference;
     public defaultValue: any;//TODO: type
 }
+
+Symbol.registerSymbol("Variable", VariableSymbol);

@@ -11,6 +11,7 @@ export type ClassMetaFunctionType = {
     static: boolean,
     meta: MetaType,
     parameters: ParameterType[],
+    args: ParameterType,
     super: ExpressionType[],
     body: BlockType
 };
@@ -20,6 +21,7 @@ export class MetaFunctionHandler extends Handler{
 
     private metaHandler: Handler|null = null;
     private readonly parameterHandlers: Handler[] = [];
+    private argsHandler: Handler|null = null;
     private bodyHandler: Handler|null = null;
     private readonly superHandlers: Handler[] = [];
     
@@ -46,6 +48,12 @@ export class MetaFunctionHandler extends Handler{
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
+        if(node.args){
+            const argsHandler = Handler.handle(node.args, this.context);
+            this.argsHandler = argsHandler;
+        }else{
+            this.argsHandler = null;
+        }
         if(body){
             this.bodyHandler = Handler.handle(body, this.context);
         }else{
@@ -59,6 +67,7 @@ export class MetaFunctionHandler extends Handler{
             meta: this.metaHandler?.value,
             super: this.superHandlers.map(handler => handler?.value),
             parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
             body: this.bodyHandler?.value,
         };
     }

@@ -10,6 +10,7 @@ export type StructMetaFunctionType = {
     static: boolean,
     meta: MetaType,
     parameters: ParameterType[],
+    args: ParameterType,
     body: BlockType
 };
 
@@ -18,6 +19,7 @@ export class MetaFunctionHandler extends Handler{
 
     private metaHandler: Handler|null = null;
     private readonly parameterHandlers: Handler[] = [];
+    private argsHandler: Handler|null = null;
     private bodyHandler: Handler|null = null;
     
     public handle(node: StructMetaFunction) {
@@ -40,6 +42,12 @@ export class MetaFunctionHandler extends Handler{
         }else{
             this.bodyHandler = null;
         }
+        if(node.args){
+            const argsHandler = Handler.handle(node.args, this.context);
+            this.argsHandler = argsHandler;
+        }else{
+            this.argsHandler = null;
+        }
 
         this.value = {
             type: "StructMetaFunction",
@@ -47,6 +55,7 @@ export class MetaFunctionHandler extends Handler{
             static: !!node.static,
             meta: this.metaHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
             body: this.bodyHandler?.value,
         };
     }

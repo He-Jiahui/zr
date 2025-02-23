@@ -11,6 +11,7 @@ export type InterfaceMethodSignatureType = {
     name: IdentifierType,
     returnType: AllType,
     parameters: ParameterType[],
+    args: ParameterType,
     generic: GenericDeclarationType,
     access: Access,
 }
@@ -19,6 +20,7 @@ export class InterfaceMethodSignatureHandler extends Handler{
     public value: InterfaceMethodSignatureType;
     private returnTypeHandler: Handler | null = null;
     private readonly parameterHandlers: Handler[] = [];
+    private argsHandler: Handler | null = null;
     private genericHandler: Handler | null = null;
     private nameHandler: Handler | null = null;
 
@@ -43,12 +45,18 @@ export class InterfaceMethodSignatureHandler extends Handler{
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
+        if(node.args){
+            this.argsHandler = Handler.handle(node.args, this.context);
+        }else{
+            this.argsHandler = null;
+        }
         this.value = {
             type: "InterfaceMethodSignature",
             name: this.nameHandler?.value,
             access: access as Access,
             returnType: this.returnTypeHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
             generic: this.genericHandler?.value,
         };
     }

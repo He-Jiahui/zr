@@ -14,6 +14,7 @@ export type StructMethodType = {
     name: IdentifierType;
     returnType: AllType;
     parameters: ParameterType[];
+    args: ParameterType;
     generic: GenericDeclarationType;
     decorators: DecoratorExpressionType[];
     body: BlockType;
@@ -25,6 +26,7 @@ export class MethodHandler extends Handler{
     private readonly decoratorHandlers: Handler[] = [];
     private returnTypeHandler: Handler | null = null;
     private readonly parameterHandlers: Handler[] = [];
+    private argsHandler: Handler | null = null;
     private genericHandler: Handler | null = null;
     private bodyHandler: Handler | null = null;
 
@@ -51,6 +53,11 @@ export class MethodHandler extends Handler{
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
+        if(node.args){
+            this.argsHandler = Handler.handle(node.args, this.context);
+        }else{
+            this.argsHandler = null;
+        }
         for(const decorator of decorators){
             const handler = Handler.handle(decorator, this.context);
             this.decoratorHandlers.push(handler);
@@ -67,9 +74,10 @@ export class MethodHandler extends Handler{
             name: this.nameHandler?.value,
             returnType: this.returnTypeHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
             generic: this.genericHandler?.value,
             decorators: this.decoratorHandlers.map(handler => handler?.value),
-            body: this.bodyHandler
+            body: this.bodyHandler?.value
         };
     }
 }

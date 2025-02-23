@@ -50,17 +50,32 @@ StructMember
   }
 
 StructMetaFunction
-  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ RPAREN _ body:Block {
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _  args:(COMMA _ PARAMS _ Parameter _)?  _ RPAREN _ body:Block {
       return { 
         type: "StructMetaFunction",
         static: staticSymbol,
         meta, 
-        params: params || [], 
+        params: params || [],
+        args: args? args[4] : null,
         body, 
         access,
         location: location()
       }
     }
+    /
+    access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ body:Block {
+      return { 
+        type: "StructMetaFunction",
+        static: staticSymbol,
+        meta, 
+        params: [],
+        args,
+        body, 
+        access,
+        location: location()
+      }
+    }
+
 
 // 结构体变量声明
 StructField
@@ -79,7 +94,7 @@ StructField
 // 结构体方法
 StructMethod
   = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
-    _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+    _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
         type: "StructMethod",
         decorator,
@@ -88,6 +103,24 @@ StructMethod
         generic,
         name,
         params: params || [],
+        args: args? args[4] : null,
+        returnType: returnPart? returnPart[2] : null,
+        body: body,
+        location: location()
+      }
+    }
+  /
+    decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
+    _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+      return {
+        type: "StructMethod",
+        decorator,
+        access: access,
+        static: staticSymbol,
+        generic,
+        name,
+        params: [],
+        args,
         returnType: returnPart? returnPart[2] : null,
         body: body,
         location: location()
@@ -116,13 +149,29 @@ ClassMember
   }
 
 MetaFunction
-  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ RPAREN _ 
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ 
     argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ body:Block {
       return { 
         type: "ClassMetaFunction", 
         meta, 
         static: staticSymbol,
         params: params || [], 
+        args: args? args[4] : null,
+        superArgs: argsPart? argsPart[2] : [], 
+        body: body,
+        access,
+        location: location()
+      }
+    }
+  /
+    access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ 
+    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ body:Block {
+      return { 
+        type: "ClassMetaFunction", 
+        meta, 
+        static: staticSymbol,
+        params: [], 
+        args,
         superArgs: argsPart? argsPart[2] : [], 
         body: body,
         access,
@@ -148,7 +197,7 @@ Field
 // 类方法
 Method
   = decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
-    _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+    _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return {
         type: "ClassMethod",
         decorator,
@@ -157,6 +206,24 @@ Method
         static: staticSymbol,
         name,
         params: params || [],
+        args: args? args[4] : null,
+        returnType: returnPart?returnPart[2] : null,
+        body,
+        location: location()
+      }
+    }
+  /
+  decorator:DecoratorExpression* _ access:AccessModifier? _ staticSymbol:STATIC? _ name:IDENTIFIER _ generic:GenericDeclaration?
+    _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
+      return {
+        type: "ClassMethod",
+        decorator,
+        generic,
+        access: access,
+        static: staticSymbol,
+        name,
+        params: [],
+        args,
         returnType: returnPart?returnPart[2] : null,
         body,
         location: location()
@@ -221,11 +288,25 @@ InterfaceMember
 
 // 接口方法签名
 InterfaceMethodSignature
-  = access:AccessModifier? _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ params:ParameterList? _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON {
+  = access:AccessModifier? _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON {
       return {
         type: "InterfaceMethodSignature",
         name,
         params: params || [],
+        args: args? args[4] : null,
+        returnType: returnPart?returnPart[2] : null,
+        access,
+        generic,
+        location: location()
+      }
+    }
+  /
+  access:AccessModifier? _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON {
+      return {
+        type: "InterfaceMethodSignature",
+        name,
+        params: [],
+        args,
         returnType: returnPart?returnPart[2] : null,
         access,
         generic,
@@ -624,10 +705,21 @@ KeyValuePair
 ComputedKey = LBRACKET _ expr:Expression _ RBRACKET { return expr }
 // lambda 表达式
 LambdaExpression
-  = LPAREN _ args:(ParameterList)? _ RPAREN _ RIGHT_ARROW _ block:Block _ {
+  = LPAREN _ params:ParameterList?  _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ RIGHT_ARROW _ block:Block _ {
     return {
       type: "LambdaExpression",
-      args: args ? args : [],
+      params: params || [],
+      args: args? args[4] : null,
+      block,
+      location: location()
+    }
+  }
+  /
+  LPAREN _ PARAMS _ args:Parameter _ RPAREN _ RIGHT_ARROW _ block:Block _ {
+    return {
+      type: "LambdaExpression",
+      params: [],
+      args,
       block,
       location: location()
     }
@@ -683,11 +775,26 @@ UnaryOperator
 
 // === 函数系统 ===
 FunctionDeclaration
-  = _ decorator:DecoratorExpression* _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN params:ParameterList? RPAREN _ returnPart:(COLON _ Type)? _ body:Block{
+  = _ decorator:DecoratorExpression* _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block{
     return {
       type: "FunctionDeclaration",
       name,
       params: params || [],
+      args: args? args[4] : null,
+      generic,
+      decorator,
+      returnType: returnPart? returnPart[2] : null,
+      body,
+      location: location
+    }
+  }
+  /
+  _ decorator:DecoratorExpression* _ name:IDENTIFIER _ generic:GenericDeclaration? _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block{
+    return {
+      type: "FunctionDeclaration",
+      name,
+      params: [],
+      args,
       generic,
       decorator,
       returnType: returnPart? returnPart[2] : null,
@@ -819,6 +926,7 @@ STATIC = "static"
 IN = "in"
 
 // 符号
+PARAMS = "..."
 QUESTIONMARK = "?"
 COLON = ":"
 SEMICOLON = ";"

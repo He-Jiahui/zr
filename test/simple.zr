@@ -19,6 +19,14 @@ test(){
     return 1;
 }
 
+testArgs(...toPush: int[]){
+
+}
+
+testArgs(c, ...toPush: int[]){
+
+}
+
 // struct 不允许继承
 struct Vector3{
     // 无论是struct 还是class中 声明变量都是明确类型的  不明确类型的就认为是object

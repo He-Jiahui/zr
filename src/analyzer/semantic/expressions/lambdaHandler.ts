@@ -5,28 +5,36 @@ import type { ParameterType } from "../types/parameterHandler"
 
 export type LambdaType = {
     type: 'LambdaExpression',
-    args: ParameterType[],
+    params: ParameterType[],
+    args: ParameterType,
     blocks: BlockType,
 }
 
 export class LambdaHandler extends Handler{
     public value: LambdaType;
-    private readonly argsHandler: Handler[] = [];
+    private readonly paramsHandler: Handler[] = [];
+    private argsHandler: Handler | null = null;
     private blockHandler: Handler | null = null;
     
     public handle(node: LambdaExpression): void {
         super.handle(node);
-        this.argsHandler.length = 0;
-        for(const arg of node.args){
-            const handler = Handler.handle(arg, this.context);
-            this.argsHandler.push(handler);
+        this.paramsHandler.length = 0;
+        for(const param of node.params){
+            const handler = Handler.handle(param, this.context);
+            this.paramsHandler.push(handler);
+        }
+        if(node.args){
+            this.argsHandler = Handler.handle(node.args, this.context);
+        }else{
+            this.argsHandler = null;
         }
 
         this.blockHandler = Handler.handle(node.block, this.context);
 
         this.value = {
             type: 'LambdaExpression',
-            args: this.argsHandler.map(handler => handler?.value as ParameterType),
+            params: this.paramsHandler.map(handler => handler?.value as ParameterType),
+            args: this.argsHandler?.value as ParameterType,
             blocks: this.blockHandler?.value
         }
     }

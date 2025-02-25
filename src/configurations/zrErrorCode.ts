@@ -6,4 +6,5 @@ export enum ZrErrorCode{
     
     SemanticError = 0x3000,
     NoHandler = 0x3001,
+    DuplicatedIdentifier = 0x3002,
 }

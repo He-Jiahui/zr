@@ -12,8 +12,8 @@ export class BlockHandler extends Handler{
 
     public value: BlockType;
 
-    public handle(node: Block): void {
-        super.handle(node);
+    public _handle(node: Block): void {
+        super._handle(node);
         this.bodyHandler.length = 0;
         for(const statement of node.body){
             const handler = Handler.handle(statement, this.context);

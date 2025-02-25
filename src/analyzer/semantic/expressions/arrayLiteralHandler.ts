@@ -11,8 +11,8 @@ export class ArrayLiteralHandler extends Handler{
     public value: ArrayLiteralType;
     private readonly elementsHandler: Handler[] = [];
 
-    public handle(node: ArrayLiteral): void {
-        super.handle(node);
+    public _handle(node: ArrayLiteral): void {
+        super._handle(node);
         this.elementsHandler.length = 0;
         for(const element of node.elements){
             const handler = Handler.handle(element, this.context);

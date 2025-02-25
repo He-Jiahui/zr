@@ -13,8 +13,8 @@ export type TypeType = {
 export class TypeHandler extends Handler{
     public value: TypeType;
     private nameHandler: Handler|null = null;
-    public handle(node: Type) {
-        super.handle(node);
+    public _handle(node: Type) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
             type: "Type",

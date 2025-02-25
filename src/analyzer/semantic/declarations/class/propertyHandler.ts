@@ -25,8 +25,8 @@ export class PropertyHandler extends Handler{
     private nameHandler: Handler | null = null;
     private paramHandler: Handler | null = null;
 
-    public handle(node: Property) {
-        super.handle(node);
+    public _handle(node: Property) {
+        super._handle(node);
         const access = node.access;
         const modifier = node.modifier as GetProperty | SetProperty;
 

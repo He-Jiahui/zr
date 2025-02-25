@@ -1,4 +1,6 @@
 import { EnumMember } from "../../../../parser/generated/parser";
+import { Symbol } from "../../../static/symbol/symbol";
+import { VariableSymbol } from "../../../static/symbol/variableSymbol";
 import { Handler } from "../../common/handler";
 import type { ExpressionType } from "../../expressions";
 import type { IdentifierType } from "../identifierHandler";
@@ -14,8 +16,8 @@ export class EnumMemberHandler extends Handler{
     private nameHandler: Handler | null = null;
     private valueHandler: Handler | null = null;
 
-    public handle(node: EnumMember) {
-        super.handle(node);
+    public _handle(node: EnumMember) {
+        super._handle(node);
         const name = node.name;
         this.nameHandler = Handler.handle(name, this.context);
         if(node.value){
@@ -28,6 +30,14 @@ export class EnumMemberHandler extends Handler{
             name: this.nameHandler?.value,
             value: this.valueHandler?.value,
         };
+    }
+
+    protected _collectDeclarations(): Symbol | undefined {
+        const name = this.value.name.name;
+        const symbol = this.context.declare<VariableSymbol>(name, "Variable");
+        const value = this.value.value;
+        Handler.getHandler(value)?.collectDeclarations();
+        return symbol;
     }
 }
 

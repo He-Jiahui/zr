@@ -16,8 +16,8 @@ export class InterfaceFieldDeclarationHandler extends Handler{
     private nameHandler: Handler | null = null;
     private targetTypeHandler: Handler | null = null;
 
-    public handle(node: InterfaceFieldDeclaration) {
-        super.handle(node);
+    public _handle(node: InterfaceFieldDeclaration) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         const access = node.access;
         if(node.targetType){

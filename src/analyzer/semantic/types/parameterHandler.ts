@@ -17,8 +17,8 @@ export class ParameterHandler extends Handler{
     private typeInfoHandler: Handler | null = null;
     private defaultValueHandler: Handler | null = null;
 
-    public handle(node: Parameter) {
-        super.handle(node);
+    public _handle(node: Parameter) {
+        super._handle(node);
         const name = node.name;
         this.nameHandler = Handler.handle(name, this.context);
         const typeInfo = node.typeInfo;

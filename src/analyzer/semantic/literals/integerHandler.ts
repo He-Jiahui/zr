@@ -7,8 +7,8 @@ export type IntegerType = {
 export class IntegerHandler extends Handler{
     public value: IntegerType;
     
-    public handle(node: DECIMAL) {
-        super.handle(node);
+    public _handle(node: DECIMAL) {
+        super._handle(node);
         this.value = {
             type: "IntegerLiteral",
             value: node.value

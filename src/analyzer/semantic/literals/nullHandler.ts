@@ -7,8 +7,8 @@ export type NullType = {
 export class NullHandler extends Handler{
     public value: NullType;
     
-    public handle(node: VALUENULL) {
-        super.handle(node);
+    public _handle(node: VALUENULL) {
+        super._handle(node);
         // this.value = node.value;
         this.value = {
             type: "NullLiteral",

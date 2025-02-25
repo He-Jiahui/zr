@@ -30,8 +30,8 @@ export class MethodHandler extends Handler{
     private genericHandler: Handler | null = null;
     private bodyHandler: Handler | null = null;
 
-    public handle(node: Method) {
-        super.handle(node);
+    public _handle(node: Method) {
+        super._handle(node);
         const access = node.access;
         this.nameHandler = Handler.handle(node.name, this.context);
         if(node.generic){

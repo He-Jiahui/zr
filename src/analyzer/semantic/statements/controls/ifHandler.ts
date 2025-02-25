@@ -17,8 +17,8 @@ export class IfStatementHandler extends Handler{
     private thenHandler: Handler | null = null;
     private elseHandler: Handler | null = null;
 
-    public handle(node: IfStatement): void {
-        super.handle(node);
+    public _handle(node: IfStatement): void {
+        super._handle(node);
 
         this.conditionHandler = Handler.handle(node.condition, this.context);
         this.thenHandler = Handler.handle(node.then, this.context);

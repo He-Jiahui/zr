@@ -4,6 +4,9 @@ import { StructMethodType } from "./methodHandler";
 import { StructFieldType } from "./fieldHandler";
 import { StructMetaFunctionType } from "./metaFunctionHandler";
 import type { IdentifierType } from "../identifierHandler";
+import { StructSymbol } from "../../../static/symbol/structSymbol";
+import { ModuleScope } from "../../../static/scope/moduleScope";
+import { StructScope } from "../../../static/scope/structScope";
 
 export type StructType ={
     type: "Struct";
@@ -17,9 +20,11 @@ export class StructDeclarationHandler extends Handler{
     public value: StructType;
     private nameHandler: Handler|null = null;
     public readonly membersHandler: Handler[] = [];
+
+    private _symbol: StructSymbol|null = null;
     
-    public handle(node: StructDeclaration) {
-        super.handle(node);
+    public _handle(node: StructDeclaration) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         const members = node.members;
         this.membersHandler.length = 0;
@@ -52,6 +57,32 @@ export class StructDeclarationHandler extends Handler{
             methods,
             metaFunctions
         };
+    }
+
+    protected _collectDeclarations() {
+        const structName: string = this.value.name.name;
+        const symbol = this.context.declare<StructSymbol>(structName, "Struct");
+        const scope = this.pushScope<StructScope>("Struct");
+        scope.structInfo = symbol;
+        symbol.table = scope;
+        
+        for(const field of this.value.fields){
+            const handler = Handler.getHandler(field);
+            scope.addField(handler?.collectDeclarations());
+        }
+        for(const method of this.value.methods){
+            const handler = Handler.getHandler(method);
+            scope.addMethod(handler?.collectDeclarations());
+        }
+        for(const metaFunction of this.value.metaFunctions){
+            const handler = Handler.getHandler(metaFunction);
+            scope.addMetaFunction(handler?.collectDeclarations());
+        }
+        
+
+        this.popScope();
+        this._symbol = symbol;
+        return symbol;
     }
 }
 

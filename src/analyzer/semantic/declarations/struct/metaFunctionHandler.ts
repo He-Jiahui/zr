@@ -22,8 +22,8 @@ export class MetaFunctionHandler extends Handler{
     private argsHandler: Handler|null = null;
     private bodyHandler: Handler|null = null;
     
-    public handle(node: StructMetaFunction) {
-        super.handle(node);
+    public _handle(node: StructMetaFunction) {
+        super._handle(node);
         if(node.meta){
             const metaHandler = Handler.handle(node.meta, this.context);
             this.metaHandler = metaHandler;

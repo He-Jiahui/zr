@@ -14,8 +14,8 @@ export class MemberAccessHandler extends Handler{
     public value: MemberAccessType;
     private propertyHandler: Handler | null = null;
 
-    handle(node: Exp<MemberAccess, "MemberExpression">) {
-        super.handle(node);
+    _handle(node: Exp<MemberAccess, "MemberExpression">) {
+        super._handle(node);
         const computed = node.computed;
         if(computed){
             this.propertyHandler = Handler.handle(node.property, this.context);

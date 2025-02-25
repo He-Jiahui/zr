@@ -7,8 +7,8 @@ export type BooleanType = {
 export class BooleanHandler extends Handler{
     public value: BooleanType;
     
-    public handle(node: BOOLEAN) {
-        super.handle(node);
+    public _handle(node: BOOLEAN) {
+        super._handle(node);
         this.value = {
             type: "BooleanLiteral",
             value: node.value

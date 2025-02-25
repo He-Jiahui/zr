@@ -16,8 +16,8 @@ export class LambdaHandler extends Handler{
     private argsHandler: Handler | null = null;
     private blockHandler: Handler | null = null;
     
-    public handle(node: LambdaExpression): void {
-        super.handle(node);
+    public _handle(node: LambdaExpression): void {
+        super._handle(node);
         this.paramsHandler.length = 0;
         for(const param of node.params){
             const handler = Handler.handle(param, this.context);

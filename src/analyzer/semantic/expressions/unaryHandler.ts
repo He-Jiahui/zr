@@ -10,8 +10,8 @@ export type UnaryOperatorType = {
 
 export class UnaryOperatorHandler extends Handler{
     public value: UnaryOperatorType;
-    handle(node: UnaryOperator) {
-        super.handle(node);
+    _handle(node: UnaryOperator) {
+        super._handle(node);
         this.value = {
             type: "UnaryOperator",
             operator: node.operator
@@ -33,8 +33,8 @@ export class UnaryHandler extends Handler{
     private operatorHandler: Handler | null = null;
     private argumentHandler: Handler | null = null;
 
-    handle(node: Exp<UnaryExpression, "Unary">) {
-        super.handle(node);
+    _handle(node: Exp<UnaryExpression, "Unary">) {
+        super._handle(node);
         this.operatorHandler = Handler.handle(node.op, this.context);
         this.argumentHandler = Handler.handle(node.argument, this.context);
         this.value = {

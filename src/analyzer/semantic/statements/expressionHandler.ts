@@ -12,8 +12,8 @@ export class ExpressionStatementHandler extends Handler{
 
     private exprHandler: Handler| null = null;
 
-    public handle(node: ExpressionStatement): void {
-        super.handle(node);
+    public _handle(node: ExpressionStatement): void {
+        super._handle(node);
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.value = {
             type: 'ExpressionStatement',

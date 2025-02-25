@@ -12,8 +12,8 @@ export class ReturnStatementHandler extends Handler{
 
     private exprHandler: Handler | null = null;
 
-    public handle(node: ReturnStatement): void {
-        super.handle(node);
+    public _handle(node: ReturnStatement): void {
+        super._handle(node);
         if(node.expr){
             this.exprHandler = Handler.handle(node.expr, this.context);
         }else{

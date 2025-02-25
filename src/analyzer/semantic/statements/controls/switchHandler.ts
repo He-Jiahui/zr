@@ -15,8 +15,8 @@ export class SwitchStatementHandler extends Handler{
     private readonly caseHandlers: Handler[] = [];
     private defaultHandler: Handler | null = null;
 
-    public handle(node: SwitchStatement): void {
-        super.handle(node);
+    public _handle(node: SwitchStatement): void {
+        super._handle(node);
 
         this.caseHandlers.length = 0;
         for(const caseNode of node.cases){
@@ -53,8 +53,8 @@ export class SwitchCaseHandler extends Handler{
     private testHandler: Handler| null = null;
     private blockHandler: Handler | null = null;
 
-    public handle(node: SwitchCase): void {
-        super.handle(node);
+    public _handle(node: SwitchCase): void {
+        super._handle(node);
 
         this.testHandler = Handler.handle(node.value, this.context);
         this.blockHandler = Handler.handle(node.block, this.context);
@@ -79,8 +79,8 @@ export class SwitchDefaultHandler extends Handler{
 
     private blockHandler: Handler | null = null;
 
-    public handle(node: SwitchDefaultType): void {
-        super.handle(node);
+    public _handle(node: SwitchDefaultType): void {
+        super._handle(node);
 
         this.blockHandler = Handler.handle(node.block, this.context);
 

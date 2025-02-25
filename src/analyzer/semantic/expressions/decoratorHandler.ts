@@ -10,8 +10,8 @@ export type DecoratorExpressionType = {
 export class DecoratorExpressionHandler extends Handler{
     public value: DecoratorExpressionType;
     private exprHandler: Handler| null = null;
-    public handle(node: DecoratorExpression): void {
-        super.handle(node);
+    public _handle(node: DecoratorExpression): void {
+        super._handle(node);
 
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.value = {

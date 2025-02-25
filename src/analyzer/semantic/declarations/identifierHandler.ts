@@ -10,8 +10,8 @@ export class IdentifierHandler extends Handler{
 
     public value: IdentifierType;
 
-    public handle(node: IDENTIFIER): void {
-        super.handle(node);
+    public _handle(node: IDENTIFIER): void {
+        super._handle(node);
         this.value = {
             type: "Identifier",
             name: node.name

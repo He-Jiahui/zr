@@ -24,8 +24,8 @@ export class InterfaceMethodSignatureHandler extends Handler{
     private genericHandler: Handler | null = null;
     private nameHandler: Handler | null = null;
 
-    public handle(node: InterfaceMethodSignature) {
-        super.handle(node);
+    public _handle(node: InterfaceMethodSignature) {
+        super._handle(node);
         const name = node.name;
         this.nameHandler = Handler.handle(name, this.context);
         const access = node.access;

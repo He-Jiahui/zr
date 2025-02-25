@@ -17,8 +17,8 @@ export class InterfacePropertySignatureHandler extends Handler{
     public value: InterfacePropertySignatureType;
     private typeInfoHandler: Handler | null = null;
     private nameHandler: Handler | null = null;
-    public handle(node: InterfacePropertySignature) {
-        super.handle(node);
+    public _handle(node: InterfacePropertySignature) {
+        super._handle(node);
         const name = node.name;
         const nameHandler = Handler.handle(name, this.context);
         const access = node.access;

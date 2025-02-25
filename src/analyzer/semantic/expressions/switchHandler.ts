@@ -18,8 +18,8 @@ export class SwitchExpressionHandler extends Handler{
     private readonly caseHandlers: Handler[] = [];
     private defaultHandler: Handler | null = null;
 
-    public handle(node: SwitchExpression): void {
-        super.handle(node);
+    public _handle(node: SwitchExpression): void {
+        super._handle(node);
         this.caseHandlers.length = 0;
         this.exprHandler = Handler.handle(node.expr, this.context);
         for(const $case of node.cases){

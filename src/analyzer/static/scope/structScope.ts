@@ -17,22 +17,22 @@ export class StructScope extends Scope {
     protected readonly metaFunctions: SymbolTable<MetaSymbol> = new SymbolTable<MetaSymbol>();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.methods];
 
-    public addGeneric(generic: GenericSymbol): boolean {
+    public addGeneric(generic: GenericSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
     }
 
-    public addField(field: FieldSymbol): boolean {
+    public addField(field: FieldSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
         return success;
     }
 
-    public addMethod(method: FunctionSymbol): boolean {
+    public addMethod(method: FunctionSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
         return success;
     }
 
-    public addMetaFunction(metaFunction: MetaSymbol): boolean {
+    public addMetaFunction(metaFunction: MetaSymbol | undefined): boolean {
         const success = this.metaFunctions.addSymbol(metaFunction);
         return success;
     }

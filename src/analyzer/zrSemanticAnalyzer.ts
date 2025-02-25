@@ -10,9 +10,8 @@ export class ZrSemanticAnalyzer{
     }
     public analyze(){
         this.scriptHandler = Handler.handle(this.context.ast, this.context);
-        
-
-        this.scriptHandler.collectDeclaration();
+    
+        this.scriptHandler.collectDeclarations();
     }
 }
 

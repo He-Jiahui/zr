@@ -14,8 +14,8 @@ export class ObjectLiteralHandler extends Handler{
 
     public value: ObjectLiteralType;
 
-    public handle(node: ObjectLiteral): void {
-        super.handle(node);
+    public _handle(node: ObjectLiteral): void {
+        super._handle(node);
         this.propertiesHandler.length = 0;
         for(const property of node.properties){
             const handler = Handler.handle(property, this.context);
@@ -43,8 +43,8 @@ export class KeyValuePairHandler extends Handler{
     private keyHandler: Handler|null = null;
     private valueHandler: Handler|null = null
 
-    public handle(node: KeyValuePair): void {
-        super.handle(node);
+    public _handle(node: KeyValuePair): void {
+        super._handle(node);
         this.keyHandler = Handler.handle(node.key, this.context);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {

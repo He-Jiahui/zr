@@ -11,8 +11,8 @@ export class DestructuringObjectHandler extends Handler{
     public value: DestructuringObjectType;
     private readonly keyHandlers: Handler[] = [];
 
-    public handle(node: DestructuringPattern): void {
-        super.handle(node);
+    public _handle(node: DestructuringPattern): void {
+        super._handle(node);
         this.keyHandlers.length = 0;
         for (const key of node.keys) {
             const handler = Handler.handle(key, this.context);
@@ -36,8 +36,8 @@ export class DestructuringArrayHandler extends Handler{
     public value: DestructuringArrayType;
     private readonly keyHandlers: Handler[] = [];
 
-    public handle(node: DestructuringPattern): void {
-        super.handle(node);
+    public _handle(node: DestructuringPattern): void {
+        super._handle(node);
         this.keyHandlers.length = 0;
         for (const key of node.keys) {
             const handler = Handler.handle(key, this.context);

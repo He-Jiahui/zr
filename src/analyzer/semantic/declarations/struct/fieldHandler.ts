@@ -19,8 +19,8 @@ export class FieldHandler extends Handler{
     private typeInfoHandler: Handler|null = null;
     private initHandler: Handler|null = null;
     
-    public handle(node: StructField) {
-        super.handle(node);
+    public _handle(node: StructField) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         if(node.typeInfo){
             const typeInfoHandler = Handler.handle(node.typeInfo, this.context);

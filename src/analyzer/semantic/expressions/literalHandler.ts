@@ -27,8 +27,8 @@ export class ValueLiteralHandler extends Handler{
 
     private valueHandler: Handler | null;
 
-    public handle(node: Exp<PrimaryExpression,"ValueLiteral">){
-        super.handle(node);
+    public _handle(node: Exp<PrimaryExpression,"ValueLiteral">){
+        super._handle(node);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {
             type: "ValueLiteralExpression",
@@ -48,8 +48,8 @@ export class IdentifierLiteralHandler extends Handler{
     public value: IdentifierLiteralType;
     private identifierHandler: Handler | null = null;
 
-    public handle(node: Exp<PrimaryExpression,"IdentifierLiteral">){
-        super.handle(node);
+    public _handle(node: Exp<PrimaryExpression,"IdentifierLiteral">){
+        super._handle(node);
         this.identifierHandler = Handler.handle(node.value, this.context);
         this.value = {
             type: "IdentifierLiteralExpression",

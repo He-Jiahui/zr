@@ -10,8 +10,8 @@ export class FunctionCallHandler extends Handler{
     public value: FunctionCallType;
     public readonly argsHandler: Handler[] = [];
 
-    handle(node: FunctionCallType) {
-        super.handle(node);
+    _handle(node: FunctionCallType) {
+        super._handle(node);
         this.argsHandler.length = 0;
         if(node.args){
             for(const arg of node.args){

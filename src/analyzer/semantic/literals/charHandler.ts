@@ -7,8 +7,8 @@ export type CharType = {
 export class CharHandler extends Handler{
     public value: CharType;
     
-    public handle(node: CHAR) {
-        super.handle(node);
+    public _handle(node: CHAR) {
+        super._handle(node);
         this.value = {
             type: "CharLiteral",
             value: node.value

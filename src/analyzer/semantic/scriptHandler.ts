@@ -1,9 +1,8 @@
 import * as parser from "../../parser/generated/parser";
 import { ModuleScope } from "../static/scope/moduleScope";
 import { ModuleSymbol } from "../static/symbol/moduleSymbol";
-
 import { Handler } from "./common/handler";
-import { ModuleDeclarationHandler, ModuleDeclarationType } from "./moduleDeclarationHandler";
+import type { ModuleDeclarationHandler, ModuleDeclarationType } from "./moduleDeclarationHandler";
 import type { StatementType } from "./statements";
 
 export type ScriptType = {
@@ -17,8 +16,8 @@ export class ScriptHandler extends Handler{
     // 脚本模块
     public moduleHandler : ModuleDeclarationHandler | null = null;
     private readonly statementHandlers: Handler[] = [];
-    public handle(start: parser.Start){
-        super.handle(start);
+    public _handle(start: parser.Start){
+        super._handle(start);
         const moduleDeclaration = start.moduleName;
         if(start.moduleName){
             this.moduleHandler = Handler.handle(moduleDeclaration, this.context) as ModuleDeclarationHandler;
@@ -37,7 +36,7 @@ export class ScriptHandler extends Handler{
         }
     }
     private _symbol: ModuleSymbol | null = null;
-    protected collectDeclarations(): void {
+    protected _collectDeclarations() {
         let moduleName = "module";
         const moduleNameContainer = this.value.module?.name;
         if(moduleNameContainer?.type === "Identifier"){
@@ -49,18 +48,45 @@ export class ScriptHandler extends Handler{
         }
 
         const symbol = this.context.declare<ModuleSymbol>(moduleName, "Module", this.moduleHandler?.location);
-        const scope = this.context.pushScope<ModuleScope>("Module");
+        const scope = this.pushScope<ModuleScope>("Module");
         scope.moduleInfo = symbol;
         symbol.table = scope;
 
-        // 收集模块声明
-        for(const statement of this.statementHandlers){
-            statement.collectDeclaration();
+        // collect module statement declarations
+        for(const statement of this.value.statements){
+            const handler = Handler.getHandler(statement);
+            if(!handler){
+                continue;
+            }
+            switch(statement.type){
+                case "Class":{
+                    scope.addClass(handler.collectDeclarations());
+                }break;
+                case "Struct":{
+                    scope.addStruct(handler.collectDeclarations());
+                }break;
+                case "Interface":{
+                    scope.addInterface(handler.collectDeclarations());
+                }break;
+                case "Enum":{
+                    scope.addEnum(handler.collectDeclarations());
+                }break;
+                case "Function":{
+                    scope.addFunction(handler.collectDeclarations());
+                }break;
+                case "VariableDeclaration":{
+                    scope.addVariable(handler.collectDeclarations());
+                }break;
+                default:{
+                    handler.collectDeclarations();
+                }break;
+            }
         }
 
-        this.context.popScope();
+        this.popScope();
 
         this._symbol = symbol;
+        return symbol;
     }
 }
 

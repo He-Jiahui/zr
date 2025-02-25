@@ -11,8 +11,8 @@ export class GenericDeclarationHandler extends Handler{
     public value: GenericDeclarationType;
     private typeArgumentsHandler: Handler[] = [];
 
-    public handle(node: GenericDeclaration) {
-        super.handle(node);
+    public _handle(node: GenericDeclaration) {
+        super._handle(node);
         const typeArguments = node.params;
         this.typeArgumentsHandler.length = 0;
         for(const typeArgument of typeArguments){

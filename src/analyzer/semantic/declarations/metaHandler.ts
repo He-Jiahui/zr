@@ -11,7 +11,7 @@ export class MetaHandler extends Handler{
     public value: MetaType;
     private nameHandler: Handler|null = null;
 
-    public handle(node: MetaIdentifier): void {
+    public _handle(node: MetaIdentifier): void {
         this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
             type: "Meta",

@@ -22,8 +22,8 @@ export class FieldHandler extends Handler{
     private initHandler: Handler|null = null;
     private readonly decoratorsHandlers: Handler[] = [];
     
-    public handle(node: Field) {
-        super.handle(node);
+    public _handle(node: Field) {
+        super._handle(node);
         if(node.typeInfo){
             const typeInfoHandler = Handler.handle(node.typeInfo, this.context);
             this.typeInfoHandler = typeInfoHandler;

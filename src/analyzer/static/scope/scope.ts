@@ -1,4 +1,5 @@
-import type { Symbol, SymbolTable } from "../symbol/symbol";
+import { DuplicatedIdentifierError } from "../../../errors/duplicatedIdentifierError";
+import { reportDuplicatedSymbol, Symbol, SymbolTable } from "../symbol/symbol";
 
 export class Scope{
     private static readonly scopeMap: Map<string, typeof Scope> = new Map<string, typeof Scope>();
@@ -18,7 +19,7 @@ export class Scope{
 
     public readonly type: string;
     protected readonly parent: Scope | null; // 父作用域
-    protected symbolTableList: SymbolTable<Symbol>[] = [];
+    protected symbolTableList: (SymbolTable<Symbol>|Symbol|null)[] = [];
     constructor(parent: Scope | null = null){
         this.parent = parent;
     }
@@ -41,10 +42,28 @@ export class Scope{
         return null;
     }
 
-    protected checkSymbolUnique(symbol: Symbol): boolean{
+    protected checkSymbolUnique(symbol: Symbol | undefined): boolean{
+        if(!symbol){
+            return false;
+        }
         for(const table of this.symbolTableList){
-            if(table.getSymbol(symbol.name)){
-                return false;
+            if(!table){
+                continue;
+            }
+            if(table instanceof SymbolTable){
+                const mayDuplicated = table.getSymbol(symbol.name);
+                if(mayDuplicated){
+                    reportDuplicatedSymbol(symbol, mayDuplicated);
+                    return false;
+                }
+            }else if(table instanceof Symbol){
+                if(!table.name){
+                    continue;
+                }
+                if(table.name === symbol.name){
+                    reportDuplicatedSymbol(table, symbol);
+                    return false;
+                }
             }
         }
         return true;

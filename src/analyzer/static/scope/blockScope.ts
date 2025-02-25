@@ -9,7 +9,7 @@ export class BlockScope extends Scope{
     protected symbolTableList: SymbolTable<Symbol>[] = [this.variables];
 
     protected readonly subScopes: Scope[] = [];
-    public addVariable(variable: VariableSymbol){
+    public addVariable(variable: VariableSymbol | undefined){
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;
     }

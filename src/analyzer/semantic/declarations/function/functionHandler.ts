@@ -1,4 +1,7 @@
 import { FunctionDeclaration } from "../../../../parser/generated/parser";
+import { FunctionScope } from "../../../static/scope/functionScope";
+import { FunctionSymbol } from "../../../static/symbol/functionSymbol";
+import { ParameterSymbol } from "../../../static/symbol/parameterSymbol";
 import { Handler } from "../../common/handler";
 import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
 import type { BlockType } from "../../statements/blockHandler";
@@ -28,8 +31,8 @@ export class FunctionHandler extends Handler{
     private genericHandler: Handler | null = null;
     private bodyHandler: Handler | null = null;
 
-    public handle(node: FunctionDeclaration) {
-        super.handle(node);
+    public _handle(node: FunctionDeclaration) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         if(node.generic){
             this.genericHandler = Handler.handle(node.generic, this.context);
@@ -74,6 +77,38 @@ export class FunctionHandler extends Handler{
             decorators: this.decoratorHandlers.map(handler => handler?.value),
             body: this.bodyHandler?.value
         };
+    }
+
+    protected _collectDeclarations() {
+        const funcName: string = this.value.name.name;
+        const symbol = this.context.declare<FunctionSymbol>(funcName, "Function");
+        
+        const scope = this.pushScope<FunctionScope>("Function");
+        scope.signature = symbol;
+        symbol.body = scope;
+        
+        for(const decorator of this.value.decorators){
+            const handler = Handler.getHandler(decorator);
+            handler?.collectDeclarations();
+        }
+
+        if(this.value.generic){
+            for(const generic of this.value.generic.typeArguments){
+                const handler = Handler.getHandler(generic);
+                scope.addGeneric(handler?.collectDeclarations());
+            }
+        }
+        
+        
+        for(const parameter of this.value.parameters){
+            const handler = Handler.getHandler(parameter);
+            scope.addParameter(handler?.collectDeclarations());
+        }
+        
+        scope.setArgs(Handler.getHandler(this.value.args)?.collectDeclarations());
+        Handler.getHandler(this.value.body)?.collectDeclarations();
+        this.popScope();
+        return symbol;
     }
 }
 

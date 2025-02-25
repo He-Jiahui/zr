@@ -9,8 +9,8 @@ export type ModuleDeclarationType = {
 export class ModuleDeclarationHandler extends Handler{
     public value: ModuleDeclarationType;
     private nameHandler: Handler | null = null;
-    public handle(node: ModuleDeclaration){
-        super.handle(node);
+    public _handle(node: ModuleDeclaration){
+        super._handle(node);
         const name = node.name;
 
         this.nameHandler = Handler.handle(name, this.context);

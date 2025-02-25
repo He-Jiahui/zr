@@ -14,8 +14,8 @@ export class WhileLoopStatementHandler extends Handler{
     private conditionHandler: Handler | null = null;
     private blockHandler: Handler | null = null;
 
-    public handle(node: WhileLoop): void {
-        super.handle(node);
+    public _handle(node: WhileLoop): void {
+        super._handle(node);
         this.conditionHandler = Handler.handle(node.cond, this.context);
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {

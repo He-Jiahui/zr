@@ -16,8 +16,8 @@ export class ConditionalHandler extends Handler{
     private consequentHandler: Handler | null = null;
     private alternateHandler: Handler | null = null;
     public value: ConditionalType;
-    public handle(node: Exp<ConditionalExpression, "Conditional">) {
-        super.handle(node);
+    public _handle(node: Exp<ConditionalExpression, "Conditional">) {
+        super._handle(node);
         this.conditionHandler = Handler.handle(node.test, this.context);
         this.consequentHandler = Handler.handle(node.consequent, this.context);
         this.alternateHandler = Handler.handle(node.alternate, this.context);

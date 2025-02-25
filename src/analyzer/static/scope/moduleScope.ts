@@ -22,32 +22,32 @@ export class ModuleScope extends Scope {
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.variables, this.classes, this.interfaces, this.structs, this.enums];
 
-    public addFunction($function: FunctionSymbol): boolean {
+    public addFunction($function: FunctionSymbol | undefined): boolean {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
         return success;
     }
 
-    public addVariable(variable: VariableSymbol): boolean {
+    public addVariable(variable: VariableSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;
     }
 
-    public addClass($class: ClassSymbol): boolean {
+    public addClass($class: ClassSymbol | undefined): boolean {
         const success = this.checkSymbolUnique($class) && this.classes.addSymbol($class);
         return success;
     }
 
-    public addInterface($interface: InterfaceSymbol): boolean {
+    public addInterface($interface: InterfaceSymbol | undefined): boolean {
         const success = this.checkSymbolUnique($interface) && this.interfaces.addSymbol($interface);
         return success;
     }
 
-    public addStruct($struct: StructSymbol): boolean {
+    public addStruct($struct: StructSymbol | undefined): boolean {
         const success = this.checkSymbolUnique($struct) && this.structs.addSymbol($struct);
         return success;
     }
 
-    public addEnum($enum: EnumSymbol): boolean {
+    public addEnum($enum: EnumSymbol | undefined): boolean {
         const success = this.checkSymbolUnique($enum) && this.enums.addSymbol($enum);
         return success;
     }

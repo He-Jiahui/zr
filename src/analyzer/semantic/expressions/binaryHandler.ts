@@ -13,12 +13,12 @@ export class BinaryHandler extends Handler{
     private leftHandler: Handler | null = null;
     private rightHandler: Handler | null = null;
     public value: BinaryType;
-    public handle(node: {
+    public _handle(node: {
         left: any,
         right: any,
         op: string
     }) {
-        super.handle(node);
+        super._handle(node);
         this.leftHandler = Handler.handle(node.left, this.context);
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {

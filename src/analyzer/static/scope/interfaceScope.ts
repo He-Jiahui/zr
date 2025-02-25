@@ -17,22 +17,22 @@ export class InterfaceScope extends Scope {
     protected readonly methods: SymbolTable<FunctionSymbol> = new SymbolTable<FunctionSymbol>();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.properties, this.methods];
 
-    public addGeneric(generic: GenericSymbol): boolean {
+    public addGeneric(generic: GenericSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
     }
 
-    public addField(field: FieldSymbol): boolean {
+    public addField(field: FieldSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
         return success;
     }
 
-    public addProperty(property: PropertySymbol): boolean {
+    public addProperty(property: PropertySymbol | undefined): boolean {
         const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
         return success;
     }
 
-    public addMethod(method: FunctionSymbol): boolean {
+    public addMethod(method: FunctionSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
         return success;
     }

@@ -7,13 +7,15 @@ import type { ClassMetaFunctionType } from "./metaFunctionHandler";
 import type { IdentifierType } from "../identifierHandler";
 import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
 import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
+import type { ClassSymbol } from "../../../static/symbol/classSymbol";
+import type { ClassScope } from "../../../static/scope/classScope";
 
 export type ClassType ={
     type: "Class";
     name: IdentifierType;
-    inherits?: IdentifierType[];
-    decorators?: DecoratorExpressionType[];
-    generic: GenericDeclarationType[];
+    inherits: IdentifierType[];
+    decorators: DecoratorExpressionType[];
+    generic: GenericDeclarationType;
     fields: ClassFieldType[];
     properties: ClassPropertyType[];
     methods: ClassMethodType[];
@@ -31,9 +33,11 @@ export class ClassDeclarationHandler extends Handler{
     public readonly decoratorsHandler: Handler[] = [];
 
     public genericHandler: Handler | null = null;
+
+    private _symbol: ClassSymbol | null = null;
     
-    public handle(node: ClassDeclaration) {
-        super.handle(node);
+    public _handle(node: ClassDeclaration) {
+        super._handle(node);
         const members = node.members;
         this.membersHandler.length = 0;
         this.inheritsHandler.length = 0;
@@ -94,6 +98,51 @@ export class ClassDeclarationHandler extends Handler{
             metaFunctions,
             properties,
         };
+    }
+
+    protected _collectDeclarations(){
+        const className: string = this.value.name.name;
+        const symbol = this.context.declare<ClassSymbol>(className, "Class");
+        // TODO: super class & decorators will be handled later
+
+        // symbol.decorators.length = 0;
+        // symbol.decorators.push(...this.decoratorsHandler.map(handler=>handler?.value));
+        const scope = this.pushScope<ClassScope>("Class");
+        scope.classInfo = symbol;
+        symbol.table = scope;
+        for(const decorator of this.value.decorators){
+            const handler = Handler.getHandler(decorator);
+            handler?.collectDeclarations();
+        }
+
+        if(this.value.generic){
+            for(const generic of this.value.generic.typeArguments){
+                const handler = Handler.getHandler(generic);
+                scope.addGeneric(handler?.collectDeclarations());
+            }
+        }
+        
+        for(const field of this.value.fields){
+            const handler = Handler.getHandler(field);
+            scope.addField(handler?.collectDeclarations());
+        }
+        for(const method of this.value.methods){
+            const handler = Handler.getHandler(method);
+            scope.addMethod(handler?.collectDeclarations());
+        }
+        for(const metaFunction of this.value.metaFunctions){
+            const handler = Handler.getHandler(metaFunction);
+            scope.addMetaFunction(handler?.collectDeclarations());
+        }
+        for(const property of this.value.properties){
+            const handler = Handler.getHandler(property);
+            scope.addProperty(handler?.collectDeclarations());
+        }
+        
+        this.popScope();
+
+        this._symbol = symbol;
+        return symbol;
     }
 }
 

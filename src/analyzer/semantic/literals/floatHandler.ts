@@ -7,8 +7,8 @@ export type FloatType = {
 export class FloatHandler extends Handler{
     public value: FloatType;
     
-    public handle(node: FLOAT) {
-        super.handle(node);
+    public _handle(node: FLOAT) {
+        super._handle(node);
         this.value = {
             type: "FloatLiteral",
             value: node.value

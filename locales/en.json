@@ -6,6 +6,7 @@
     "syntaxError2" : "SyntaxError: {{message}}",
     "noHandlerError" : "There is no handler for {{type}}",
     "parserError": "Parser error: {{message}}",
-    "internalError": "Internal error: {{message}}"
+    "internalError": "Internal error: {{message}}",
+    "duplicatedIdentifierError": "Duplicated identifier: {{identifier}}, conflicting with {{start}}~{{end}}"
     
 }

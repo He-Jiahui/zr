@@ -14,8 +14,8 @@ export class AssignmentHandler extends Handler{
     private leftHandler: Handler | null = null;
     private rightHandler: Handler | null = null;
     public value: AssignmentType;
-    public handle(node: Exp<AssignmentExpression, "Assignment">) {
-        super.handle(node);
+    public _handle(node: Exp<AssignmentExpression, "Assignment">) {
+        super._handle(node);
         this.leftHandler = Handler.handle(node.left, this.context);
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {

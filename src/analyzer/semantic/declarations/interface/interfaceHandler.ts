@@ -1,4 +1,8 @@
 import { InterfaceFieldDeclaration, InterfaceDeclaration, InterfaceMethodSignature, InterfacePropertySignature } from "../../../../parser/generated/parser";
+import { InterfaceScope } from "../../../static/scope/interfaceScope";
+import { ModuleScope } from "../../../static/scope/moduleScope";
+import { InterfaceSymbol } from "../../../static/symbol/interfaceSymbol";
+import { Symbol } from "../../../static/symbol/symbol";
 import { Handler } from "../../common/handler";
 import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
 import type { IdentifierType } from "../identifierHandler";
@@ -13,7 +17,7 @@ export type InterfaceType = {
     properties: InterfacePropertySignatureType[],
     fields: InterfaceFieldDeclarationType[],
     inherits: IdentifierType[],
-    generic: GenericDeclarationType[],
+    generic: GenericDeclarationType,
 }
 
 export class InterfaceDeclarationHandler extends Handler{
@@ -23,8 +27,8 @@ export class InterfaceDeclarationHandler extends Handler{
     public readonly inheritsHandler: Handler[] = [];
     public genericHandler: Handler | null = null;
     
-    public handle(node: InterfaceDeclaration) {
-        super.handle(node);
+    public _handle(node: InterfaceDeclaration) {
+        super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         const members = node.members;
         this.membersHandler.length = 0;
@@ -72,6 +76,36 @@ export class InterfaceDeclarationHandler extends Handler{
             inherits: this.inheritsHandler.map(handler => handler?.value),
             generic: this.genericHandler?.value
         };
+    }
+
+    protected _collectDeclarations(): Symbol | undefined {
+        const interfaceName = this.value.name.name;
+        const symbol = this.context.declare<InterfaceSymbol>(interfaceName, "Interface");
+        const scope = this.pushScope<InterfaceScope>("Interface");
+        scope.interfaceInfo = symbol;
+        symbol.table = scope;
+        if(this.value.generic){
+            for(const generic of this.value.generic.typeArguments){
+                const handler = Handler.getHandler(generic);
+                scope.addGeneric(handler?.collectDeclarations());
+            }
+        }
+
+        for(const field of this.value.fields){
+            const handler = Handler.getHandler(field);
+            scope.addField(handler?.collectDeclarations());
+        }
+        for(const method of this.value.methods){
+            const handler = Handler.getHandler(method);
+            scope.addMethod(handler?.collectDeclarations());
+        }
+        for(const property of this.value.properties){
+            const handler = Handler.getHandler(property);
+            scope.addProperty(handler?.collectDeclarations());
+        }
+
+        this.popScope();
+        return symbol;
     }
 }
 

@@ -7,8 +7,8 @@ export type StringType = {
 export class StringHandler extends Handler{
     public value: StringType;
     
-    public handle(node: STRING) {
-        super.handle(node);
+    public _handle(node: STRING) {
+        super._handle(node);
         this.value = {
             type: "StringLiteral",
             value: node.value

@@ -10,8 +10,8 @@ export class GenericImplementHandler extends Handler{
     public value: GenericType;
     private typeArgumentsHandler: Handler[] = [];
 
-    public handle(node: GenericImplementType) {
-        super.handle(node);
+    public _handle(node: GenericImplementType) {
+        super._handle(node);
         const typeArguments = node.params;
         this.typeArgumentsHandler.length = 0;
         for(const typeArgument of typeArguments){

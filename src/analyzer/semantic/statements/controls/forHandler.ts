@@ -23,8 +23,8 @@ export class ForLoopStatementHandler extends Handler{
     private stepHandler: Handler | null = null;
     private blockHandler: Handler | null = null;
 
-    public handle(node: ForLoop): void {
-        super.handle(node);
+    public _handle(node: ForLoop): void {
+        super._handle(node);
         if(node.init !== ";"){
             this.initHandler = Handler.handle(node.init, this.context);
         }else{
@@ -68,8 +68,8 @@ export class ForeachLoopStatementHandler extends Handler{
     private exprHandler: Handler | null = null;
     private blockHandler: Handler | null = null;
 
-    public handle(node: ForeachLoop): void {
-        super.handle(node);
+    public _handle(node: ForeachLoop): void {
+        super._handle(node);
         this.patternHandler = Handler.handle(node.pattern, this.context);
 
         if(node.typeInfo){

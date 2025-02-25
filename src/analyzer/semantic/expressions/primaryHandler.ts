@@ -16,8 +16,8 @@ export class PrimaryHandler extends Handler{
     private propertyHandler: Handler | null = null;
     private readonly memberHandlers: Handler[] = [];
 
-    public handle(node: Exp<UnaryExpression, "PrimaryExpression">) {
-        super.handle(node);
+    public _handle(node: Exp<UnaryExpression, "PrimaryExpression">) {
+        super._handle(node);
         this.memberHandlers.length = 0;
         this.propertyHandler = Handler.handle(node.property, this.context);
         if(node.members){

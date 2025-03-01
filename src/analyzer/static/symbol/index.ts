@@ -1,6 +1,7 @@
 import "./symbol";
 import "./variableSymbol";
 import "./propertySymbol";
+import "./blockSymbol";
 
 import "./functionSymbol";
 import "./parameterSymbol";

@@ -1,20 +1,20 @@
-import type { FunctionSymbol } from "../symbol/functionSymbol";
-import type { GenericSymbol } from "../symbol/genericSymbol";
-import type { ParameterSymbol } from "../symbol/parameterSymbol";
-import { type Symbol, SymbolTable } from "../symbol/symbol";
-import type { BlockScope } from "./blockScope";
-import { Scope } from "./scope";
+import type {FunctionSymbol} from "../symbol/functionSymbol";
+import type {GenericSymbol} from "../symbol/genericSymbol";
+import type {ParameterSymbol} from "../symbol/parameterSymbol";
+import {type Symbol, SymbolTable} from "../symbol/symbol";
+import {Scope} from "./scope";
+import {BlockSymbol} from "../symbol/blockSymbol";
 
 // 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
 export class FunctionScope extends Scope {
     public readonly type: string = "FunctionScope";
-    
+
     public signature: FunctionSymbol;
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     public args: ParameterSymbol | null = null;
-    protected symbolTableList = [this.generics, this.parameters, this.args]; 
-    public body: BlockScope;
+    protected symbolTableList = [this.generics, this.parameters, this.args];
+    public body: BlockSymbol | null = null;
 
     public addGeneric(generic: GenericSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -23,7 +23,7 @@ export class FunctionScope extends Scope {
 
     public addParameter(parameter: ParameterSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
-        
+
         return success;
     }
 
@@ -38,6 +38,10 @@ export class FunctionScope extends Scope {
             return true;
         }
         return false;
+    }
+
+    public setBody(body: BlockSymbol | undefined): void {
+        this.body = body ?? null;
     }
 
 

@@ -1,16 +1,16 @@
-import { Handler } from "../../common/handler";
-import { ClassDeclaration } from "../../../../parser/generated/parser";
-import type { ClassFieldType } from "./fieldHandler";
-import type { ClassPropertyType } from "./propertyHandler";
-import type { ClassMethodType } from "./methodHandler";
-import type { ClassMetaFunctionType } from "./metaFunctionHandler";
-import type { IdentifierType } from "../identifierHandler";
-import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
-import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
-import type { ClassSymbol } from "../../../static/symbol/classSymbol";
-import type { ClassScope } from "../../../static/scope/classScope";
+import {Handler} from "../../common/handler";
+import {ClassDeclaration} from "../../../../parser/generated/parser";
+import type {ClassFieldType} from "./fieldHandler";
+import type {ClassPropertyType} from "./propertyHandler";
+import type {ClassMethodType} from "./methodHandler";
+import type {ClassMetaFunctionType} from "./metaFunctionHandler";
+import type {IdentifierType} from "../identifierHandler";
+import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
+import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
+import type {ClassSymbol} from "../../../static/symbol/classSymbol";
+import type {ClassScope} from "../../../static/scope/classScope";
 
-export type ClassType ={
+export type ClassType = {
     type: "Class";
     name: IdentifierType;
     inherits: IdentifierType[];
@@ -22,7 +22,7 @@ export type ClassType ={
     metaFunctions: ClassMetaFunctionType[];
 }
 
-export class ClassDeclarationHandler extends Handler{
+export class ClassDeclarationHandler extends Handler {
     public value: ClassType;
     private nameHandler: Handler | null = null;
 
@@ -35,7 +35,7 @@ export class ClassDeclarationHandler extends Handler{
     public genericHandler: Handler | null = null;
 
     private _symbol: ClassSymbol | null = null;
-    
+
     public _handle(node: ClassDeclaration) {
         super._handle(node);
         const members = node.members;
@@ -43,55 +43,59 @@ export class ClassDeclarationHandler extends Handler{
         this.inheritsHandler.length = 0;
         this.decoratorsHandler.length = 0;
         this.nameHandler = Handler.handle(node.name, this.context);
-        if(node.inherits){
-            for(const inherit of node.inherits){
+        if (node.inherits) {
+            for (const inherit of node.inherits) {
                 const handler = Handler.handle(inherit, this.context);
                 this.inheritsHandler.push(handler);
             }
         }
-        if(node.decorator){
-            for(const decorator of node.decorator){
+        if (node.decorator) {
+            for (const decorator of node.decorator) {
                 const handler = Handler.handle(decorator, this.context);
                 this.decoratorsHandler.push(handler);
             }
         }
-        if(node.generic){
+        if (node.generic) {
             this.genericHandler = Handler.handle(node.generic, this.context);
-        }else{
+        } else {
             this.genericHandler = null;
         }
 
-        const fields:ClassFieldType[] = [];
-        const methods:ClassMethodType[] = [];
-        const metaFunctions:ClassMetaFunctionType[] = [];
+        const fields: ClassFieldType[] = [];
+        const methods: ClassMethodType[] = [];
+        const metaFunctions: ClassMetaFunctionType[] = [];
         const properties: ClassPropertyType[] = [];
-        for(const member of members){
+        for (const member of members) {
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler?.value as (ClassFieldType|ClassMethodType|ClassMetaFunctionType|ClassPropertyType);
-            if(!value){
+            const value = handler?.value as (ClassFieldType | ClassMethodType | ClassMetaFunctionType | ClassPropertyType);
+            if (!value) {
                 continue;
             }
-            switch(value.type){
-                case "ClassField":{
+            switch (value.type) {
+                case "ClassField": {
                     fields.push(value);
-                }break;
-                case "ClassMethod":{
+                }
+                    break;
+                case "ClassMethod": {
                     methods.push(value);
-                }break;
-                case "ClassMetaFunction":{
+                }
+                    break;
+                case "ClassMetaFunction": {
                     metaFunctions.push(value);
-                }break;
-                case "ClassProperty":{
+                }
+                    break;
+                case "ClassProperty": {
                     properties.push(value);
-                }break;
+                }
+                    break;
             }
         }
         this.value = {
             type: "Class",
             name: this.nameHandler?.value,
-            inherits: this.inheritsHandler.map(handler=>handler?.value),
-            decorators: this.decoratorsHandler.map(handler=>handler?.value),
+            inherits: this.inheritsHandler.map(handler => handler?.value),
+            decorators: this.decoratorsHandler.map(handler => handler?.value),
             generic: this.genericHandler?.value,
             fields,
             methods,
@@ -100,45 +104,43 @@ export class ClassDeclarationHandler extends Handler{
         };
     }
 
-    protected _collectDeclarations(){
+    protected _collectDeclarations() {
         const className: string = this.value.name.name;
         const symbol = this.context.declare<ClassSymbol>(className, "Class");
         // TODO: super class & decorators will be handled later
-
-        // symbol.decorators.length = 0;
-        // symbol.decorators.push(...this.decoratorsHandler.map(handler=>handler?.value));
+        
         const scope = this.pushScope<ClassScope>("Class");
         scope.classInfo = symbol;
         symbol.table = scope;
-        for(const decorator of this.value.decorators){
+        for (const decorator of this.value.decorators) {
             const handler = Handler.getHandler(decorator);
-            handler?.collectDeclarations();
+            symbol.decorators.push(handler?.collectDeclarations());
         }
 
-        if(this.value.generic){
-            for(const generic of this.value.generic.typeArguments){
+        if (this.value.generic) {
+            for (const generic of this.value.generic.typeArguments) {
                 const handler = Handler.getHandler(generic);
                 scope.addGeneric(handler?.collectDeclarations());
             }
         }
-        
-        for(const field of this.value.fields){
+
+        for (const field of this.value.fields) {
             const handler = Handler.getHandler(field);
             scope.addField(handler?.collectDeclarations());
         }
-        for(const method of this.value.methods){
+        for (const method of this.value.methods) {
             const handler = Handler.getHandler(method);
             scope.addMethod(handler?.collectDeclarations());
         }
-        for(const metaFunction of this.value.metaFunctions){
+        for (const metaFunction of this.value.metaFunctions) {
             const handler = Handler.getHandler(metaFunction);
             scope.addMetaFunction(handler?.collectDeclarations());
         }
-        for(const property of this.value.properties){
+        for (const property of this.value.properties) {
             const handler = Handler.getHandler(property);
             scope.addProperty(handler?.collectDeclarations());
         }
-        
+
         this.popScope();
 
         this._symbol = symbol;

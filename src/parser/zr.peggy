@@ -382,6 +382,7 @@ Statement
   / ExpressionStatement
   / ReturnStatement
   / BreakContinueStatement
+  / OutStatement
   / Block) _  {
     // Block 本身也是语句（如 if 的 then 块） 
     return dec;
@@ -435,28 +436,26 @@ BreakContinueStatement
     }
   }
 
-IfStatement
-  = IF _ LPAREN _ cond:Expression _ RPAREN _ thenBlock:Block elseBlock:(_ ELSE _ (Block / IfStatement))? {
-      return {
-        type: "IfStatement",
-        condition: cond,
-        then: thenBlock,
-        else: elseBlock ? elseBlock[3] : null,
-        location: location()
-      }
+OutStatement
+  = OUT _ expr:Expression _ SEMICOLON {
+    return {
+      type: "OutStatement",
+      expr,
+      location: location()
     }
+  }
+
+IfStatement
+  = expr:IfExpression {
+    expr.isStatement = true;
+    return expr;
+  }
 
 SwitchStatement
-  = SWITCH _ LPAREN _ expr:Expression? _ RPAREN _ LBRACE 
-    cases:SwitchCase* defaultCase:SwitchDefault? _ RBRACE {
-      return {
-        type: "SwitchStatement",
-        expr,
-        cases,
-        default: defaultCase,
-        location: location()
-      }
-    }
+  = expr:SwitchExpression{
+    expr.isStatement = true;
+    return expr;
+  }
 
 SwitchCase
   = _ LPAREN _ value:Expression _ RPAREN _ block:Block _ { 
@@ -478,12 +477,19 @@ SwitchDefault
   }
 
 LoopStatement
+  = expr:LoopExpression{
+    expr.isStatement = true;
+    return expr;
+  }
+
+LoopExpression
   = WhileLoop / ForeachLoop / ForLoop 
 
 WhileLoop
   = WHILE _ LPAREN _ cond:Expression _ RPAREN _ block:Block {
     return {
       type: "WhileLoop",
+      isStatement: false,
       cond,
       block,
       location: location()
@@ -494,6 +500,7 @@ ForLoop
   = FOR _ LPAREN _ init:(VariableDeclaration / SEMICOLON) _ cond:(ExpressionStatement / SEMICOLON) _ step:Expression? _ RPAREN _ block:Block{
     return {
       type: "ForLoop",
+      isStatement: false,
       init,
       cond,
       step,
@@ -507,6 +514,7 @@ ForeachLoop
     return {
       type:"ForeachLoop",
       pattern,
+      isStatement: false,
       typeInfo: typePart? typePart[3] : null,
       expr,
       block,
@@ -517,7 +525,8 @@ ForeachLoop
 Block
   = LBRACE _ statements:Statement* _ RBRACE { 
       return { 
-        type: "Block", 
+        type: "Block",
+        isStatement: true,
         body: statements.filter(s => s !== null), // 过滤空白和注释
         location: location()
       } 
@@ -672,8 +681,13 @@ PrimaryExpression
   / LambdaExpression
   / IfExpression
   / SwitchExpression
+  / LoopExpression
   / value:IDENTIFIER {return {type: "IdentifierLiteral", value, location: location()}}
   / LPAREN _ expr:Expression _ RPAREN { return expr }
+  / LBRACE _ block:Block _ RBRACE { 
+      block.isStatement = false;
+      return block 
+    }
 // --- 数组字面量 ---
 ArrayLiteral
   = LBRACKET _ elements:(Expression (_ (COMMA / SEMICOLON) _ Expression)* _ (COMMA / SEMICOLON)?)? _ RBRACKET
@@ -726,9 +740,10 @@ LambdaExpression
   }
 // if 表达式（支持三元运算）
 IfExpression
-  = IF _ condition:Expression _ thenExpr:Block elseExpr:(_ ELSE _ (Block / IfExpression))? {
+  = IF _ LPAREN _ condition:Expression _ RPAREN _ thenExpr:Block elseExpr:(_ ELSE _ (Block / IfExpression))? {
       return {
         type: "IfExpression",
+        isStatement: false,
         condition,
         then: thenExpr,
         else: elseExpr ? elseExpr[3] : null,
@@ -738,15 +753,18 @@ IfExpression
 
   // 自定义 switch 语法
 SwitchExpression
-  = SWITCH _ LPAREN _ expr:Expression? _ RPAREN _ LBRACE _ cases:SwitchCase* defaultCase:SwitchDefault? _ RBRACE {
+  = SWITCH _ LPAREN _ expr:Expression _ RPAREN _ LBRACE _ 
+  cases:SwitchCase* defaultCase:SwitchDefault? _ RBRACE {
       return {
         type: "SwitchExpression",
+        isStatement: false,
         expr,
         cases: cases? cases : [],
         default: defaultCase,
         location: location()
       }
     }
+
 
 // === 操作符定义 ===
 AssignmentOperator
@@ -756,7 +774,7 @@ EqualityOperator
   = DOUBLE_EQUALS / BANG_EQUALS
 
 RelationalOperator
-  = LESS_THAN / LESS_THAN_EQUALS / GREATER_THAN / GREATER_THAN_EQUALS
+  = LESS_THAN_EQUALS / GREATER_THAN_EQUALS / LESS_THAN / GREATER_THAN 
 
 AdditiveOperator
   = PLUS / MINUS
@@ -909,7 +927,6 @@ VAR = "var"
 PUB = "pub"
 PRI = "pri"
 PRO = "pro"
-FN = "fn"
 IF = "if"
 ELSE = "else"
 SWITCH = "switch"
@@ -924,6 +941,7 @@ SET = "set"
 GET = "get"
 STATIC = "static"
 IN = "in"
+OUT = "out"
 
 // 符号
 PARAMS = "..."

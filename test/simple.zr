@@ -23,11 +23,11 @@ testArgs(...toPush: int[]){
 
 }
 
-testArgs(c, ...toPush: int[]){
+// testArgs(c, ...toPush: int[]){
 
-}
+// }
 
-var Vector3 = {x:1,y:2,z:3};
+// var Vector3 = {x:1,y:2,z:3};
 
 // struct 不允许继承
 struct Vector3{
@@ -133,6 +133,28 @@ class Person{
         return this._address;
     }
 }
+// 迭代器写法
+// 返回 IEnumerator
+var j = for(var i in [1, 2, 3, 4, 5]){
+    if(i % 2 == 0){
+        continue i;
+    }
+    if(i>=4){
+        break i;
+    }
+    // default continue null;
+};
+// result is [2, 4]
+
+var k = {{
+    // out 会寻找最近的block表达式
+    // j的类型在编译阶段就已经确定
+    if(Object.type(j) == "array"){
+        // out to block expression
+        out j.toArray();
+    }
+    // default out null;
+}};
 // 类允许单继承一个基类和实现多个接口
 class Student:Person, Man{
     // 必须先构造基类
@@ -161,8 +183,7 @@ class Student:Person, Man{
                 (2){2;}
                 (){3;}
             };
-
-
+        
         }
     }
     pub get a:int{

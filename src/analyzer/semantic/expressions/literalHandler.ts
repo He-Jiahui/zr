@@ -1,20 +1,26 @@
-import { PrimaryExpression } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler"
-import type { IdentifierType } from "../declarations/identifierHandler";
-import type { LiteralType } from "../literals"
-import type { ArrayLiteralType } from "./arrayLiteralHandler";
-import { Exp } from "./expression";
-import type { IfExpressionType } from "./ifHandler";
-import type { LambdaType } from "./lambdaHandler";
-import type { ObjectLiteralType } from "./objectLiteralHandler";
-import type { SwitchExpressionType } from "./switchHandler";
-export type LiteralExpressionType = ValueLiteralType | 
-IdentifierLiteralType |
-ObjectLiteralType |
-ArrayLiteralType |
-LambdaType |
-IfExpressionType |
-SwitchExpressionType;
+import {PrimaryExpression} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler"
+import type {IdentifierType} from "../declarations/identifierHandler";
+import type {LiteralType} from "../literals"
+import type {ArrayLiteralType} from "./arrayLiteralHandler";
+import {Exp} from "./expression";
+import type {IfExpressionType} from "./ifHandler";
+import type {LambdaType} from "./lambdaHandler";
+import type {ObjectLiteralType} from "./objectLiteralHandler";
+import type {SwitchExpressionType} from "./switchHandler";
+import type {ForeachLoopExpressionType, ForLoopExpressionType} from "./forHandler";
+import type {WhileLoopExpressionType} from "./whileHandler";
+
+export type LiteralExpressionType = ValueLiteralType |
+    IdentifierLiteralType |
+    ObjectLiteralType |
+    ArrayLiteralType |
+    LambdaType |
+    IfExpressionType |
+    SwitchExpressionType |
+    ForLoopExpressionType |
+    ForeachLoopExpressionType |
+    WhileLoopExpressionType;
 
 
 export type ValueLiteralType = {
@@ -22,12 +28,12 @@ export type ValueLiteralType = {
     value: LiteralType
 }
 
-export class ValueLiteralHandler extends Handler{
+export class ValueLiteralHandler extends Handler {
     public value: ValueLiteralType;
 
     private valueHandler: Handler | null;
 
-    public _handle(node: Exp<PrimaryExpression,"ValueLiteral">){
+    public _handle(node: Exp<PrimaryExpression, "ValueLiteral">) {
         super._handle(node);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {
@@ -44,11 +50,11 @@ export type IdentifierLiteralType = {
     value: IdentifierType
 }
 
-export class IdentifierLiteralHandler extends Handler{
+export class IdentifierLiteralHandler extends Handler {
     public value: IdentifierLiteralType;
     private identifierHandler: Handler | null = null;
 
-    public _handle(node: Exp<PrimaryExpression,"IdentifierLiteral">){
+    public _handle(node: Exp<PrimaryExpression, "IdentifierLiteral">) {
         super._handle(node);
         this.identifierHandler = Handler.handle(node.value, this.context);
         this.value = {

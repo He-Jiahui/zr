@@ -1,14 +1,13 @@
-import { FunctionDeclaration } from "../../../../parser/generated/parser";
-import { FunctionScope } from "../../../static/scope/functionScope";
-import { FunctionSymbol } from "../../../static/symbol/functionSymbol";
-import { ParameterSymbol } from "../../../static/symbol/parameterSymbol";
-import { Handler } from "../../common/handler";
-import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
-import type { BlockType } from "../../statements/blockHandler";
-import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
-import type { ParameterType } from "../../types/parameterHandler";
-import type { AllType } from "../../types/types";
-import type { IdentifierType } from "../identifierHandler";
+import {FunctionDeclaration} from "../../../../parser/generated/parser";
+import {FunctionScope} from "../../../static/scope/functionScope";
+import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
+import {Handler} from "../../common/handler";
+import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
+import type {BlockType} from "../../statements/blockHandler";
+import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
+import type {ParameterType} from "../../types/parameterHandler";
+import type {AllType} from "../../types/types";
+import type {IdentifierType} from "../identifierHandler";
 
 export type FunctionType = {
     type: "Function",
@@ -21,7 +20,7 @@ export type FunctionType = {
     body: BlockType;
 }
 
-export class FunctionHandler extends Handler{
+export class FunctionHandler extends Handler {
     public value: FunctionType;
     private nameHandler: Handler | null = null;
     private readonly decoratorHandlers: Handler[] = [];
@@ -34,14 +33,14 @@ export class FunctionHandler extends Handler{
     public _handle(node: FunctionDeclaration) {
         super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
-        if(node.generic){
+        if (node.generic) {
             this.genericHandler = Handler.handle(node.generic, this.context);
-        }else{
+        } else {
             this.genericHandler = null;
         }
-        if(node.returnType){
+        if (node.returnType) {
             this.returnTypeHandler = Handler.handle(node.returnType, this.context);
-        }else{
+        } else {
             this.returnTypeHandler = null;
         }
         const parameters = node.params;
@@ -49,22 +48,22 @@ export class FunctionHandler extends Handler{
         const body = node.body;
         this.parameterHandlers.length = 0;
         this.decoratorHandlers.length = 0;
-        for(const parameter of parameters){
+        for (const parameter of parameters) {
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
-        if(node.args){
+        if (node.args) {
             this.argsHandler = Handler.handle(node.args, this.context);
-        }else{
+        } else {
             this.argsHandler = null;
         }
-        for(const decorator of decorators){
+        for (const decorator of decorators) {
             const handler = Handler.handle(decorator, this.context);
             this.decoratorHandlers.push(handler);
         }
-        if(body){
+        if (body) {
             this.bodyHandler = Handler.handle(body, this.context);
-        }else{
+        } else {
             this.bodyHandler = null;
         }
         this.value = {
@@ -82,29 +81,29 @@ export class FunctionHandler extends Handler{
     protected _collectDeclarations() {
         const funcName: string = this.value.name.name;
         const symbol = this.context.declare<FunctionSymbol>(funcName, "Function");
-        
+
         const scope = this.pushScope<FunctionScope>("Function");
         scope.signature = symbol;
         symbol.body = scope;
-        
-        for(const decorator of this.value.decorators){
+
+        for (const decorator of this.value.decorators) {
             const handler = Handler.getHandler(decorator);
-            handler?.collectDeclarations();
+            symbol.decorators.push(handler?.collectDeclarations());
         }
 
-        if(this.value.generic){
-            for(const generic of this.value.generic.typeArguments){
+        if (this.value.generic) {
+            for (const generic of this.value.generic.typeArguments) {
                 const handler = Handler.getHandler(generic);
                 scope.addGeneric(handler?.collectDeclarations());
             }
         }
-        
-        
-        for(const parameter of this.value.parameters){
+
+
+        for (const parameter of this.value.parameters) {
             const handler = Handler.getHandler(parameter);
             scope.addParameter(handler?.collectDeclarations());
         }
-        
+
         scope.setArgs(Handler.getHandler(this.value.args)?.collectDeclarations());
         Handler.getHandler(this.value.body)?.collectDeclarations();
         this.popScope();

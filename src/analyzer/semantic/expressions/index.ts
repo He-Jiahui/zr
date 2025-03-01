@@ -1,6 +1,8 @@
-
 import "./ifHandler";
 import "./switchHandler";
+import "./forHandler";
+import "./whileHandler";
+
 import "./lambdaHandler";
 import "./arrayLiteralHandler";
 import "./objectLiteralHandler";
@@ -18,6 +20,6 @@ import "./assignmentHandler";
 
 import "./decoratorHandler";
 
-import { AssignmentType } from "./assignmentHandler";
+import {AssignmentType} from "./assignmentHandler";
 
 export type ExpressionType = AssignmentType;

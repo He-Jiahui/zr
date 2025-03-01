@@ -1,23 +1,24 @@
-import { ForeachLoop, ForLoop } from "../../../../parser/generated/parser"
-import { Handler } from "../../common/handler"
-import type { IdentifierType } from "../../declarations/identifierHandler"
-import type { DestructuringArrayType, DestructuringObjectType } from "../../declarations/variable/destructuringHandler"
-import type { VariableType } from "../../declarations/variable/variableHandler"
-import type { ExpressionType } from "../../expressions"
-import type { AllType } from "../../types/types"
-import type { BlockType } from "../blockHandler"
-import type { ExpressionStatementType } from "../expressionHandler"
+import {ForeachLoop, ForLoop} from "../../../parser/generated/parser"
+import {Handler} from "../common/handler"
+import type {IdentifierType} from "../declarations/identifierHandler"
+import type {DestructuringArrayType, DestructuringObjectType} from "../declarations/variable/destructuringHandler"
+import type {VariableType} from "../declarations/variable/variableHandler"
+import type {ExpressionType} from "./index"
+import type {AllType} from "../types/types"
+import type {BlockType} from "../statements/blockHandler"
+import type {ExpressionStatementType} from "../statements/expressionHandler"
 
-export type ForLoopStatementType = {
-    type:"ForLoopStatement",
+export type ForLoopExpressionType = {
+    type: "ForLoopExpression",
+    isStatement: boolean,
     init: VariableType | null,
     condition: ExpressionStatementType | null,
     step: ExpressionType | null,
     block: BlockType
 }
 
-export class ForLoopStatementHandler extends Handler{
-    public value: ForLoopStatementType;
+export class ForLoopExpressionHandler extends Handler {
+    public value: ForLoopExpressionType;
     private initHandler: Handler | null = null;
     private conditionHandler: Handler | null = null;
     private stepHandler: Handler | null = null;
@@ -25,24 +26,25 @@ export class ForLoopStatementHandler extends Handler{
 
     public _handle(node: ForLoop): void {
         super._handle(node);
-        if(node.init !== ";"){
+        if (node.init !== ";") {
             this.initHandler = Handler.handle(node.init, this.context);
-        }else{
+        } else {
             this.initHandler = null;
         }
-        if(node.cond !== ";"){
+        if (node.cond !== ";") {
             this.conditionHandler = Handler.handle(node.cond, this.context);
-        }else{
+        } else {
             this.conditionHandler = null;
         }
-        if(node.step){
+        if (node.step) {
             this.stepHandler = Handler.handle(node.step, this.context);
-        }else{
+        } else {
             this.stepHandler = null;
         }
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {
-            type:"ForLoopStatement",
+            type: "ForLoopExpression",
+            isStatement: node.isStatement,
             init: this.initHandler?.value as VariableType | null,
             condition: this.conditionHandler?.value as ExpressionStatementType | null,
             step: this.stepHandler?.value as ExpressionType | null,
@@ -51,18 +53,19 @@ export class ForLoopStatementHandler extends Handler{
     }
 }
 
-Handler.registerHandler("ForLoop", ForLoopStatementHandler);
+Handler.registerHandler("ForLoop", ForLoopExpressionHandler);
 
-export type ForeachLoopStatementType = {
-    type:"ForeachLoopStatement",
+export type ForeachLoopExpressionType = {
+    type: "ForeachLoopExpression",
+    isStatement: boolean,
     pattern: DestructuringObjectType | DestructuringArrayType | IdentifierType,
     typeInfo: AllType | null,
     expr: ExpressionType,
     block: BlockType
 }
 
-export class ForeachLoopStatementHandler extends Handler{
-    public value: ForeachLoopStatementType;
+export class ForeachLoopExpressionHandler extends Handler {
+    public value: ForeachLoopExpressionType;
     private patternHandler: Handler | null = null;
     private typeHandler: Handler | null = null;
     private exprHandler: Handler | null = null;
@@ -72,13 +75,14 @@ export class ForeachLoopStatementHandler extends Handler{
         super._handle(node);
         this.patternHandler = Handler.handle(node.pattern, this.context);
 
-        if(node.typeInfo){
+        if (node.typeInfo) {
             this.typeHandler = Handler.handle(node.typeInfo, this.context);
         }
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {
-            type:"ForeachLoopStatement",
+            type: "ForeachLoopExpression",
+            isStatement: node.isStatement,
             pattern: this.patternHandler.value as DestructuringObjectType | DestructuringArrayType | IdentifierType,
             typeInfo: this.typeHandler?.value as AllType | null,
             expr: this.exprHandler.value as ExpressionType,
@@ -87,4 +91,4 @@ export class ForeachLoopStatementHandler extends Handler{
     }
 }
 
-Handler.registerHandler("ForeachLoop", ForeachLoopStatementHandler);
+Handler.registerHandler("ForeachLoop", ForeachLoopExpressionHandler);

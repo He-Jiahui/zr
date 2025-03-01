@@ -1,17 +1,21 @@
-import { ScriptContext } from "../common/scriptContext";
-import { Handler } from "./semantic/common/handler";
+import {ScriptContext} from "../common/scriptContext";
+import {Handler} from "./semantic/common/handler";
 import "./semantic/index";
 import "./static/index";
-export class ZrSemanticAnalyzer{
+
+export class ZrSemanticAnalyzer {
     private context: ScriptContext;
     private scriptHandler: Handler;
-    public constructor(context: ScriptContext){
+
+    public constructor(context: ScriptContext) {
         this.context = context;
     }
-    public analyze(){
+
+    public analyze() {
         this.scriptHandler = Handler.handle(this.context.ast, this.context);
-    
+
         this.scriptHandler.collectDeclarations();
+
     }
 }
 

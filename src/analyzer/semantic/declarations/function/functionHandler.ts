@@ -105,7 +105,7 @@ export class FunctionHandler extends Handler {
         }
 
         scope.setArgs(Handler.getHandler(this.value.args)?.collectDeclarations());
-        Handler.getHandler(this.value.body)?.collectDeclarations();
+        scope.setBody(Handler.getHandler(this.value.body)?.collectDeclarations());
         this.popScope();
         return symbol;
     }

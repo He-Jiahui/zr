@@ -13,8 +13,8 @@ export class FunctionScope extends Scope {
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     public args: ParameterSymbol | null = null;
-    protected symbolTableList = [this.generics, this.parameters, this.args];
     public body: BlockSymbol | null = null;
+    protected symbolTableList = [this.generics, this.parameters, () => this.args, () => this.body];
 
     public addGeneric(generic: GenericSymbol | undefined): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);

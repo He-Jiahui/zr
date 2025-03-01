@@ -1,16 +1,17 @@
-import { DuplicatedIdentifierError } from "../../../errors/duplicatedIdentifierError";
-import { reportDuplicatedSymbol, Symbol, SymbolTable } from "../symbol/symbol";
+import {reportDuplicatedSymbol, Symbol, SymbolTable} from "../symbol/symbol";
 
-export class Scope{
+type SymbolGetter = () => Symbol | null;
+
+export class Scope {
     private static readonly scopeMap: Map<string, typeof Scope> = new Map<string, typeof Scope>();
-    
-    public static registerScope(scopeType: string, scope:typeof Scope){
+
+    public static registerScope(scopeType: string, scope: typeof Scope) {
         Scope.scopeMap.set(scopeType, scope);
     }
 
-    public static createScope<T extends Scope>(scopeType: string, parent: Scope | null = null): T{
+    public static createScope<T extends Scope>(scopeType: string, parent: Scope | null = null): T {
         const scope = Scope.scopeMap.get(scopeType);
-        if(!scope){
+        if (!scope) {
             return null!;
         }
         return new scope(parent) as T;
@@ -19,22 +20,23 @@ export class Scope{
 
     public readonly type: string;
     protected readonly parent: Scope | null; // 父作用域
-    protected symbolTableList: (SymbolTable<Symbol>|Symbol|null)[] = [];
-    constructor(parent: Scope | null = null){
+    protected symbolTableList: (SymbolTable<Symbol> | SymbolGetter | null)[] = [];
+
+    constructor(parent: Scope | null = null) {
         this.parent = parent;
     }
 
     // 
     // 定义一个公共方法 getSymbol，用于获取符号对象
-    public getSymbol(symbol:string):Symbol | null{
+    public getSymbol(symbol: string): Symbol | null {
         // 调用私有方法 _getSymbol，尝试获取符号对象
         const sym = this._getSymbol(symbol);
         // 如果获取到了符号对象，则直接返回该符号对象
-        if(sym){
+        if (sym) {
             return sym;
         }
         // 如果当前对象没有父对象，则返回 null
-        if(this.parent){
+        if (this.parent) {
             // 如果当前对象有父对象，则递归调用父对象的 getSymbol 方法，尝试从父对象中获取符号对象
             return this.parent.getSymbol(symbol);
         }
@@ -42,26 +44,30 @@ export class Scope{
         return null;
     }
 
-    protected checkSymbolUnique(symbol: Symbol | undefined): boolean{
-        if(!symbol){
+    protected checkSymbolUnique(symbol: Symbol | undefined): boolean {
+        if (!symbol) {
             return false;
         }
-        for(const table of this.symbolTableList){
-            if(!table){
+        for (const table of this.symbolTableList) {
+            if (!table) {
                 continue;
             }
-            if(table instanceof SymbolTable){
+            if (table instanceof SymbolTable) {
                 const mayDuplicated = table.getSymbol(symbol.name);
-                if(mayDuplicated){
+                if (mayDuplicated) {
                     reportDuplicatedSymbol(symbol, mayDuplicated);
                     return false;
                 }
-            }else if(table instanceof Symbol){
-                if(!table.name){
+            } else if (typeof (table) === "function") {
+                if (!table.name) {
                     continue;
                 }
-                if(table.name === symbol.name){
-                    reportDuplicatedSymbol(table, symbol);
+                const realSymbol = table() as Symbol | null;
+                if (!realSymbol) {
+                    continue;
+                }
+                if (realSymbol.name === symbol.name) {
+                    reportDuplicatedSymbol(realSymbol, symbol);
                     return false;
                 }
             }
@@ -69,10 +75,9 @@ export class Scope{
         return true;
     }
 
-    protected _getSymbol(_symbol:string):Symbol | undefined{
+    protected _getSymbol(_symbol: string): Symbol | undefined {
         return undefined;
     }
-
 
 
 }

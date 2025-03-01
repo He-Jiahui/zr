@@ -4,6 +4,7 @@ import {ModuleSymbol} from "../static/symbol/moduleSymbol";
 import {Handler} from "./common/handler";
 import type {ModuleDeclarationHandler, ModuleDeclarationType} from "./moduleDeclarationHandler";
 import type {TopLevelStatementType} from "./statements";
+import {prettyPrintSymbolTables} from "../../utils/prettyPrint";
 
 export type ScriptType = {
     type: "Script",
@@ -96,6 +97,7 @@ export class ScriptHandler extends Handler {
         this.popScope();
 
         this._symbol = symbol;
+        prettyPrintSymbolTables(this._symbol);
         return symbol;
     }
 }

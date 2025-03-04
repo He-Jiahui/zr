@@ -396,6 +396,34 @@ class MetaFunctionHandler extends handler_1.Handler {
             body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
         };
     }
+    _collectDeclarations() {
+        const metaType = this.value.meta.name.name;
+        const metaName = "@" + metaType;
+        const symbol = this.context.declare(metaName, "Meta");
+        symbol.metaType = metaType;
+        symbol.accessibility = this.value.access;
+        symbol.isStatic = this.value.static;
+        const scope = this.pushScope("Function");
+        scope.signature = symbol;
+        symbol.body = scope;
+        // TODO: add parameters and args to scope
+        for (const parameter of this.value.parameters) {
+            const handler = handler_1.Handler.getHandler(parameter);
+            scope.addParameter(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        }
+        if (this.value.args) {
+            const handler = handler_1.Handler.getHandler(this.value.args);
+            scope.setArgs(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        }
+        // TODO:handle super calls
+        const body = this.value.body;
+        if (body) {
+            const handler = handler_1.Handler.getHandler(body);
+            scope.setBody(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        }
+        this.popScope();
+        return symbol;
+    }
 }
 exports.MetaFunctionHandler = MetaFunctionHandler;
 handler_1.Handler.registerHandler("ClassMetaFunction", MetaFunctionHandler);
@@ -486,6 +514,7 @@ class MethodHandler extends handler_1.Handler {
         // todo: type is not available now
         // symbol.returnType = this.value.returnType;
         symbol.isStatic = this.value.static;
+        symbol.accessibility = this.value.access;
         scope.signature = symbol;
         // decorators
         for (const decorator of this.value.decorators) {
@@ -535,6 +564,7 @@ handler_1.Handler.registerHandler("ClassMethod", MethodHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PropertyHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 class PropertyHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -589,6 +619,49 @@ class PropertyHandler extends handler_1.Handler {
             decorators: this.decoratorHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             body: (_d = this.bodyHandler) === null || _d === void 0 ? void 0 : _d.value
         };
+    }
+    _collectDeclarations() {
+        var _a;
+        const propertyName = this.value.name.name;
+        const symbol = this.context.declare(propertyName, "Property");
+        symbol.accessibility = this.value.access;
+        symbol.isStatic = this.value.static;
+        const propertyType = this.value.propertyType;
+        symbol.propertyType = propertyType;
+        for (const decorator of this.value.decorators) {
+            const handler = handler_1.Handler.getHandler(decorator);
+            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        }
+        const isGetter = propertyType === access_1.PropertyType.GET;
+        let functionSymbol;
+        if (isGetter) {
+            const getterSymbol = this.context.declare(propertyName + "$Get", "Function");
+            symbol.getterSymbol = getterSymbol;
+            functionSymbol = getterSymbol;
+        }
+        else {
+            const setterSymbol = this.context.declare(propertyName + "$Set", "Function");
+            symbol.setterSymbol = setterSymbol;
+            functionSymbol = setterSymbol;
+        }
+        functionSymbol.accessibility = this.value.access;
+        functionSymbol.isStatic = this.value.static;
+        functionSymbol.decorators.push(...symbol.decorators);
+        const scope = this.pushScope("Function");
+        scope.signature = functionSymbol;
+        functionSymbol.body = scope;
+        if (!isGetter) {
+            // add parameter
+            const parameterSymbol = this.context.declare(this.value.param.name, "Parameter");
+            // TODO parameterSymbol type should be determined by the propertyType
+            scope.addParameter(parameterSymbol);
+        }
+        else {
+            // TODO: add return type for getter
+        }
+        scope.setBody((_a = handler_1.Handler.getHandler(this.value.body)) === null || _a === void 0 ? void 0 : _a.collectDeclarations());
+        this.popScope();
+        return symbol;
     }
 }
 exports.PropertyHandler = PropertyHandler;
@@ -732,6 +805,7 @@ handler_1.Handler.registerHandler("EnumMember", EnumMemberHandler);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionHandler = void 0;
+const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 class FunctionHandler extends handler_1.Handler {
     constructor() {
@@ -803,6 +877,8 @@ class FunctionHandler extends handler_1.Handler {
         const scope = this.pushScope("Function");
         scope.signature = symbol;
         symbol.body = scope;
+        symbol.accessibility = access_1.Access.PUBLIC;
+        symbol.isStatic = true;
         for (const decorator of this.value.decorators) {
             const handler = handler_1.Handler.getHandler(decorator);
             symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
@@ -3279,6 +3355,7 @@ scope_1.Scope.registerScope("Block", BlockScope);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ClassScope = void 0;
+const access_1 = __webpack_require__(/*! ../../../types/access */ "./src/types/access.ts");
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 class ClassScope extends scope_1.Scope {
@@ -3290,7 +3367,7 @@ class ClassScope extends scope_1.Scope {
         this.properties = new symbol_1.SymbolTable();
         this.methods = new symbol_1.SymbolTable();
         this.metaFunctions = new symbol_1.SymbolTable();
-        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods];
+        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods, this.metaFunctions];
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -3301,14 +3378,54 @@ class ClassScope extends scope_1.Scope {
         return success;
     }
     addProperty(property) {
+        var _a, _b;
+        if (property) {
+            const definedProperty = this.properties.getSymbol(property.name);
+            if (definedProperty) {
+                // check type of defined property
+                if (definedProperty.propertyType === property.propertyType || definedProperty.propertyType === access_1.PropertyType.GET_SET) {
+                    // TODO: throw error if they are the same type or if they are GET_SET
+                    return false;
+                }
+                if (definedProperty.isStatic !== property.isStatic) {
+                    // TODO: throw error if they are not the same type
+                    return false;
+                }
+                // warning if they have different accessibility
+                if (definedProperty.accessibility !== property.accessibility) {
+                    // TODO: throw warning if they have different accessibility
+                }
+                // merge getter and setter body if they are not defined yet
+                definedProperty.propertyType = access_1.PropertyType.GET_SET;
+                definedProperty.getterSymbol = (_a = property.getterSymbol) !== null && _a !== void 0 ? _a : definedProperty.getterSymbol;
+                definedProperty.setterSymbol = (_b = property.setterSymbol) !== null && _b !== void 0 ? _b : definedProperty.setterSymbol;
+                return true;
+            }
+        }
         const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
         return success;
     }
     addMethod(method) {
+        if (method) {
+            const definedMethod = this.methods.getSymbol(method.name);
+            if (definedMethod) {
+                // now we are not able to check overloads signatures, just add into overload list
+                // it will be checked later when type is resolved
+                definedMethod.overloads.push(method);
+                return true;
+            }
+        }
         const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
         return success;
     }
     addMetaFunction(metaFunction) {
+        if (metaFunction) {
+            const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
+            if (definedMetaFunction) {
+                definedMetaFunction.overloads.push(metaFunction);
+                return true;
+            }
+        }
         const success = this.metaFunctions.addSymbol(metaFunction);
         return success;
     }
@@ -3594,9 +3711,6 @@ class Scope {
                 }
             }
             else if (typeof (table) === "function") {
-                if (!table.name) {
-                    continue;
-                }
                 const realSymbol = table();
                 if (!realSymbol) {
                     continue;
@@ -3774,9 +3888,11 @@ class FunctionSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
         this.type = "function";
-        // 函数调用
+        // 
+        this.overloads = [];
+        // 
         this.isStatic = false;
-        // 函数装饰器
+        // 
         this.decorators = [];
     }
 }
@@ -3874,6 +3990,7 @@ class MetaSymbol extends functionSymbol_1.FunctionSymbol {
     constructor() {
         super(...arguments);
         this.type = "meta";
+        this.overloads = [];
     }
 }
 exports.MetaSymbol = MetaSymbol;
@@ -17745,6 +17862,42 @@ exports.ZrParser = ZrParser;
 
 /***/ }),
 
+/***/ "./src/types/access.ts":
+/*!*****************************!*\
+  !*** ./src/types/access.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MetaType = exports.PropertyType = exports.Access = void 0;
+var Access;
+(function (Access) {
+    Access["PUBLIC"] = "pub";
+    Access["PRIVATE"] = "pri";
+    Access["PROTECTED"] = "pro";
+})(Access || (exports.Access = Access = {}));
+var PropertyType;
+(function (PropertyType) {
+    PropertyType["GET"] = "get";
+    PropertyType["SET"] = "set";
+    PropertyType["GET_SET"] = "get_set";
+})(PropertyType || (exports.PropertyType = PropertyType = {}));
+var MetaType;
+(function (MetaType) {
+    MetaType[MetaType["CONSTRUCTOR"] = 1] = "CONSTRUCTOR";
+    MetaType[MetaType["ADD"] = 2] = "ADD";
+    MetaType[MetaType["SUB"] = 3] = "SUB";
+    MetaType[MetaType["MUL"] = 4] = "MUL";
+    MetaType[MetaType["DIV"] = 5] = "DIV";
+    MetaType[MetaType["MOD"] = 6] = "MOD";
+    MetaType[MetaType["NEG"] = 7] = "NEG";
+    MetaType[MetaType["COMPARE"] = 8] = "COMPARE";
+})(MetaType || (exports.MetaType = MetaType = {}));
+
+
+/***/ }),
+
 /***/ "./src/utils/i18n.ts":
 /*!***************************!*\
   !*** ./src/utils/i18n.ts ***!
@@ -17850,6 +18003,14 @@ function prettyPrintSymbolTables(sym, indent = 0) {
                     }
                     prettyPrintSymbolTables(k, indent + 2);
                 }
+            }
+        }
+        else if (value instanceof symbol_1.Symbol) {
+            prettyPrintSymbolTables(value, indent + 2);
+        }
+        else if (value instanceof Array && value.length > 0 && value[0] instanceof symbol_1.Symbol) {
+            for (const v of value) {
+                prettyPrintSymbolTables(v, indent + 2);
             }
         }
     }

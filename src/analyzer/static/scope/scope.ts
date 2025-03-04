@@ -59,9 +59,6 @@ export class Scope {
                     return false;
                 }
             } else if (typeof (table) === "function") {
-                if (!table.name) {
-                    continue;
-                }
                 const realSymbol = table() as Symbol | null;
                 if (!realSymbol) {
                     continue;

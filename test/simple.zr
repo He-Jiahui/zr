@@ -193,6 +193,7 @@ class Student:Person, Man{
         // do nothing
     }
 
+
     pub test():void{
         // 函数
         key.register(()=>{

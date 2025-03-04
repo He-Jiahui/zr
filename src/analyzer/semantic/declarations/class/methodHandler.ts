@@ -94,6 +94,8 @@ export class MethodHandler extends Handler {
         // todo: type is not available now
         // symbol.returnType = this.value.returnType;
         symbol.isStatic = this.value.static;
+        symbol.accessibility = this.value.access;
+
 
         scope.signature = symbol;
         // decorators

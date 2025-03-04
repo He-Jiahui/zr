@@ -31,6 +31,12 @@ export function prettyPrintSymbolTables(sym: Symbol, indent: number = 0) {
                     prettyPrintSymbolTables(k, indent + 2);
                 }
             }
+        }else if(value instanceof Symbol){
+            prettyPrintSymbolTables(value, indent + 2);
+        }else if(value instanceof Array && value.length > 0 && value[0] instanceof Symbol){
+            for(const v of value){
+                prettyPrintSymbolTables(v, indent + 2);
+            }
         }
     }
 }

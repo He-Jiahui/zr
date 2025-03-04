@@ -1,4 +1,5 @@
 import {FunctionDeclaration} from "../../../../parser/generated/parser";
+import { Access } from "../../../../types/access";
 import {FunctionScope} from "../../../static/scope/functionScope";
 import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {Handler} from "../../common/handler";
@@ -85,6 +86,8 @@ export class FunctionHandler extends Handler {
         const scope = this.pushScope<FunctionScope>("Function");
         scope.signature = symbol;
         symbol.body = scope;
+        symbol.accessibility = Access.PUBLIC;
+        symbol.isStatic = true;
 
         for (const decorator of this.value.decorators) {
             const handler = Handler.getHandler(decorator);

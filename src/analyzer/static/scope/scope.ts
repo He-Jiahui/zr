@@ -1,4 +1,4 @@
-import {reportDuplicatedSymbol, Symbol, SymbolTable} from "../symbol/symbol";
+import {reportDuplicatedSymbol, Symbol, SymbolOrSymbolSet, SymbolTable} from "../symbol/symbol";
 
 type SymbolGetter = () => Symbol | null;
 
@@ -44,32 +44,41 @@ export class Scope {
         return null;
     }
 
-    protected checkSymbolUnique(symbol: Symbol | undefined): boolean {
+    protected checkSymbolUnique(symbol: SymbolOrSymbolSet): boolean {
         if (!symbol) {
             return false;
         }
-        for (const table of this.symbolTableList) {
-            if (!table) {
-                continue;
-            }
-            if (table instanceof SymbolTable) {
-                const mayDuplicated = table.getSymbol(symbol.name);
-                if (mayDuplicated) {
-                    reportDuplicatedSymbol(symbol, mayDuplicated);
-                    return false;
-                }
-            } else if (typeof (table) === "function") {
-                const realSymbol = table() as Symbol | null;
-                if (!realSymbol) {
+        let symbolSet: Symbol[];
+        if(symbol instanceof Array){
+            symbolSet = symbol;
+        }else {
+            symbolSet = [symbol];
+        }
+        let allSymbolUnique = true;
+        for(const symbol of symbolSet){
+            for (const table of this.symbolTableList) {
+                if (!table) {
                     continue;
                 }
-                if (realSymbol.name === symbol.name) {
-                    reportDuplicatedSymbol(realSymbol, symbol);
-                    return false;
+                if (table instanceof SymbolTable) {
+                    const mayDuplicated = table.getSymbol(symbol.name);
+                    if (mayDuplicated) {
+                        reportDuplicatedSymbol(symbol, mayDuplicated);
+                        allSymbolUnique = false;
+                    }
+                } else if (typeof (table) === "function") {
+                    const realSymbol = table() as Symbol | null;
+                    if (!realSymbol) {
+                        continue;
+                    }
+                    if (realSymbol.name === symbol.name) {
+                        reportDuplicatedSymbol(realSymbol, symbol);
+                        allSymbolUnique = false;
+                    }
                 }
             }
         }
-        return true;
+        return allSymbolUnique;
     }
 
     protected _getSymbol(_symbol: string): Symbol | undefined {

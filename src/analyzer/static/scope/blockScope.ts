@@ -1,4 +1,4 @@
-import {type Symbol, SymbolTable} from "../symbol/symbol";
+import {type Symbol, SymbolOrSymbolSet, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
 import type {VariableSymbol} from "../symbol/variableSymbol";
 import {Scope} from "./scope";
 import type {BlockSymbol} from "../symbol/blockSymbol";
@@ -14,12 +14,12 @@ export class BlockScope extends Scope {
     protected symbolTableList: SymbolTable<Symbol>[] = [this.variables, this.subScopeSymbols];
 
 
-    public addVariable(variable: VariableSymbol | undefined) {
+    public addVariable(variable: TSymbolOrSymbolSet<VariableSymbol>) {
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;
     }
 
-    public addSubScope(subScopes: Symbol | undefined) {
+    public addSubScope(subScopes: SymbolOrSymbolSet) {
         const success = this.checkSymbolUnique(subScopes) && this.subScopeSymbols.addSymbol(subScopes);
         return success;
     }

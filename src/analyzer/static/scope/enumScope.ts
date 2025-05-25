@@ -1,5 +1,5 @@
 import type { EnumSymbol } from "../symbol/enumSymbol";
-import { type Symbol, SymbolTable } from "../symbol/symbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
 import type { VariableSymbol } from "../symbol/variableSymbol";
 import { Scope } from "./scope";
 
@@ -13,7 +13,7 @@ export class EnumScope extends Scope {
     protected symbolTableList: SymbolTable<Symbol>[] = [this.enumMembers];
 
 
-    public addMember(member: VariableSymbol | undefined): boolean {
+    public addMember(member: TSymbolOrSymbolSet<VariableSymbol>): boolean {
         return this.checkSymbolUnique(member) && this.enumMembers.addSymbol(member);
     }
 

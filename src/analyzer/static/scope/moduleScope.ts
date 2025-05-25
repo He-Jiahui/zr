@@ -5,7 +5,7 @@ import type { FunctionSymbol } from "../symbol/functionSymbol";
 import type { InterfaceSymbol } from "../symbol/interfaceSymbol";
 import type { ModuleSymbol } from "../symbol/moduleSymbol";
 import type { StructSymbol } from "../symbol/structSymbol";
-import { type Symbol, SymbolTable } from "../symbol/symbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
 import type { VariableSymbol } from "../symbol/variableSymbol";
 import { Scope } from "./scope";
 export class ModuleScope extends Scope {
@@ -22,32 +22,32 @@ export class ModuleScope extends Scope {
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.variables, this.classes, this.interfaces, this.structs, this.enums];
 
-    public addFunction($function: FunctionSymbol | undefined): boolean {
+    public addFunction($function: TSymbolOrSymbolSet<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
         return success;
     }
 
-    public addVariable(variable: VariableSymbol | undefined): boolean {
+    public addVariable(variable: TSymbolOrSymbolSet<VariableSymbol>): boolean {
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;
     }
 
-    public addClass($class: ClassSymbol | undefined): boolean {
+    public addClass($class: TSymbolOrSymbolSet<ClassSymbol>): boolean {
         const success = this.checkSymbolUnique($class) && this.classes.addSymbol($class);
         return success;
     }
 
-    public addInterface($interface: InterfaceSymbol | undefined): boolean {
+    public addInterface($interface: TSymbolOrSymbolSet<InterfaceSymbol>): boolean {
         const success = this.checkSymbolUnique($interface) && this.interfaces.addSymbol($interface);
         return success;
     }
 
-    public addStruct($struct: StructSymbol | undefined): boolean {
+    public addStruct($struct: TSymbolOrSymbolSet<StructSymbol>): boolean {
         const success = this.checkSymbolUnique($struct) && this.structs.addSymbol($struct);
         return success;
     }
 
-    public addEnum($enum: EnumSymbol | undefined): boolean {
+    public addEnum($enum: TSymbolOrSymbolSet<EnumSymbol>): boolean {
         const success = this.checkSymbolUnique($enum) && this.enums.addSymbol($enum);
         return success;
     }

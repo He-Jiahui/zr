@@ -1,6 +1,7 @@
 import { ExpressionStatement } from "../../../parser/generated/parser";
 import { Handler } from "../common/handler";
 import { ExpressionType } from "../expressions";
+import {Symbol} from "../../static/symbol/symbol";
 
 export type ExpressionStatementType = {
     type: 'ExpressionStatement';
@@ -19,6 +20,11 @@ export class ExpressionStatementHandler extends Handler{
             type: 'ExpressionStatement',
             expr: this.exprHandler?.value as ExpressionType
         }
+    }
+
+    protected _collectDeclarations() {
+        const handler = Handler.getHandler(this.value.expr);
+        return handler?.collectDeclarations();
     }
 }
 

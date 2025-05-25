@@ -97,6 +97,7 @@ export class ScriptHandler extends Handler {
         this.popScope();
 
         this._symbol = symbol;
+        // TODO: debug only
         prettyPrintSymbolTables(this._symbol);
         return symbol;
     }

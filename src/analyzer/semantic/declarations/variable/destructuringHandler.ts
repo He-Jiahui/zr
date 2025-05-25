@@ -1,4 +1,6 @@
 import { DestructuringPattern } from "../../../../parser/generated/parser";
+import { Symbol } from "../../../static/symbol/symbol";
+import { VariableSymbol } from "../../../static/symbol/variableSymbol";
 import { Handler } from "../../common/handler"
 import type { IdentifierType } from "../identifierHandler"
 

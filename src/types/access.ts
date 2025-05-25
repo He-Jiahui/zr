@@ -19,6 +19,7 @@ export enum MetaType{
     MOD = 6,
     NEG = 7,
     COMPARE = 8,
-    
+    TO_BOOL = 9,
+    TO_STRING = 10,
 
 }

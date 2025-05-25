@@ -58,7 +58,7 @@ class Handler {
     collectDeclarations() {
         return this._collectDeclarations();
     }
-    // collects 
+    // collects
     _collectDeclarations() {
         return undefined;
     }
@@ -1762,6 +1762,7 @@ handler_1.Handler.registerHandler("ArrayLiteral", ArrayLiteralHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AssignmentHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const symbol_1 = __webpack_require__(/*! ../../static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 class AssignmentHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1779,6 +1780,55 @@ class AssignmentHandler extends handler_1.Handler {
             right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
             op: node.op
         };
+    }
+    _collectDeclarations() {
+        switch (this.value.type) {
+            case "AssignmentExpression":
+                {
+                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
+                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
+                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
+                }
+                break;
+            case "ConditionalExpression":
+                {
+                    const conditionHandler = handler_1.Handler.getHandler(this.value.condition);
+                    const alternateHandler = handler_1.Handler.getHandler(this.value.alternate);
+                    const consequentHandler = handler_1.Handler.getHandler(this.value.consequent);
+                    return (0, symbol_1.makeSymbolSet)(conditionHandler, consequentHandler, alternateHandler);
+                }
+                break;
+            case "BinaryExpression":
+                {
+                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
+                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
+                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
+                }
+                break;
+            case "LogicalExpression":
+                {
+                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
+                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
+                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
+                }
+                break;
+            case "PrimaryExpression":
+                {
+                    const propertyHandler = handler_1.Handler.getHandler(this.value.property);
+                    const membersHandler = this.value.members.map(m => handler_1.Handler.getHandler(m));
+                    return (0, symbol_1.makeSymbolSet)(propertyHandler, ...membersHandler);
+                }
+                break;
+            case "UnaryExpression":
+                {
+                    const handler = handler_1.Handler.getHandler(this.value.arguments);
+                    return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
+                }
+                break;
+            default: {
+                return undefined;
+            }
+        }
     }
 }
 exports.AssignmentHandler = AssignmentHandler;
@@ -1884,6 +1934,7 @@ class DecoratorExpressionHandler extends handler_1.Handler {
         };
     }
     _collectDeclarations() {
+        // if there is a block in expression
         const handler = handler_1.Handler.getHandler(this.value.expr);
         return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
     }
@@ -2831,6 +2882,7 @@ class ScriptHandler extends handler_1.Handler {
         }
         this.popScope();
         this._symbol = symbol;
+        // TODO: debug only
         (0, prettyPrint_1.prettyPrintSymbolTables)(this._symbol);
         return symbol;
     }
@@ -3044,6 +3096,10 @@ class ExpressionStatementHandler extends handler_1.Handler {
             type: 'ExpressionStatement',
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
+    }
+    _collectDeclarations() {
+        const handler = handler_1.Handler.getHandler(this.value.expr);
+        return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
     }
 }
 exports.ExpressionStatementHandler = ExpressionStatementHandler;
@@ -3378,8 +3434,8 @@ class ClassScope extends scope_1.Scope {
         return success;
     }
     addProperty(property) {
-        var _a, _b;
-        if (property) {
+        return (0, symbol_1.checkSymbolOrSymbolSet)(property, (property) => {
+            var _a, _b;
             const definedProperty = this.properties.getSymbol(property.name);
             if (definedProperty) {
                 // check type of defined property
@@ -3399,35 +3455,38 @@ class ClassScope extends scope_1.Scope {
                 definedProperty.propertyType = access_1.PropertyType.GET_SET;
                 definedProperty.getterSymbol = (_a = property.getterSymbol) !== null && _a !== void 0 ? _a : definedProperty.getterSymbol;
                 definedProperty.setterSymbol = (_b = property.setterSymbol) !== null && _b !== void 0 ? _b : definedProperty.setterSymbol;
-                return true;
             }
-        }
-        const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
-        return success;
+            const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
+            return success;
+        });
     }
     addMethod(method) {
-        if (method) {
-            const definedMethod = this.methods.getSymbol(method.name);
-            if (definedMethod) {
-                // now we are not able to check overloads signatures, just add into overload list
-                // it will be checked later when type is resolved
-                definedMethod.overloads.push(method);
-                return true;
+        return (0, symbol_1.checkSymbolOrSymbolSet)(method, (method) => {
+            if (method) {
+                const definedMethod = this.methods.getSymbol(method.name);
+                if (definedMethod) {
+                    // now we are not able to check overloads signatures, just add into overload list
+                    // it will be checked later when type is resolved
+                    definedMethod.overloads.push(method);
+                    return true;
+                }
             }
-        }
-        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
-        return success;
+            const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+            return success;
+        });
     }
     addMetaFunction(metaFunction) {
-        if (metaFunction) {
-            const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
-            if (definedMetaFunction) {
-                definedMetaFunction.overloads.push(metaFunction);
-                return true;
+        return (0, symbol_1.checkSymbolOrSymbolSet)(metaFunction, (metaFunction) => {
+            if (metaFunction) {
+                const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
+                if (definedMetaFunction) {
+                    definedMetaFunction.overloads.push(metaFunction);
+                    return true;
+                }
             }
-        }
-        const success = this.metaFunctions.addSymbol(metaFunction);
-        return success;
+            const success = this.metaFunctions.addSymbol(metaFunction);
+            return success;
+        });
     }
     _getSymbol(name) {
         const symbol = this.fields.getSymbol(name) || this.properties.getSymbol(name) || this.methods.getSymbol(name) || this.generics.getSymbol(name);
@@ -3503,19 +3562,26 @@ class FunctionScope extends scope_1.Scope {
         return success;
     }
     setArgs(args) {
-        if (this.args == null) {
-            return true;
-        }
-        this.args = null;
-        const success = this.checkSymbolUnique(args);
-        if (success) {
-            this.args = args !== null && args !== void 0 ? args : null;
-            return true;
-        }
-        return false;
+        return (0, symbol_1.checkSymbolOrSymbolSet)(args, (args) => {
+            if (this.args == null) {
+                return true;
+            }
+            this.args = null;
+            const success = this.checkSymbolUnique(args);
+            if (success) {
+                this.args = args !== null && args !== void 0 ? args : null;
+                return true;
+            }
+            return false;
+        });
     }
     setBody(body) {
-        this.body = body !== null && body !== void 0 ? body : null;
+        if (body instanceof Array) {
+            this.body = body[0];
+        }
+        else {
+            this.body = body !== null && body !== void 0 ? body : null;
+        }
     }
     _getSymbol(_symbol) {
         return this.parameters.getSymbol(_symbol);
@@ -3699,29 +3765,39 @@ class Scope {
         if (!symbol) {
             return false;
         }
-        for (const table of this.symbolTableList) {
-            if (!table) {
-                continue;
-            }
-            if (table instanceof symbol_1.SymbolTable) {
-                const mayDuplicated = table.getSymbol(symbol.name);
-                if (mayDuplicated) {
-                    (0, symbol_1.reportDuplicatedSymbol)(symbol, mayDuplicated);
-                    return false;
-                }
-            }
-            else if (typeof (table) === "function") {
-                const realSymbol = table();
-                if (!realSymbol) {
+        let symbolSet;
+        if (symbol instanceof Array) {
+            symbolSet = symbol;
+        }
+        else {
+            symbolSet = [symbol];
+        }
+        let allSymbolUnique = true;
+        for (const symbol of symbolSet) {
+            for (const table of this.symbolTableList) {
+                if (!table) {
                     continue;
                 }
-                if (realSymbol.name === symbol.name) {
-                    (0, symbol_1.reportDuplicatedSymbol)(realSymbol, symbol);
-                    return false;
+                if (table instanceof symbol_1.SymbolTable) {
+                    const mayDuplicated = table.getSymbol(symbol.name);
+                    if (mayDuplicated) {
+                        (0, symbol_1.reportDuplicatedSymbol)(symbol, mayDuplicated);
+                        allSymbolUnique = false;
+                    }
+                }
+                else if (typeof (table) === "function") {
+                    const realSymbol = table();
+                    if (!realSymbol) {
+                        continue;
+                    }
+                    if (realSymbol.name === symbol.name) {
+                        (0, symbol_1.reportDuplicatedSymbol)(realSymbol, symbol);
+                        allSymbolUnique = false;
+                    }
                 }
             }
         }
-        return true;
+        return allSymbolUnique;
     }
     _getSymbol(_symbol) {
         return undefined;
@@ -4098,6 +4174,8 @@ symbol_1.Symbol.registerSymbol("Struct", StructSymbol);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymbolTable = exports.Symbol = void 0;
+exports.makeSymbolSet = makeSymbolSet;
+exports.checkSymbolOrSymbolSet = checkSymbolOrSymbolSet;
 exports.reportDuplicatedSymbol = reportDuplicatedSymbol;
 const duplicatedIdentifierError_1 = __webpack_require__(/*! ../../../errors/duplicatedIdentifierError */ "./src/errors/duplicatedIdentifierError.ts");
 class Symbol {
@@ -4119,6 +4197,34 @@ class Symbol {
 }
 exports.Symbol = Symbol;
 Symbol.symbolMap = new Map();
+function makeSymbolSet(...handlers) {
+    const symbolSet = [];
+    for (const handler of handlers) {
+        const symbol = handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
+        if (symbol instanceof Array) {
+            symbolSet.push(...symbol);
+        }
+        else if (symbol) {
+            symbolSet.push(symbol);
+        }
+    }
+    return symbolSet;
+}
+function checkSymbolOrSymbolSet(symbolOrSymbolSet, predicate) {
+    if (!symbolOrSymbolSet) {
+        return true;
+    }
+    if (symbolOrSymbolSet instanceof Array) {
+        let allCheckPass = true;
+        for (const symbol of symbolOrSymbolSet) {
+            allCheckPass && (allCheckPass = predicate(symbol));
+        }
+        return allCheckPass;
+    }
+    else {
+        return predicate(symbolOrSymbolSet);
+    }
+}
 class SymbolTable {
     constructor() {
         this.symbolTable = [];
@@ -4127,28 +4233,37 @@ class SymbolTable {
         if (!symbol) {
             return false;
         }
-        if (symbol.type === "Function") {
-            // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded 
-            // so we pass the check here
-            return true;
-        }
-        // variable destruction pattern can have multiple symbols with names, we should check all of them
-        if (!symbol.name) {
-            let finalResult = true;
-            for (const subSymbol of symbol.subSymbols) {
-                const result = this.addSymbol(subSymbol);
-                finalResult = result && finalResult;
-            }
-            return finalResult;
-        }
-        const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
-        if (duplicatedCheckIndex === -1) {
-            this.symbolTable.push(symbol);
-            return true;
+        let symbolSet;
+        if (symbol instanceof Array) {
+            symbolSet = symbol;
         }
         else {
-            const conflictSymbol = this.symbolTable[duplicatedCheckIndex];
-            reportDuplicatedSymbol(symbol, conflictSymbol);
+            symbolSet = [symbol];
+        }
+        for (const symbol of symbolSet) {
+            if (symbol.type === "Function") {
+                // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
+                // so we pass the check here
+                return true;
+            }
+            // variable destruction pattern can have multiple symbols with names, we should check all of them
+            if (!symbol.name) {
+                let finalResult = true;
+                for (const subSymbol of symbol.subSymbols) {
+                    const result = this.addSymbol(subSymbol);
+                    finalResult = result && finalResult;
+                }
+                return finalResult;
+            }
+            const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
+            if (duplicatedCheckIndex === -1) {
+                this.symbolTable.push(symbol);
+                return true;
+            }
+            else {
+                const conflictSymbol = this.symbolTable[duplicatedCheckIndex];
+                reportDuplicatedSymbol(symbol, conflictSymbol);
+            }
         }
         return false;
     }
@@ -17893,6 +18008,8 @@ var MetaType;
     MetaType[MetaType["MOD"] = 6] = "MOD";
     MetaType[MetaType["NEG"] = 7] = "NEG";
     MetaType[MetaType["COMPARE"] = 8] = "COMPARE";
+    MetaType[MetaType["TO_BOOL"] = 9] = "TO_BOOL";
+    MetaType[MetaType["TO_STRING"] = 10] = "TO_STRING";
 })(MetaType || (exports.MetaType = MetaType = {}));
 
 

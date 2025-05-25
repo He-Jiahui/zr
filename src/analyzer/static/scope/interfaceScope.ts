@@ -4,7 +4,7 @@ import type { FunctionSymbol } from "../symbol/functionSymbol";
 import type { GenericSymbol } from "../symbol/genericSymbol";
 import type { InterfaceSymbol } from "../symbol/interfaceSymbol";
 import type { PropertySymbol } from "../symbol/propertySymbol";
-import { type Symbol, SymbolTable } from "../symbol/symbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
 import { Scope } from "./scope";
 export class InterfaceScope extends Scope {
     public readonly type: string = "InterfaceScope";
@@ -17,22 +17,22 @@ export class InterfaceScope extends Scope {
     protected readonly methods: SymbolTable<FunctionSymbol> = new SymbolTable<FunctionSymbol>();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.properties, this.methods];
 
-    public addGeneric(generic: GenericSymbol | undefined): boolean {
+    public addGeneric(generic: TSymbolOrSymbolSet<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
     }
 
-    public addField(field: FieldSymbol | undefined): boolean {
+    public addField(field: TSymbolOrSymbolSet<FieldSymbol>): boolean {
         const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
         return success;
     }
 
-    public addProperty(property: PropertySymbol | undefined): boolean {
+    public addProperty(property: TSymbolOrSymbolSet<PropertySymbol>): boolean {
         const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
         return success;
     }
 
-    public addMethod(method: FunctionSymbol | undefined): boolean {
+    public addMethod(method: TSymbolOrSymbolSet<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
         return success;
     }

@@ -1,7 +1,7 @@
 import type {ExpressionType} from ".";
 import {DecoratorExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
-import {Symbol} from "../../static/symbol/symbol";
+import {Symbol, SymbolOrSymbolSet} from "../../static/symbol/symbol";
 
 export type DecoratorExpressionType = {
     type: 'DecoratorExpression',
@@ -22,7 +22,8 @@ export class DecoratorExpressionHandler extends Handler {
         }
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
+    protected _collectDeclarations() {
+        // if there is a block in expression
         const handler = Handler.getHandler(this.value.expr);
         return handler?.collectDeclarations();
     }

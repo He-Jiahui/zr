@@ -75,7 +75,7 @@ export class PropertyHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
+    protected _collectDeclarations(){
         const propertyName: string = this.value.name.name;
         const symbol = this.context.declare<PropertySymbol>(propertyName, "Property");
         symbol.accessibility = this.value.access;

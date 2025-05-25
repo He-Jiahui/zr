@@ -74,16 +74,7 @@ export class SymbolTable<T extends Symbol> {
     }
 
     public addSymbol(symbol: TSymbolOrSymbolSet<T>): boolean {
-        if (!symbol) {
-            return false;
-        }
-        let symbolSet: T[];
-        if (symbol instanceof Array) {
-            symbolSet = symbol;
-        } else {
-            symbolSet = [symbol];
-        }
-        for (const symbol of symbolSet) {
+        return checkSymbolOrSymbolSet(symbol, (symbol) => {
             if (symbol.type === "Function") {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
@@ -98,7 +89,6 @@ export class SymbolTable<T extends Symbol> {
                 }
                 return finalResult;
             }
-
             const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
             if (duplicatedCheckIndex === -1) {
                 this.symbolTable.push(symbol);
@@ -107,9 +97,8 @@ export class SymbolTable<T extends Symbol> {
                 const conflictSymbol = this.symbolTable[duplicatedCheckIndex];
                 reportDuplicatedSymbol(symbol, conflictSymbol);
             }
-        }
-
-        return false;
+            return true;
+        });
     }
 
     // not for function symbol table

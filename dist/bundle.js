@@ -50,13 +50,18 @@ class Handler {
         const { location } = node;
         this.location = location;
         this.context.location = location;
+        this.context.pushHandler(this);
         this._handle(node);
+        this.context.popHandler();
     }
     // handles node
     _handle(node) {
     }
     collectDeclarations() {
-        return this._collectDeclarations();
+        this.context.pushHandler(this);
+        const declarationSymbols = this._collectDeclarations();
+        this.context.popHandler();
+        return declarationSymbols;
     }
     // collects
     _collectDeclarations() {
@@ -4230,17 +4235,7 @@ class SymbolTable {
         this.symbolTable = [];
     }
     addSymbol(symbol) {
-        if (!symbol) {
-            return false;
-        }
-        let symbolSet;
-        if (symbol instanceof Array) {
-            symbolSet = symbol;
-        }
-        else {
-            symbolSet = [symbol];
-        }
-        for (const symbol of symbolSet) {
+        return checkSymbolOrSymbolSet(symbol, (symbol) => {
             if (symbol.type === "Function") {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
@@ -4264,8 +4259,8 @@ class SymbolTable {
                 const conflictSymbol = this.symbolTable[duplicatedCheckIndex];
                 reportDuplicatedSymbol(symbol, conflictSymbol);
             }
-        }
-        return false;
+            return true;
+        });
     }
     // not for function symbol table
     getSymbol(name) {
@@ -4384,9 +4379,19 @@ class ScriptContext {
     constructor(info) {
         this.encoding = "utf-8";
         this._scopeStack = [];
+        this._handlerStack = [];
         this.compilingDirectory = info.compilingDirectory;
         this.fileRelativePath = info.fileRelativePath;
         this.encoding = info.encoding;
+    }
+    pushHandler(currentHandler) {
+        this._handlerStack.push(currentHandler);
+    }
+    popHandler() {
+        return this._handlerStack.pop();
+    }
+    get currentHandler() {
+        return this._handlerStack[this._handlerStack.length - 1];
     }
     declare(symbolName, symbolType, location) {
         const symbol = symbol_1.Symbol.createSymbol(symbolType, symbolName);
@@ -4394,7 +4399,7 @@ class ScriptContext {
             new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, this).report(); // TODO: throw 
             return null;
         }
-        symbol.location = location;
+        symbol.location = location !== null && location !== void 0 ? location : this.currentHandler.location;
         symbol.ownerScope = this._currentScope;
         symbol.context = this;
         this.currentSymbol = symbol;

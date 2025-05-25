@@ -58,7 +58,9 @@ export class Handler {
         const {location} = node;
         this.location = location;
         this.context.location = location;
+        this.context.pushHandler(this);
         this._handle(node);
+        this.context.popHandler();
     }
 
     // handles node
@@ -68,7 +70,10 @@ export class Handler {
 
 
     public collectDeclarations<T extends SymbolDeclaration>(): TSymbolOrSymbolSet<T> {
-        return this._collectDeclarations() as T;
+        this.context.pushHandler(this);
+        const declarationSymbols = this._collectDeclarations() as TSymbolOrSymbolSet<T>;
+        this.context.popHandler();
+        return declarationSymbols;
     }
 
     // collects

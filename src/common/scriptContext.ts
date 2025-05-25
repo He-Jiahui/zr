@@ -4,6 +4,7 @@ import { FileRange, Start } from "../parser/generated/parser";
 import { Scope } from "../analyzer/static/scope/scope";
 import { Symbol } from "../analyzer/static/symbol/symbol";
 import { ZrInternalError } from "../errors/zrInternalError";
+import {Handler} from "../analyzer/semantic/common/handler";
 export class ScriptContext{
     public compilingDirectory: string;
 
@@ -21,12 +22,13 @@ export class ScriptContext{
     public syntaxErrorRange: FileRange;
 
     public ast: Start;
-
+    // only available when handler is calling Handle function
     public location: FileRange;
 
     // fill by static analyzer
     
     public _currentScope: Scope;
+
     public get currentScope(): Scope{
         return this._currentScope;
     }
@@ -41,6 +43,18 @@ export class ScriptContext{
         this.encoding = info.encoding;
     }
 
+    private readonly _handlerStack: Handler[] = [];
+
+    public pushHandler(currentHandler: Handler){
+        this._handlerStack.push(currentHandler);
+    }
+    public popHandler(){
+        return this._handlerStack.pop();
+    }
+    public get currentHandler(): Handler{
+        return this._handlerStack[this._handlerStack.length - 1];
+    }
+
 
 
     public declare<T extends Symbol>(symbolName: string | undefined, symbolType: string, location?: FileRange): T{
@@ -49,7 +63,7 @@ export class ScriptContext{
             new ZrInternalError(`Symbol ${symbolType} is not registered`, this).report(); // TODO: throw 
             return null!;
         }
-        symbol.location = location;
+        symbol.location = location ?? this.currentHandler.location;
         symbol.ownerScope = this._currentScope;
         symbol.context = this;
         this.currentSymbol = symbol;

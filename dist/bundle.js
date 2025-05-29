@@ -2361,6 +2361,7 @@ __webpack_require__(/*! ./decoratorHandler */ "./src/analyzer/semantic/expressio
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LambdaHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const access_1 = __webpack_require__(/*! ../../../types/access */ "./src/types/access.ts");
 class LambdaHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2396,6 +2397,36 @@ class LambdaHandler extends handler_1.Handler {
             args: (_a = this.argsHandler) === null || _a === void 0 ? void 0 : _a.value,
             blocks: (_b = this.blockHandler) === null || _b === void 0 ? void 0 : _b.value
         };
+    }
+    _createSymbolAndScope(parentScope) {
+        const symbol = this.declareSymbol("$Lambda", "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = access_1.Access.PUBLIC;
+        symbol.isStatic = true;
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "parameter":
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case "block":
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
     }
 }
 exports.LambdaHandler = LambdaHandler;
@@ -4595,6 +4626,11 @@ class SymbolTable {
             }
             // if the symbol is block symbol, we should add it to the symbol table without checking
             if (symbol.name === "$Block") {
+                this.symbolTable.push(symbol);
+                return true;
+            }
+            // if the symbol is lambda symbol, we should add it to the symbol table without checking
+            if (symbol.name === "$Lambda") {
                 this.symbolTable.push(symbol);
                 return true;
             }

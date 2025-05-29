@@ -90,6 +90,11 @@ export class SymbolTable<T extends Symbol> {
                 this.symbolTable.push(symbol);
                 return true;
             }
+            // if the symbol is lambda symbol, we should add it to the symbol table without checking
+            if (symbol.name === "$Lambda") {
+                this.symbolTable.push(symbol);
+                return true;
+            }
             const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
             if (duplicatedCheckIndex === -1) {
                 this.symbolTable.push(symbol);

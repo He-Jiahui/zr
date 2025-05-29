@@ -3,6 +3,13 @@ import {Handler} from "../common/handler"
 import type {BlockType} from "../statements/blockHandler"
 import type {ParameterType} from "../types/parameterHandler"
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration, Symbol} from "../../static/symbol/symbol";
+import {Scope} from "../../static/scope/scope";
+import {FunctionSymbol} from "../../static/symbol/functionSymbol";
+import {Access} from "../../../types/access";
+import {FunctionScope} from "../../static/scope/functionScope";
+import {ParameterSymbol} from "../../static/symbol/parameterSymbol";
+import {BlockSymbol} from "../../static/symbol/blockSymbol";
 
 export type LambdaType = {
     type: 'LambdaExpression',
@@ -46,6 +53,38 @@ export class LambdaHandler extends Handler {
             args: this.argsHandler?.value as ParameterType,
             blocks: this.blockHandler?.value
         }
+    }
+
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
+        const symbol = this.declareSymbol<FunctionSymbol>("$Lambda", "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = Access.PUBLIC;
+        symbol.isStatic = true;
+        return symbol;
+    }
+
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope as FunctionScope;
+
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "parameter": {
+                    scope.addParameter(child as ParameterSymbol);
+                }
+                    break;
+                case "block": {
+                    scope.setBody(child as BlockSymbol);
+                }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
     }
 }
 

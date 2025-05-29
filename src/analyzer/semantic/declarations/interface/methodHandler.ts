@@ -1,10 +1,11 @@
-import { InterfaceMethodSignature } from "../../../../parser/generated/parser";
-import { Access } from "../../../../types/access";
-import { Handler } from "../../common/handler";
-import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
-import type { ParameterType } from "../../types/parameterHandler";
-import type { AllType } from "../../types/types";
-import type { IdentifierType } from "../identifierHandler";
+import {InterfaceMethodSignature} from "../../../../parser/generated/parser";
+import {Access} from "../../../../types/access";
+import {Handler} from "../../common/handler";
+import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
+import type {ParameterType} from "../../types/parameterHandler";
+import type {AllType} from "../../types/types";
+import type {IdentifierType} from "../identifierHandler";
+import {TNullable} from "../../../utils/zrCompilerTypes";
 
 export type InterfaceMethodSignatureType = {
     type: "InterfaceMethodSignature",
@@ -16,38 +17,48 @@ export type InterfaceMethodSignatureType = {
     access: Access,
 }
 
-export class InterfaceMethodSignatureHandler extends Handler{
+export class InterfaceMethodSignatureHandler extends Handler {
     public value: InterfaceMethodSignatureType;
-    private returnTypeHandler: Handler | null = null;
+    private returnTypeHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
-    private argsHandler: Handler | null = null;
-    private genericHandler: Handler | null = null;
-    private nameHandler: Handler | null = null;
+    private argsHandler: TNullable<Handler> = null;
+    private genericHandler: TNullable<Handler> = null;
+    private nameHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+        ];
+    }
 
     public _handle(node: InterfaceMethodSignature) {
         super._handle(node);
         const name = node.name;
         this.nameHandler = Handler.handle(name, this.context);
         const access = node.access;
-        if(node.generic){
+        if (node.generic) {
             this.genericHandler = Handler.handle(node.generic, this.context);
-        }else{
+        } else {
             this.genericHandler = null;
         }
-        if(node.returnType){
+        if (node.returnType) {
             this.returnTypeHandler = Handler.handle(node.returnType, this.context);
-        }else{
+        } else {
             this.returnTypeHandler = null;
         }
         const parameters = node.params;
         this.parameterHandlers.length = 0;
-        for(const parameter of parameters){
+        for (const parameter of parameters) {
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
-        if(node.args){
+        if (node.args) {
             this.argsHandler = Handler.handle(node.args, this.context);
-        }else{
+        } else {
             this.argsHandler = null;
         }
         this.value = {

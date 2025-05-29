@@ -9,6 +9,14 @@ import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
 import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
 import type {ClassSymbol} from "../../../static/symbol/classSymbol";
 import type {ClassScope} from "../../../static/scope/classScope";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
+import {GenericSymbol} from "../../../static/symbol/genericSymbol";
+import {Scope} from "../../../static/scope/scope";
+import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
+import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
+import {MetaSymbol} from "../../../static/symbol/metaSymbol";
+import {PropertySymbol} from "../../../static/symbol/propertySymbol";
 
 export type ClassType = {
     type: "Class";
@@ -24,17 +32,20 @@ export type ClassType = {
 
 export class ClassDeclarationHandler extends Handler {
     public value: ClassType;
-    private nameHandler: Handler | null = null;
-
     public readonly membersHandler: Handler[] = [];
-
     public readonly inheritsHandler: Handler[] = [];
-
     public readonly decoratorsHandler: Handler[] = [];
+    public genericHandler: TNullable<Handler> = null;
+    private nameHandler: TNullable<Handler> = null;
 
-    public genericHandler: Handler | null = null;
-
-    private _symbol: ClassSymbol | null = null;
+    protected get _children() {
+        return [
+            this.nameHandler,
+            ...this.inheritsHandler,
+            ...this.decoratorsHandler,
+            ...this.membersHandler
+        ];
+    }
 
     public _handle(node: ClassDeclaration) {
         super._handle(node);
@@ -104,47 +115,44 @@ export class ClassDeclarationHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations() {
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>) {
         const className: string = this.value.name.name;
-        const symbol = this.context.declare<ClassSymbol>(className, "Class");
-        // TODO: super class & decorators will be handled later
-        
-        const scope = this.pushScope<ClassScope>("Class");
-        scope.classInfo = symbol;
-        symbol.table = scope;
-        for (const decorator of this.value.decorators) {
-            const handler = Handler.getHandler(decorator);
-            symbol.decorators.push(handler?.collectDeclarations());
-        }
+        const symbol = this.declareSymbol<ClassSymbol>(className, "Class", parentScope);
+        // we can not decide super class
+        return symbol;
+    }
 
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = Handler.getHandler(generic);
-                scope.addGeneric(handler?.collectDeclarations());
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope as ClassScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic": {
+                    scope.addGeneric(child as GenericSymbol);
+                }
+                    break;
+                case "field": {
+                    scope.addField(child as FieldSymbol);
+                }
+                    break;
+                case "function": {
+                    scope.addMethod(child as FunctionSymbol);
+                }
+                    break;
+                case "meta": {
+                    scope.addMetaFunction(child as MetaSymbol);
+                }
+                    break;
+                case "property": {
+                    scope.addProperty(child as PropertySymbol);
+                }
+                    break;
             }
         }
+        return currentScope.ownerSymbol;
 
-        for (const field of this.value.fields) {
-            const handler = Handler.getHandler(field);
-            scope.addField(handler?.collectDeclarations());
-        }
-        for (const method of this.value.methods) {
-            const handler = Handler.getHandler(method);
-            scope.addMethod(handler?.collectDeclarations());
-        }
-        for (const metaFunction of this.value.metaFunctions) {
-            const handler = Handler.getHandler(metaFunction);
-            scope.addMetaFunction(handler?.collectDeclarations());
-        }
-        for (const property of this.value.properties) {
-            const handler = Handler.getHandler(property);
-            scope.addProperty(handler?.collectDeclarations());
-        }
-
-        this.popScope();
-
-        this._symbol = symbol;
-        return symbol;
     }
 }
 

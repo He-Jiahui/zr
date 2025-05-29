@@ -1,9 +1,9 @@
 import {ScriptContext} from "../../../common/scriptContext";
 import {NoHandlerError} from "../../../errors/noHandlerError";
-import {ZrInternalError} from "../../../errors/zrInternalError";
 import {FileRange} from "../../../parser/generated/parser";
 import {Scope} from "../../static/scope/scope";
-import {Symbol as SymbolDeclaration, SymbolOrSymbolSet, TSymbolOrSymbolSet} from "../../static/symbol/symbol";
+import {Symbol as SymbolDeclaration, SymbolOrSymbolArray, TSymbolOrSymbolArray} from "../../static/symbol/symbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type AnyNode = {
     type: string;
@@ -14,6 +14,22 @@ export type AnyNode = {
 export class Handler {
     private static handlers: Map<string, typeof Handler> = new Map();
     private static semanticHandlerMap: Map<any, Handler> = new Map();
+    public context: ScriptContext;
+    public value: any;
+    public location: FileRange;
+    protected _symbol: TNullable<SymbolDeclaration>;
+
+    public constructor(context: ScriptContext) {
+        this.context = context;
+    }
+
+    public get children(): Array<Handler> {
+        return this._children.filter(child => child !== null).map(child => child!);
+    }
+
+    protected get _children(): Array<TNullable<Handler>> {
+        return [];
+    }
 
     public static registerHandler(nodeType: string, handler: typeof Handler) {
         Handler.handlers.set(nodeType, handler);
@@ -31,7 +47,7 @@ export class Handler {
         return h;
     }
 
-    protected static getHandler(semanticType: any): Handler | null {
+    protected static getHandler(semanticType: any): TNullable<Handler> {
         if (!semanticType) {
             return null;
         }
@@ -40,15 +56,6 @@ export class Handler {
         } else {
             return null;
         }
-    }
-
-    public context: ScriptContext;
-    public value: any;
-
-    public location: FileRange;
-
-    public constructor(context: ScriptContext) {
-        this.context = context;
     }
 
     public handleInternal(node: AnyNode | any): void {
@@ -63,44 +70,38 @@ export class Handler {
         this.context.popHandler();
     }
 
+    public createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
+        return this._createSymbolAndScope(parentScope);
+    }
+
+    public collectDeclarations<T extends SymbolDeclaration>(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>): TSymbolOrSymbolArray<T> {
+        this.context.pushHandler(this);
+        const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope) as TSymbolOrSymbolArray<T>;
+        this.context.popHandler();
+        return declarationSymbols;
+    }
+
     // handles node
     protected _handle(node: AnyNode | any): void {
 
     }
 
-
-    public collectDeclarations<T extends SymbolDeclaration>(): TSymbolOrSymbolSet<T> {
-        this.context.pushHandler(this);
-        const declarationSymbols = this._collectDeclarations() as TSymbolOrSymbolSet<T>;
-        this.context.popHandler();
-        return declarationSymbols;
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
+        return null;
     }
 
     // collects
-    protected _collectDeclarations(): SymbolOrSymbolSet {
-        return undefined;
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>): SymbolOrSymbolArray {
+        return null;
     }
 
-    protected pushScope<T extends Scope>(scopeType: string): T {
-        const context = this.context;
-        const scope = Scope.createScope<T>(scopeType, context._currentScope);
-        if (!scope) {
-            new ZrInternalError(`Scope ${scopeType} is not registered`, context).report(); // TODO: throw
-            return null!;
+    protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
+        const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
+        this._symbol = createdSymbol;
+        const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
+        if (createdSymbol) {
+            createdSymbol.childScope = createdScope;
         }
-        if (context._currentScope) {
-            context._scopeStack.push(context._currentScope);
-        }
-        context._currentScope = scope;
-        return scope;
-    }
-
-    protected popScope() {
-        const context = this.context;
-        if (context._scopeStack.length > 0) {
-            context._currentScope = context._scopeStack.pop()!;
-        } else {
-            context._currentScope = undefined!;
-        }
+        return createdSymbol;
     }
 }

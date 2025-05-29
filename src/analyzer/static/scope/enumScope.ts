@@ -1,19 +1,17 @@
-import type { EnumSymbol } from "../symbol/enumSymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
-import type { VariableSymbol } from "../symbol/variableSymbol";
-import { Scope } from "./scope";
+import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import type {VariableSymbol} from "../symbol/variableSymbol";
+import {Scope} from "./scope";
 
 export class EnumScope extends Scope {
     public readonly type: string = "EnumScope";
 
-    public enumInfo: EnumSymbol;
     // 枚举类型
     private readonly enumMembers: SymbolTable<VariableSymbol> = new SymbolTable<VariableSymbol>();
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.enumMembers];
 
 
-    public addMember(member: TSymbolOrSymbolSet<VariableSymbol>): boolean {
+    public addMember(member: TSymbolOrSymbolArray<VariableSymbol>): boolean {
         return this.checkSymbolUnique(member) && this.enumMembers.addSymbol(member);
     }
 

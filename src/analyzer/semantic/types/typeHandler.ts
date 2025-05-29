@@ -1,8 +1,9 @@
-import { Type } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import type { IdentifierType } from "../declarations/identifierHandler";
-import { GenericType } from "./genericHandler";
-import { TupleType } from "./tupleHandler";
+import {Type} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {IdentifierType} from "../declarations/identifierHandler";
+import {GenericType} from "./genericHandler";
+import {TupleType} from "./tupleHandler";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type TypeType = {
     type: "Type",
@@ -10,9 +11,16 @@ export type TypeType = {
     dimensions: number
 }
 
-export class TypeHandler extends Handler{
+export class TypeHandler extends Handler {
     public value: TypeType;
-    private nameHandler: Handler|null = null;
+    private nameHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler
+        ];
+    }
+
     public _handle(node: Type) {
         super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);

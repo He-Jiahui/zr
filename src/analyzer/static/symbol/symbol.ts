@@ -2,26 +2,16 @@ import {ScriptContext} from "../../../common/scriptContext";
 import {DuplicatedIdentifierError} from "../../../errors/duplicatedIdentifierError";
 import {FileRange} from "../../../parser/generated/parser";
 import type {Scope} from "../scope/scope";
-import {Handler} from "../../semantic/common/handler";
+import {TMaybeArray, TNullable} from "../../utils/zrCompilerTypes";
+import {ZrInternalError} from "../../../errors/zrInternalError";
+import type {Handler} from "../../semantic/common/handler";
 
 export class Symbol {
     private static readonly symbolMap: Map<string, typeof Symbol> = new Map<string, typeof Symbol>();
-
-    public static registerSymbol(symbolType: string, symbol: typeof Symbol) {
-        Symbol.symbolMap.set(symbolType, symbol);
-    }
-
-    public static createSymbol<T extends Symbol>(symbolType: string, name: string | undefined): T {
-        const symbol = Symbol.symbolMap.get(symbolType);
-        if (!symbol) {
-            return null!;
-        }
-        return new symbol(name) as T;
-    }
-
     public readonly type: string;
     public name: string | undefined;
-    public ownerScope: Scope; // TODO: owner scope
+    public ownerScope: TNullable<Scope>; // TODO: owner scope
+    public childScope: TNullable<Scope>;
     public location?: FileRange;
     public context: ScriptContext;
     // if symbols has sub symbols, like destruction patterns symbol
@@ -30,26 +20,33 @@ export class Symbol {
     constructor(name: string | undefined) {
         this.name = name;
     }
-}
 
-export type SymbolOrSymbolSet = Symbol | Symbol[] | undefined;
-
-export type TSymbolOrSymbolSet<T extends Symbol> = T | T[] | undefined;
-
-export function makeSymbolSet(...handlers: (Handler | null)[]) {
-    const symbolSet: Symbol[] = [];
-    for (const handler of handlers) {
-        const symbol = handler?.collectDeclarations();
-        if (symbol instanceof Array) {
-            symbolSet.push(...symbol);
-        }else if (symbol){
-            symbolSet.push(symbol);
-        }
+    public static registerSymbol(symbolType: string, symbol: typeof Symbol) {
+        Symbol.symbolMap.set(symbolType, symbol);
     }
-    return symbolSet;
+
+    public static createSymbol<T extends Symbol>(symbolName: string | undefined, symbolType: string, handler: Handler, parentScope: TNullable<Scope>, location?: FileRange): TNullable<T> {
+        const symbolClass = Symbol.symbolMap.get(symbolType);
+        if (!symbolClass) {
+            return null;
+        }
+        const symbol = new symbolClass(symbolName) as T;
+        if (!symbol) {
+            new ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
+            return null;
+        }
+        symbol.location = location ?? handler.location;
+        symbol.ownerScope = parentScope;
+        symbol.context = handler.context;
+        return symbol;
+    }
 }
 
-export function checkSymbolOrSymbolSet<T extends Symbol>(symbolOrSymbolSet: TSymbolOrSymbolSet<T>, predicate: (symbol: T) => boolean): boolean {
+export type SymbolOrSymbolArray = TNullable<TMaybeArray<Symbol>>;
+
+export type TSymbolOrSymbolArray<T extends Symbol> = TNullable<TMaybeArray<T>>;
+
+export function checkSymbolOrSymbolArray<T extends Symbol>(symbolOrSymbolSet: TSymbolOrSymbolArray<T>, predicate: (symbol: T) => boolean): boolean {
     if (!symbolOrSymbolSet) {
         return true;
     }
@@ -65,16 +62,15 @@ export function checkSymbolOrSymbolSet<T extends Symbol>(symbolOrSymbolSet: TSym
 }
 
 export class SymbolTable<T extends Symbol> {
-    private readonly symbolTable: T[] = [];
-
     public location: FileRange;
+    private readonly symbolTable: T[] = [];
 
     constructor() {
 
     }
 
-    public addSymbol(symbol: TSymbolOrSymbolSet<T>): boolean {
-        return checkSymbolOrSymbolSet(symbol, (symbol) => {
+    public addSymbol(symbol: TSymbolOrSymbolArray<T>): boolean {
+        return checkSymbolOrSymbolArray(symbol, (symbol) => {
             if (symbol.type === "Function") {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
@@ -88,6 +84,11 @@ export class SymbolTable<T extends Symbol> {
                     finalResult = result && finalResult;
                 }
                 return finalResult;
+            }
+            // if the symbol is block symbol, we should add it to the symbol table without checking
+            if (symbol.name === "$Block") {
+                this.symbolTable.push(symbol);
+                return true;
             }
             const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
             if (duplicatedCheckIndex === -1) {

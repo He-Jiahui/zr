@@ -7,9 +7,14 @@ import type {BlockType} from "../../statements/blockHandler";
 import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
 import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
 import type {AllType} from "../../types/types";
-import {Symbol} from "../../../static/symbol/symbol";
+import {Symbol as SymbolDeclaration, Symbol} from "../../../static/symbol/symbol";
 import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {FunctionScope} from "../../../static/scope/functionScope";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Scope} from "../../../static/scope/scope";
+import {GenericSymbol} from "../../../static/symbol/genericSymbol";
+import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 
 export type ClassMethodType = {
     type: "ClassMethod";
@@ -26,15 +31,25 @@ export type ClassMethodType = {
 
 export class MethodHandler extends Handler {
     public value: ClassMethodType;
-    private nameHandler: Handler | null = null;
+    private nameHandler: TNullable<Handler> = null;
     private readonly decoratorHandlers: Handler[] = [];
-    private returnTypeHandler: Handler | null = null;
+    private returnTypeHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
-    private argsHandler: Handler | null = null;
-    private genericHandler: Handler | null = null;
-    private bodyHandler: Handler | null = null;
+    private argsHandler: TNullable<Handler> = null;
+    private genericHandler: TNullable<Handler> = null;
+    private bodyHandler: TNullable<Handler> = null;
 
-    private _symbol: FunctionSymbol;
+    protected get _children() {
+        return [
+            this.nameHandler,
+            ...this.decoratorHandlers,
+            this.returnTypeHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.bodyHandler
+        ];
+    }
 
     public _handle(node: Method) {
         super._handle(node);
@@ -87,50 +102,40 @@ export class MethodHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
-        const symbol = this.context.declare<FunctionSymbol>(this.value.name.name, "Function");
-        const scope = this.pushScope<FunctionScope>("Function");
-        symbol.body = scope;
-        // todo: type is not available now
-        // symbol.returnType = this.value.returnType;
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
+        const funcName: string = this.value.name.name;
+        const symbol = this.declareSymbol<FunctionSymbol>(funcName, "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
+        return symbol;
+    }
 
-
-        scope.signature = symbol;
-        // decorators
-        for (const decorator of this.value.decorators) {
-            const handler = Handler.getHandler(decorator);
-            symbol.decorators.push(handler?.collectDeclarations());
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
         }
-        // generics
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = Handler.getHandler(generic);
-                scope.addGeneric(handler?.collectDeclarations());
+        const scope = currentScope as FunctionScope;
+
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic": {
+                    scope.addGeneric(child as GenericSymbol);
+                }
+                    break;
+                case "parameter": {
+                    scope.addParameter(child as ParameterSymbol);
+                }
+                    break;
+                case "block": {
+                    scope.setBody(child as BlockSymbol);
+                }
+                    break;
             }
         }
-        // parameters
-        for (const parameter of this.value.parameters) {
-            const handler = Handler.getHandler(parameter);
-            scope.addParameter(handler?.collectDeclarations());
-        }
-
-        // args
-        if (this.value.args) {
-            const handler = Handler.getHandler(this.value.args);
-            scope.setArgs(handler?.collectDeclarations());
-        }
-
-        // body
-        const body = this.value.body;
-        if (body) {
-            const handler = Handler.getHandler(body);
-            scope.setBody(handler?.collectDeclarations());
-        }
-
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 

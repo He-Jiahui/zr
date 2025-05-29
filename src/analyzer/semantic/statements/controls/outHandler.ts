@@ -1,6 +1,7 @@
 import {Handler} from "../../common/handler";
 import type {ExpressionType} from "../../expressions";
 import {OutStatement} from "../../../../parser/generated/parser";
+import {TNullable} from "../../../utils/zrCompilerTypes";
 
 export type OutStatementType = {
     type: "OutStatement",
@@ -10,7 +11,13 @@ export type OutStatementType = {
 export class OutHandler extends Handler {
     public value: OutStatementType;
 
-    private exprHandler: Handler | null = null;
+    private exprHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
 
     public _handle(node: OutStatement): void {
         super._handle(node);

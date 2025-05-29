@@ -1,18 +1,15 @@
+import type {ClassSymbol} from "../symbol/classSymbol";
+import type {EnumSymbol} from "../symbol/enumSymbol";
+import type {FunctionSymbol} from "../symbol/functionSymbol";
+import type {InterfaceSymbol} from "../symbol/interfaceSymbol";
+import type {StructSymbol} from "../symbol/structSymbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import type {VariableSymbol} from "../symbol/variableSymbol";
+import {Scope} from "./scope";
 
-import type { ClassSymbol } from "../symbol/classSymbol";
-import type { EnumSymbol } from "../symbol/enumSymbol";
-import type { FunctionSymbol } from "../symbol/functionSymbol";
-import type { InterfaceSymbol } from "../symbol/interfaceSymbol";
-import type { ModuleSymbol } from "../symbol/moduleSymbol";
-import type { StructSymbol } from "../symbol/structSymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
-import type { VariableSymbol } from "../symbol/variableSymbol";
-import { Scope } from "./scope";
 export class ModuleScope extends Scope {
     public readonly type: string = "ModuleScope";
 
-    public moduleInfo: ModuleSymbol;
-    
     protected readonly functions: SymbolTable<FunctionSymbol> = new SymbolTable();
     protected readonly variables: SymbolTable<VariableSymbol> = new SymbolTable();
     protected readonly classes: SymbolTable<ClassSymbol> = new SymbolTable();
@@ -22,32 +19,32 @@ export class ModuleScope extends Scope {
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.variables, this.classes, this.interfaces, this.structs, this.enums];
 
-    public addFunction($function: TSymbolOrSymbolSet<FunctionSymbol>): boolean {
+    public addFunction($function: TSymbolOrSymbolArray<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
         return success;
     }
 
-    public addVariable(variable: TSymbolOrSymbolSet<VariableSymbol>): boolean {
+    public addVariable(variable: TSymbolOrSymbolArray<VariableSymbol>): boolean {
         const success = this.checkSymbolUnique(variable) && this.variables.addSymbol(variable);
         return success;
     }
 
-    public addClass($class: TSymbolOrSymbolSet<ClassSymbol>): boolean {
+    public addClass($class: TSymbolOrSymbolArray<ClassSymbol>): boolean {
         const success = this.checkSymbolUnique($class) && this.classes.addSymbol($class);
         return success;
     }
 
-    public addInterface($interface: TSymbolOrSymbolSet<InterfaceSymbol>): boolean {
+    public addInterface($interface: TSymbolOrSymbolArray<InterfaceSymbol>): boolean {
         const success = this.checkSymbolUnique($interface) && this.interfaces.addSymbol($interface);
         return success;
     }
 
-    public addStruct($struct: TSymbolOrSymbolSet<StructSymbol>): boolean {
+    public addStruct($struct: TSymbolOrSymbolArray<StructSymbol>): boolean {
         const success = this.checkSymbolUnique($struct) && this.structs.addSymbol($struct);
         return success;
     }
 
-    public addEnum($enum: TSymbolOrSymbolSet<EnumSymbol>): boolean {
+    public addEnum($enum: TSymbolOrSymbolArray<EnumSymbol>): boolean {
         const success = this.checkSymbolUnique($enum) && this.enums.addSymbol($enum);
         return success;
     }

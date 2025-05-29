@@ -1,8 +1,9 @@
-import type { ExpressionType } from ".";
-import { MemberAccess } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import type { IdentifierType } from "../declarations/identifierHandler";
-import { Exp } from "./expression";
+import type {ExpressionType} from ".";
+import {MemberAccess} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {IdentifierType} from "../declarations/identifierHandler";
+import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+
 
 export type MemberAccessType = {
     type: "MemberExpression",
@@ -10,16 +11,22 @@ export type MemberAccessType = {
     computed: boolean,
 }
 
-export class MemberAccessHandler extends Handler{
+export class MemberAccessHandler extends Handler {
     public value: MemberAccessType;
-    private propertyHandler: Handler | null = null;
+    private propertyHandler: TNullable<Handler> = null;
 
-    _handle(node: Exp<MemberAccess, "MemberExpression">) {
+    protected get _children() {
+        return [
+            this.propertyHandler
+        ];
+    }
+
+    _handle(node: TExpression<MemberAccess, "MemberExpression">) {
         super._handle(node);
         const computed = node.computed;
-        if(computed){
+        if (computed) {
             this.propertyHandler = Handler.handle(node.property, this.context);
-        }else{
+        } else {
             this.propertyHandler = null;
         }
 

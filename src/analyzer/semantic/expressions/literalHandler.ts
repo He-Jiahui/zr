@@ -3,13 +3,13 @@ import {Handler} from "../common/handler"
 import type {IdentifierType} from "../declarations/identifierHandler";
 import type {LiteralType} from "../literals"
 import type {ArrayLiteralType} from "./arrayLiteralHandler";
-import {Exp} from "./expression";
 import type {IfExpressionType} from "./ifHandler";
 import type {LambdaType} from "./lambdaHandler";
 import type {ObjectLiteralType} from "./objectLiteralHandler";
 import type {SwitchExpressionType} from "./switchHandler";
 import type {ForeachLoopExpressionType, ForLoopExpressionType} from "./forHandler";
 import type {WhileLoopExpressionType} from "./whileHandler";
+import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 
 export type LiteralExpressionType = ValueLiteralType |
     IdentifierLiteralType |
@@ -31,9 +31,15 @@ export type ValueLiteralType = {
 export class ValueLiteralHandler extends Handler {
     public value: ValueLiteralType;
 
-    private valueHandler: Handler | null;
+    private valueHandler: TNullable<Handler> = null;
 
-    public _handle(node: Exp<PrimaryExpression, "ValueLiteral">) {
+    protected get _children() {
+        return [
+            this.valueHandler
+        ];
+    }
+
+    public _handle(node: TExpression<PrimaryExpression, "ValueLiteral">) {
         super._handle(node);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {
@@ -52,9 +58,9 @@ export type IdentifierLiteralType = {
 
 export class IdentifierLiteralHandler extends Handler {
     public value: IdentifierLiteralType;
-    private identifierHandler: Handler | null = null;
+    private identifierHandler: TNullable<Handler> = null;
 
-    public _handle(node: Exp<PrimaryExpression, "IdentifierLiteral">) {
+    public _handle(node: TExpression<PrimaryExpression, "IdentifierLiteral">) {
         super._handle(node);
         this.identifierHandler = Handler.handle(node.value, this.context);
         this.value = {

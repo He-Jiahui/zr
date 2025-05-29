@@ -16,6 +16,10 @@ var {matrix, pi, e, ln} = import("math");
 
 // 测试方法
 test(){
+    if(true){
+        var i = 4;
+        return 0;
+    }
     return 1;
 }
 

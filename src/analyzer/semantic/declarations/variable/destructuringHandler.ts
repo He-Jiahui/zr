@@ -1,17 +1,21 @@
-import { DestructuringPattern } from "../../../../parser/generated/parser";
-import { Symbol } from "../../../static/symbol/symbol";
-import { VariableSymbol } from "../../../static/symbol/variableSymbol";
-import { Handler } from "../../common/handler"
-import type { IdentifierType } from "../identifierHandler"
+import {DestructuringPattern} from "../../../../parser/generated/parser";
+import {Handler} from "../../common/handler"
+import type {IdentifierType} from "../identifierHandler"
 
 export type DestructuringObjectType = {
-    type:"DestructuringObject",
+    type: "DestructuringObject",
     keys: IdentifierType[]
 }
 
-export class DestructuringObjectHandler extends Handler{
+export class DestructuringObjectHandler extends Handler {
     public value: DestructuringObjectType;
     private readonly keyHandlers: Handler[] = [];
+
+    protected get _children() {
+        return [
+            ...this.keyHandlers
+        ];
+    }
 
     public _handle(node: DestructuringPattern): void {
         super._handle(node);
@@ -25,7 +29,7 @@ export class DestructuringObjectHandler extends Handler{
             keys: this.keyHandlers.map(handler => handler.value)
         }
     }
-} 
+}
 
 Handler.registerHandler("DestructuringObject", DestructuringObjectHandler);
 
@@ -34,7 +38,7 @@ export type DestructuringArrayType = {
     keys: IdentifierType[]
 }
 
-export class DestructuringArrayHandler extends Handler{
+export class DestructuringArrayHandler extends Handler {
     public value: DestructuringArrayType;
     private readonly keyHandlers: Handler[] = [];
 

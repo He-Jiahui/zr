@@ -1,7 +1,8 @@
-import { LambdaExpression } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler"
-import type { BlockType } from "../statements/blockHandler"
-import type { ParameterType } from "../types/parameterHandler"
+import {LambdaExpression} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler"
+import type {BlockType} from "../statements/blockHandler"
+import type {ParameterType} from "../types/parameterHandler"
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type LambdaType = {
     type: 'LambdaExpression',
@@ -10,22 +11,30 @@ export type LambdaType = {
     blocks: BlockType,
 }
 
-export class LambdaHandler extends Handler{
+export class LambdaHandler extends Handler {
     public value: LambdaType;
     private readonly paramsHandler: Handler[] = [];
-    private argsHandler: Handler | null = null;
-    private blockHandler: Handler | null = null;
-    
+    private argsHandler: TNullable<Handler> = null;
+    private blockHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            ...this.paramsHandler,
+            this.argsHandler,
+            this.blockHandler
+        ];
+    }
+
     public _handle(node: LambdaExpression): void {
         super._handle(node);
         this.paramsHandler.length = 0;
-        for(const param of node.params){
+        for (const param of node.params) {
             const handler = Handler.handle(param, this.context);
             this.paramsHandler.push(handler);
         }
-        if(node.args){
+        if (node.args) {
             this.argsHandler = Handler.handle(node.args, this.context);
-        }else{
+        } else {
             this.argsHandler = null;
         }
 

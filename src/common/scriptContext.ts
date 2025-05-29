@@ -1,11 +1,9 @@
+import {ScriptInfo} from "./scriptInfo";
+import {FileRange, Start} from "../parser/generated/parser";
+import type {Scope} from "../analyzer/static/scope/scope";
+import type {Handler} from "../analyzer/semantic/common/handler";
 
-import { ScriptInfo } from "./scriptInfo";
-import { FileRange, Start } from "../parser/generated/parser";
-import { Scope } from "../analyzer/static/scope/scope";
-import { Symbol } from "../analyzer/static/symbol/symbol";
-import { ZrInternalError } from "../errors/zrInternalError";
-import {Handler} from "../analyzer/semantic/common/handler";
-export class ScriptContext{
+export class ScriptContext {
     public compilingDirectory: string;
 
     public fileRelativePath: string;
@@ -25,49 +23,22 @@ export class ScriptContext{
     // only available when handler is calling Handle function
     public location: FileRange;
 
-    // fill by static analyzer
-    
-    public _currentScope: Scope;
-
-    public get currentScope(): Scope{
-        return this._currentScope;
-    }
-
-    public currentSymbol: Symbol;
-
     public readonly _scopeStack: Scope[] = [];
+    private readonly _handlerStack: Handler[] = [];
 
-    public constructor(info: ScriptInfo){
+    public constructor(info: ScriptInfo) {
         this.compilingDirectory = info.compilingDirectory;
         this.fileRelativePath = info.fileRelativePath;
         this.encoding = info.encoding;
     }
 
-    private readonly _handlerStack: Handler[] = [];
-
-    public pushHandler(currentHandler: Handler){
+    public pushHandler(currentHandler: Handler) {
         this._handlerStack.push(currentHandler);
     }
-    public popHandler(){
+
+    public popHandler() {
         return this._handlerStack.pop();
     }
-    public get currentHandler(): Handler{
-        return this._handlerStack[this._handlerStack.length - 1];
-    }
 
 
-
-    public declare<T extends Symbol>(symbolName: string | undefined, symbolType: string, location?: FileRange): T{
-        const symbol = Symbol.createSymbol<T>(symbolType, symbolName);
-        if(!symbol){
-            new ZrInternalError(`Symbol ${symbolType} is not registered`, this).report(); // TODO: throw 
-            return null!;
-        }
-        symbol.location = location ?? this.currentHandler.location;
-        symbol.ownerScope = this._currentScope;
-        symbol.context = this;
-        this.currentSymbol = symbol;
-        return symbol;
-    }
-    
 }

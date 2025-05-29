@@ -1,7 +1,7 @@
 import type {ExpressionType} from ".";
 import {DecoratorExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
-import {Symbol, SymbolOrSymbolSet} from "../../static/symbol/symbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type DecoratorExpressionType = {
     type: 'DecoratorExpression',
@@ -10,7 +10,13 @@ export type DecoratorExpressionType = {
 
 export class DecoratorExpressionHandler extends Handler {
     public value: DecoratorExpressionType;
-    private exprHandler: Handler | null = null;
+    private exprHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
 
     public _handle(node: DecoratorExpression): void {
         super._handle(node);
@@ -20,12 +26,6 @@ export class DecoratorExpressionHandler extends Handler {
             type: 'DecoratorExpression',
             expr: this.exprHandler?.value as ExpressionType
         }
-    }
-
-    protected _collectDeclarations() {
-        // if there is a block in expression
-        const handler = Handler.getHandler(this.value.expr);
-        return handler?.collectDeclarations();
     }
 }
 

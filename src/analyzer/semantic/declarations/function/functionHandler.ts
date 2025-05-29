@@ -1,5 +1,5 @@
 import {FunctionDeclaration} from "../../../../parser/generated/parser";
-import { Access } from "../../../../types/access";
+import {Access} from "../../../../types/access";
 import {FunctionScope} from "../../../static/scope/functionScope";
 import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {Handler} from "../../common/handler";
@@ -9,6 +9,12 @@ import type {GenericDeclarationType} from "../../types/genericDeclarationHandler
 import type {ParameterType} from "../../types/parameterHandler";
 import type {AllType} from "../../types/types";
 import type {IdentifierType} from "../identifierHandler";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration, Symbol} from "../../../static/symbol/symbol";
+import {Scope} from "../../../static/scope/scope";
+import {GenericSymbol} from "../../../static/symbol/genericSymbol";
+import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 
 export type FunctionType = {
     type: "Function",
@@ -23,13 +29,25 @@ export type FunctionType = {
 
 export class FunctionHandler extends Handler {
     public value: FunctionType;
-    private nameHandler: Handler | null = null;
+    private nameHandler: TNullable<Handler> = null;
     private readonly decoratorHandlers: Handler[] = [];
-    private returnTypeHandler: Handler | null = null;
+    private returnTypeHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
-    private argsHandler: Handler | null = null;
-    private genericHandler: Handler | null = null;
-    private bodyHandler: Handler | null = null;
+    private argsHandler: TNullable<Handler> = null;
+    private genericHandler: TNullable<Handler> = null;
+    private bodyHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            ...this.decoratorHandlers,
+            this.bodyHandler
+        ];
+    }
 
     public _handle(node: FunctionDeclaration) {
         super._handle(node);
@@ -79,38 +97,41 @@ export class FunctionHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations() {
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const funcName: string = this.value.name.name;
-        const symbol = this.context.declare<FunctionSymbol>(funcName, "Function");
-
-        const scope = this.pushScope<FunctionScope>("Function");
-        scope.signature = symbol;
-        symbol.body = scope;
+        const symbol = this.declareSymbol<FunctionSymbol>(funcName, "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = Access.PUBLIC;
         symbol.isStatic = true;
+        return symbol;
+    }
 
-        for (const decorator of this.value.decorators) {
-            const handler = Handler.getHandler(decorator);
-            symbol.decorators.push(handler?.collectDeclarations());
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+
+        if (!currentScope) {
+            return null;
         }
+        const scope = currentScope as FunctionScope;
 
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = Handler.getHandler(generic);
-                scope.addGeneric(handler?.collectDeclarations());
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic": {
+                    scope.addGeneric(child as GenericSymbol);
+                }
+                    break;
+                case "parameter": {
+                    scope.addParameter(child as ParameterSymbol);
+                }
+                    break;
+                case "block": {
+                    scope.setBody(child as BlockSymbol);
+                }
+                    break;
             }
         }
-
-
-        for (const parameter of this.value.parameters) {
-            const handler = Handler.getHandler(parameter);
-            scope.addParameter(handler?.collectDeclarations());
-        }
-
-        scope.setArgs(Handler.getHandler(this.value.args)?.collectDeclarations());
-        scope.setBody(Handler.getHandler(this.value.body)?.collectDeclarations());
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 

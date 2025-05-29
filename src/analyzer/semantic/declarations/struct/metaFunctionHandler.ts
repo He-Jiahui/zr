@@ -1,9 +1,11 @@
-import { Handler } from "../../common/handler";
-import { StructMetaFunction } from "../../../../parser/generated/parser";
-import { Access } from "../../../../types/access";
-import type { MetaType } from "../metaHandler";
-import type { ParameterType } from "../../types/parameterHandler";
-import type { BlockType } from "../../statements/blockHandler";
+import {Handler} from "../../common/handler";
+import {StructMetaFunction} from "../../../../parser/generated/parser";
+import {Access} from "../../../../types/access";
+import type {MetaType} from "../metaHandler";
+import type {ParameterType} from "../../types/parameterHandler";
+import type {BlockType} from "../../statements/blockHandler";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+
 export type StructMetaFunctionType = {
     type: "StructMetaFunction";
     access: Access,
@@ -14,38 +16,47 @@ export type StructMetaFunctionType = {
     body: BlockType
 };
 
-export class MetaFunctionHandler extends Handler{
+export class MetaFunctionHandler extends Handler {
     public value: StructMetaFunctionType;
 
-    private metaHandler: Handler|null = null;
+    private metaHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
-    private argsHandler: Handler|null = null;
-    private bodyHandler: Handler|null = null;
-    
+    private argsHandler: TNullable<Handler> = null;
+    private bodyHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.metaHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.bodyHandler
+        ];
+    }
+
     public _handle(node: StructMetaFunction) {
         super._handle(node);
-        if(node.meta){
+        if (node.meta) {
             const metaHandler = Handler.handle(node.meta, this.context);
             this.metaHandler = metaHandler;
-        }else{
+        } else {
             this.metaHandler = null;
         }
         const parameters = node.params;
         const body = node.body;
         this.parameterHandlers.length = 0;
-        for(const parameter of parameters){
+        for (const parameter of parameters) {
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
-        if(body){
+        if (body) {
             this.bodyHandler = Handler.handle(body, this.context);
-        }else{
+        } else {
             this.bodyHandler = null;
         }
-        if(node.args){
+        if (node.args) {
             const argsHandler = Handler.handle(node.args, this.context);
             this.argsHandler = argsHandler;
-        }else{
+        } else {
             this.argsHandler = null;
         }
 

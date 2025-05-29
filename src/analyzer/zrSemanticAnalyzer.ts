@@ -2,10 +2,16 @@ import {ScriptContext} from "../common/scriptContext";
 import {Handler} from "./semantic/common/handler";
 import "./semantic/index";
 import "./static/index";
+import {ZrHandlerDispatcher} from "./utils/zrHandlerDispatcher";
+import {TNullable} from "./utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration} from "./static/symbol/symbol";
+import {prettyPrintSymbolTables} from "../utils/prettyPrint";
 
 export class ZrSemanticAnalyzer {
     private context: ScriptContext;
     private scriptHandler: Handler;
+
+    private handlerDispatcher: ZrHandlerDispatcher;
 
     public constructor(context: ScriptContext) {
         this.context = context;
@@ -14,8 +20,15 @@ export class ZrSemanticAnalyzer {
     public analyze() {
         this.scriptHandler = Handler.handle(this.context.ast, this.context);
 
-        this.scriptHandler.collectDeclarations();
+        this.handlerDispatcher = new ZrHandlerDispatcher(this.scriptHandler);
 
+        // create symbol and scope
+        const topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult: TNullable<SymbolDeclaration>) => {
+                return handler.createSymbolAndScope(upperResult?.childScope ?? null) ?? null;
+            },
+            (handler, lowerResult: Array<SymbolDeclaration>, selfTopDownResult: TNullable<SymbolDeclaration>) => {
+                return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;
+            }) as SymbolDeclaration;
+        prettyPrintSymbolTables(topSymbol);
     }
 }
-

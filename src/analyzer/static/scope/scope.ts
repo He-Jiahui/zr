@@ -1,32 +1,38 @@
-import {reportDuplicatedSymbol, Symbol, SymbolOrSymbolSet, SymbolTable} from "../symbol/symbol";
+import {reportDuplicatedSymbol, Symbol, SymbolOrSymbolArray, SymbolTable} from "../symbol/symbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 type SymbolGetter = () => Symbol | null;
 
 export class Scope {
     private static readonly scopeMap: Map<string, typeof Scope> = new Map<string, typeof Scope>();
+    public readonly type: string;
+    protected readonly _parentScope: TNullable<Scope>; // 父作用域
+    protected readonly _ownerSymbol: TNullable<Symbol>;
+    protected symbolTableList: (SymbolTable<Symbol> | SymbolGetter | null)[] = [];
+
+    constructor(parentScope: TNullable<Scope>, ownerSymbol: TNullable<Symbol>) {
+        this._parentScope = parentScope;
+        this._ownerSymbol = ownerSymbol;
+
+    }
+
+    //
+    public get ownerSymbol(): TNullable<Symbol> {
+        return this._ownerSymbol;
+    }
 
     public static registerScope(scopeType: string, scope: typeof Scope) {
         Scope.scopeMap.set(scopeType, scope);
     }
 
-    public static createScope<T extends Scope>(scopeType: string, parent: Scope | null = null): T {
+    public static createScope<T extends Scope>(scopeType: string, parent: TNullable<Scope>, symbol: TNullable<Symbol>): TNullable<T> {
         const scope = Scope.scopeMap.get(scopeType);
         if (!scope) {
-            return null!;
+            return null;
         }
-        return new scope(parent) as T;
+        return new scope(parent, symbol) as T;
     }
 
-
-    public readonly type: string;
-    protected readonly parent: Scope | null; // 父作用域
-    protected symbolTableList: (SymbolTable<Symbol> | SymbolGetter | null)[] = [];
-
-    constructor(parent: Scope | null = null) {
-        this.parent = parent;
-    }
-
-    // 
     // 定义一个公共方法 getSymbol，用于获取符号对象
     public getSymbol(symbol: string): Symbol | null {
         // 调用私有方法 _getSymbol，尝试获取符号对象
@@ -36,26 +42,26 @@ export class Scope {
             return sym;
         }
         // 如果当前对象没有父对象，则返回 null
-        if (this.parent) {
+        if (this._parentScope) {
             // 如果当前对象有父对象，则递归调用父对象的 getSymbol 方法，尝试从父对象中获取符号对象
-            return this.parent.getSymbol(symbol);
+            return this._parentScope.getSymbol(symbol);
         }
         // 如果当前对象及其父对象都没有找到符号对象，则返回 null
         return null;
     }
 
-    protected checkSymbolUnique(symbol: SymbolOrSymbolSet): boolean {
+    protected checkSymbolUnique(symbol: SymbolOrSymbolArray): boolean {
         if (!symbol) {
             return false;
         }
         let symbolSet: Symbol[];
-        if(symbol instanceof Array){
+        if (symbol instanceof Array) {
             symbolSet = symbol;
-        }else {
+        } else {
             symbolSet = [symbol];
         }
         let allSymbolUnique = true;
-        for(const symbol of symbolSet){
+        for (const symbol of symbolSet) {
             for (const table of this.symbolTableList) {
                 if (!table) {
                     continue;

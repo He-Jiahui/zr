@@ -1,11 +1,14 @@
-import { EnumDeclaration } from "../../../../parser/generated/parser";
-import type { EnumScope } from "../../../static/scope/enumScope";
-import type { ModuleScope } from "../../../static/scope/moduleScope";
-import type { EnumSymbol } from "../../../static/symbol/enumSymbol";
-import { Handler } from "../../common/handler";
-import type { AllType } from "../../types/types";
-import type { IdentifierType } from "../identifierHandler";
-import type { EnumMemberType } from "./memberHandler";
+import {EnumDeclaration} from "../../../../parser/generated/parser";
+import type {EnumScope} from "../../../static/scope/enumScope";
+import type {EnumSymbol} from "../../../static/symbol/enumSymbol";
+import {Handler} from "../../common/handler";
+import type {AllType} from "../../types/types";
+import type {IdentifierType} from "../identifierHandler";
+import type {EnumMemberType} from "./memberHandler";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Symbol, Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
+import {Scope} from "../../../static/scope/scope";
+import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 
 export type EnumType = {
     type: "Enum",
@@ -14,13 +17,19 @@ export type EnumType = {
     baseType: AllType
 }
 
-export class EnumDeclarationHandler extends Handler{
+export class EnumDeclarationHandler extends Handler {
     public value: EnumType;
-    private baseTypeHandler: Handler | null = null;
+    private baseTypeHandler: TNullable<Handler> = null;
     private membersHandler: Handler[] = [];
-    private nameHandler: Handler | null = null;
+    private nameHandler: TNullable<Handler> = null;
 
-    private _symbol: EnumSymbol | null = null;
+    protected get _children() {
+        return [
+            this.nameHandler,
+            this.baseTypeHandler,
+            ...this.membersHandler
+        ];
+    }
 
     public _handle(node: EnumDeclaration) {
         super._handle(node);
@@ -28,38 +37,38 @@ export class EnumDeclarationHandler extends Handler{
         this.nameHandler = Handler.handle(name, this.context);
         const members = node.members;
         const baseType = node.baseType;
-        if(baseType){
+        if (baseType) {
             this.baseTypeHandler = Handler.handle(baseType, this.context);
-        }else{
+        } else {
             this.baseTypeHandler = null;
         }
         this.membersHandler.length = 0;
-        for(const member of members){
+        for (const member of members) {
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
         }
         this.value = {
             type: "Enum",
             name: this.nameHandler?.value,
-            members: this.membersHandler.map(handler=>handler?.value),
+            members: this.membersHandler.map(handler => handler?.value),
             baseType: this.baseTypeHandler?.value
         };
     }
 
-    protected _collectDeclarations() {
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const enumName = this.value.name.name;
-        const symbol = this.context.declare<EnumSymbol>(enumName, "Enum");
+        return this.declareSymbol<EnumSymbol>(enumName, "Enum", parentScope);
+    }
 
-        const scope = this.pushScope<EnumScope>("Enum");
-        scope.enumInfo = symbol;
-        symbol.table = scope;
-        for(const member of this.value.members){
-            const handler = Handler.getHandler(member);
-            scope.addMember(handler?.collectDeclarations());
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
         }
-        this.popScope();
-        this._symbol = symbol;
-        return symbol;
+        const scope = currentScope as EnumScope;
+        for (const child of childrenSymbols) {
+            scope.addMember(child as VariableSymbol);
+        }
+        return scope.ownerSymbol;
     }
 }
 

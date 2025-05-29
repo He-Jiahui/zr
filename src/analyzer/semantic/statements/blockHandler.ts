@@ -1,9 +1,12 @@
 import type {StatementType} from "."
 import {Block} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler"
-import {Symbol} from "../../static/symbol/symbol";
-import {BlockSymbol} from "../../static/symbol/blockSymbol";
+import type {BlockSymbol} from "../../static/symbol/blockSymbol";
 import {BlockScope} from "../../static/scope/blockScope";
+import {Symbol as SymbolDeclaration} from "../../static/symbol/symbol";
+import type {VariableSymbol} from "../../static/symbol/variableSymbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
+import {Scope} from "../../static/scope/scope";
 
 export type BlockType = {
     type: "Block",
@@ -12,9 +15,14 @@ export type BlockType = {
 }
 
 export class BlockHandler extends Handler {
+    public value: BlockType;
     private readonly bodyHandler: Handler[] = [];
 
-    public value: BlockType;
+    protected get _children() {
+        return [
+            ...this.bodyHandler
+        ];
+    }
 
     public _handle(node: Block): void {
         super._handle(node);
@@ -30,26 +38,25 @@ export class BlockHandler extends Handler {
         }
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
-        const symbol = this.context.declare<BlockSymbol>("", "Block");
-        const scope = this.pushScope<BlockScope>("Block");
-        symbol.body = scope;
-        scope.info = symbol;
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
+        return this.declareSymbol<BlockSymbol>("$Block", "Block", parentScope);
+    }
 
-        for (const statement of this.value.body) {
-            const handler = Handler.getHandler(statement);
-            const sym = handler?.collectDeclarations();
-            // collect variables
-            if (sym) {
-                if (statement.type === "VariableDeclaration") {
-                    scope.addVariable(handler?.collectDeclarations());
-                } else {
-                    scope.addSubScope(handler?.collectDeclarations());
-                }
-            }
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
         }
-        this.popScope();
-        return symbol;
+        const scope = currentScope as BlockScope;
+        for (const child of childrenSymbols) {
+            // collect variables
+            if (child.type === "variable") {
+                scope.addVariable(child as VariableSymbol);
+            } else {
+                scope.addSubScope(child);
+            }
+
+        }
+        return scope.ownerSymbol;
     }
 }
 

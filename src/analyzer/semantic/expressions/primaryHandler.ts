@@ -1,9 +1,10 @@
-import { UnaryExpression } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import { Exp } from "./expression";
-import type { FunctionCallType } from "./functionCallHandler";
-import type { LiteralExpressionType } from "./literalHandler";
-import type { MemberAccessType } from "./memberAccessHandler";
+import {UnaryExpression} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {FunctionCallType} from "./functionCallHandler";
+import type {LiteralExpressionType} from "./literalHandler";
+import type {MemberAccessType} from "./memberAccessHandler";
+import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+
 
 export type PrimaryType = {
     type: "PrimaryExpression";
@@ -11,17 +12,24 @@ export type PrimaryType = {
     members: (MemberAccessType | FunctionCallType)[];
 }
 
-export class PrimaryHandler extends Handler{
+export class PrimaryHandler extends Handler {
     public value: PrimaryType;
-    private propertyHandler: Handler | null = null;
+    private propertyHandler: TNullable<Handler> = null;
     private readonly memberHandlers: Handler[] = [];
 
-    public _handle(node: Exp<UnaryExpression, "PrimaryExpression">) {
+    protected get _children() {
+        return [
+            this.propertyHandler,
+            ...this.memberHandlers
+        ];
+    }
+
+    public _handle(node: TExpression<UnaryExpression, "PrimaryExpression">) {
         super._handle(node);
         this.memberHandlers.length = 0;
         this.propertyHandler = Handler.handle(node.property, this.context);
-        if(node.members){
-            for(const member of node.members){
+        if (node.members) {
+            for (const member of node.members) {
                 const handler = Handler.handle(member, this.context);
                 this.memberHandlers.push(handler);
             }
@@ -30,7 +38,7 @@ export class PrimaryHandler extends Handler{
         this.value = {
             type: "PrimaryExpression",
             property: this.propertyHandler?.value,
-            members: this.memberHandlers.map(handler=>handler?.value),
+            members: this.memberHandlers.map(handler => handler?.value),
         }
     }
 }

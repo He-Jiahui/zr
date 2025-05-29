@@ -2,6 +2,7 @@ import type {ExpressionType} from ".";
 import {IfExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {BlockType} from "../statements/blockHandler";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type IfExpressionType = {
     type: "IfExpression",
@@ -13,9 +14,17 @@ export type IfExpressionType = {
 
 export class IfExpressionHandler extends Handler {
     public value: IfExpressionType;
-    private conditionHandler: Handler | null = null;
-    private thenHandler: Handler | null = null;
-    private elseHandler: Handler | null = null;
+    private conditionHandler: TNullable<Handler> = null;
+    private thenHandler: TNullable<Handler> = null;
+    private elseHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.conditionHandler,
+            this.thenHandler,
+            this.elseHandler
+        ];
+    }
 
     public _handle(node: IfExpression): void {
         super._handle(node);

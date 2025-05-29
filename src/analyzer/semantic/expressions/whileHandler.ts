@@ -2,6 +2,7 @@ import {WhileLoop} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import {ExpressionType} from "./index";
 import {BlockType} from "../statements/blockHandler";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type WhileLoopExpressionType = {
     type: "WhileLoopExpression",
@@ -12,8 +13,15 @@ export type WhileLoopExpressionType = {
 
 export class WhileLoopExpressionHandler extends Handler {
     public value: WhileLoopExpressionType;
-    private conditionHandler: Handler | null = null;
-    private blockHandler: Handler | null = null;
+    private conditionHandler: TNullable<Handler> = null;
+    private blockHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.conditionHandler,
+            this.blockHandler
+        ];
+    }
 
     public _handle(node: WhileLoop): void {
         super._handle(node);

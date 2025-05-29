@@ -12,9 +12,18 @@
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Handler = void 0;
 const noHandlerError_1 = __webpack_require__(/*! ../../../errors/noHandlerError */ "./src/errors/noHandlerError.ts");
-const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 const scope_1 = __webpack_require__(/*! ../../static/scope/scope */ "./src/analyzer/static/scope/scope.ts");
+const symbol_1 = __webpack_require__(/*! ../../static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 class Handler {
+    constructor(context) {
+        this.context = context;
+    }
+    get children() {
+        return this._children.filter(child => child !== null).map(child => child);
+    }
+    get _children() {
+        return [];
+    }
     static registerHandler(nodeType, handler) {
         Handler.handlers.set(nodeType, handler);
     }
@@ -40,9 +49,6 @@ class Handler {
             return null;
         }
     }
-    constructor(context) {
-        this.context = context;
-    }
     handleInternal(node) {
         // clear previous value
         this.value = null;
@@ -54,40 +60,33 @@ class Handler {
         this._handle(node);
         this.context.popHandler();
     }
-    // handles node
-    _handle(node) {
+    createSymbolAndScope(parentScope) {
+        return this._createSymbolAndScope(parentScope);
     }
-    collectDeclarations() {
+    collectDeclarations(childrenSymbols, currentScope) {
         this.context.pushHandler(this);
-        const declarationSymbols = this._collectDeclarations();
+        const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope);
         this.context.popHandler();
         return declarationSymbols;
     }
+    // handles node
+    _handle(node) {
+    }
+    _createSymbolAndScope(parentScope) {
+        return null;
+    }
     // collects
-    _collectDeclarations() {
-        return undefined;
+    _collectDeclarations(childrenSymbols, currentScope) {
+        return null;
     }
-    pushScope(scopeType) {
-        const context = this.context;
-        const scope = scope_1.Scope.createScope(scopeType, context._currentScope);
-        if (!scope) {
-            new zrInternalError_1.ZrInternalError(`Scope ${scopeType} is not registered`, context).report(); // TODO: throw
-            return null;
+    declareSymbol(symbolName, symbolType, parentScope) {
+        const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
+        this._symbol = createdSymbol;
+        const createdScope = scope_1.Scope.createScope(symbolType, parentScope, createdSymbol);
+        if (createdSymbol) {
+            createdSymbol.childScope = createdScope;
         }
-        if (context._currentScope) {
-            context._scopeStack.push(context._currentScope);
-        }
-        context._currentScope = scope;
-        return scope;
-    }
-    popScope() {
-        const context = this.context;
-        if (context._scopeStack.length > 0) {
-            context._currentScope = context._scopeStack.pop();
-        }
-        else {
-            context._currentScope = undefined;
-        }
+        return createdSymbol;
     }
 }
 exports.Handler = Handler;
@@ -123,12 +122,19 @@ const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyze
 class ClassDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
-        this.nameHandler = null;
         this.membersHandler = [];
         this.inheritsHandler = [];
         this.decoratorsHandler = [];
         this.genericHandler = null;
-        this._symbol = null;
+        this.nameHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.inheritsHandler,
+            ...this.decoratorsHandler,
+            ...this.membersHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -202,42 +208,47 @@ class ClassDeclarationHandler extends handler_1.Handler {
             properties,
         };
     }
-    _collectDeclarations() {
+    _createSymbolAndScope(parentScope) {
         const className = this.value.name.name;
-        const symbol = this.context.declare(className, "Class");
-        // TODO: super class & decorators will be handled later
-        const scope = this.pushScope("Class");
-        scope.classInfo = symbol;
-        symbol.table = scope;
-        for (const decorator of this.value.decorators) {
-            const handler = handler_1.Handler.getHandler(decorator);
-            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        const symbol = this.declareSymbol(className, "Class", parentScope);
+        // we can not decide super class
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
         }
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = handler_1.Handler.getHandler(generic);
-                scope.addGeneric(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic":
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case "field":
+                    {
+                        scope.addField(child);
+                    }
+                    break;
+                case "function":
+                    {
+                        scope.addMethod(child);
+                    }
+                    break;
+                case "meta":
+                    {
+                        scope.addMetaFunction(child);
+                    }
+                    break;
+                case "property":
+                    {
+                        scope.addProperty(child);
+                    }
+                    break;
             }
         }
-        for (const field of this.value.fields) {
-            const handler = handler_1.Handler.getHandler(field);
-            scope.addField(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const method of this.value.methods) {
-            const handler = handler_1.Handler.getHandler(method);
-            scope.addMethod(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const metaFunction of this.value.metaFunctions) {
-            const handler = handler_1.Handler.getHandler(metaFunction);
-            scope.addMetaFunction(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const property of this.value.properties) {
-            const handler = handler_1.Handler.getHandler(property);
-            scope.addProperty(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        this.popScope();
-        this._symbol = symbol;
-        return symbol;
+        return currentScope.ownerSymbol;
     }
 }
 exports.ClassDeclarationHandler = ClassDeclarationHandler;
@@ -263,6 +274,14 @@ class FieldHandler extends handler_1.Handler {
         this.typeInfoHandler = null;
         this.initHandler = null;
         this.decoratorsHandlers = [];
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler,
+            this.initHandler,
+            ...this.decoratorsHandlers
+        ];
     }
     _handle(node) {
         var _a, _b, _c;
@@ -299,15 +318,14 @@ class FieldHandler extends handler_1.Handler {
             decorators: this.decoratorsHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
-    _collectDeclarations() {
-        const symbol = this.context.declare(this.value.name.name, "Field");
-        this._symbol = symbol;
+    _createSymbolAndScope(parentScope) {
+        const name = this.value.name.name;
+        const symbol = this.declareSymbol(name, "Field", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
-        for (const decorator of this.value.decorators) {
-            const handler = handler_1.Handler.getHandler(decorator);
-            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
         return symbol;
     }
 }
@@ -352,6 +370,15 @@ class MetaFunctionHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.bodyHandler = null;
         this.superHandlers = [];
+    }
+    get _children() {
+        return [
+            this.metaHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.bodyHandler,
+            ...this.superHandlers
+        ];
     }
     _handle(node) {
         var _a, _b, _c;
@@ -401,33 +428,37 @@ class MetaFunctionHandler extends handler_1.Handler {
             body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
         };
     }
-    _collectDeclarations() {
+    _createSymbolAndScope(parentScope) {
         const metaType = this.value.meta.name.name;
         const metaName = "@" + metaType;
-        const symbol = this.context.declare(metaName, "Meta");
-        symbol.metaType = metaType;
-        symbol.accessibility = this.value.access;
-        symbol.isStatic = this.value.static;
-        const scope = this.pushScope("Function");
-        scope.signature = symbol;
-        symbol.body = scope;
-        // TODO: add parameters and args to scope
-        for (const parameter of this.value.parameters) {
-            const handler = handler_1.Handler.getHandler(parameter);
-            scope.addParameter(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        const symbol = this.declareSymbol(metaName, "Meta", parentScope);
+        if (symbol) {
+            symbol.metaType = metaType;
+            symbol.accessibility = this.value.access;
+            symbol.isStatic = this.value.static;
         }
-        if (this.value.args) {
-            const handler = handler_1.Handler.getHandler(this.value.args);
-            scope.setArgs(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        // TODO:handle super calls
-        const body = this.value.body;
-        if (body) {
-            const handler = handler_1.Handler.getHandler(body);
-            scope.setBody(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        this.popScope();
         return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "parameter":
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case "block":
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return currentScope.ownerSymbol;
     }
 }
 exports.MetaFunctionHandler = MetaFunctionHandler;
@@ -456,6 +487,17 @@ class MethodHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.genericHandler = null;
         this.bodyHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.decoratorHandlers,
+            this.returnTypeHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.bodyHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c, _d, _e;
@@ -512,45 +554,41 @@ class MethodHandler extends handler_1.Handler {
             body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
         };
     }
-    _collectDeclarations() {
-        const symbol = this.context.declare(this.value.name.name, "Function");
-        const scope = this.pushScope("Function");
-        symbol.body = scope;
-        // todo: type is not available now
-        // symbol.returnType = this.value.returnType;
+    _createSymbolAndScope(parentScope) {
+        const funcName = this.value.name.name;
+        const symbol = this.declareSymbol(funcName, "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
-        scope.signature = symbol;
-        // decorators
-        for (const decorator of this.value.decorators) {
-            const handler = handler_1.Handler.getHandler(decorator);
-            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
         }
-        // generics
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = handler_1.Handler.getHandler(generic);
-                scope.addGeneric(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic":
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case "parameter":
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case "block":
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
             }
         }
-        // parameters
-        for (const parameter of this.value.parameters) {
-            const handler = handler_1.Handler.getHandler(parameter);
-            scope.addParameter(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        // args
-        if (this.value.args) {
-            const handler = handler_1.Handler.getHandler(this.value.args);
-            scope.setArgs(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        // body
-        const body = this.value.body;
-        if (body) {
-            const handler = handler_1.Handler.getHandler(body);
-            scope.setBody(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 exports.MethodHandler = MethodHandler;
@@ -578,6 +616,15 @@ class PropertyHandler extends handler_1.Handler {
         this.bodyHandler = null;
         this.nameHandler = null;
         this.paramHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.targetTypeHandler,
+            ...this.decoratorHandlers,
+            this.paramHandler,
+            this.bodyHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c, _d;
@@ -625,48 +672,76 @@ class PropertyHandler extends handler_1.Handler {
             body: (_d = this.bodyHandler) === null || _d === void 0 ? void 0 : _d.value
         };
     }
-    _collectDeclarations() {
-        var _a;
+    _createSymbolAndScope(parentScope) {
         const propertyName = this.value.name.name;
-        const symbol = this.context.declare(propertyName, "Property");
+        const symbol = this.declareSymbol(propertyName, "Property", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
         const propertyType = this.value.propertyType;
         symbol.propertyType = propertyType;
-        for (const decorator of this.value.decorators) {
-            const handler = handler_1.Handler.getHandler(decorator);
-            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
         const isGetter = propertyType === access_1.PropertyType.GET;
         let functionSymbol;
+        const scope = symbol.childScope;
         if (isGetter) {
-            const getterSymbol = this.context.declare(propertyName + "$Get", "Function");
-            symbol.getterSymbol = getterSymbol;
+            const getterSymbol = this.declareSymbol(propertyName + "$Get", "Function", symbol.childScope);
+            scope.setGetter(getterSymbol);
             functionSymbol = getterSymbol;
         }
         else {
-            const setterSymbol = this.context.declare(propertyName + "$Set", "Function");
-            symbol.setterSymbol = setterSymbol;
+            const setterSymbol = this.declareSymbol(propertyName + "$Set", "Function", symbol.childScope);
+            scope.setSetter(setterSymbol);
             functionSymbol = setterSymbol;
         }
-        functionSymbol.accessibility = this.value.access;
-        functionSymbol.isStatic = this.value.static;
-        functionSymbol.decorators.push(...symbol.decorators);
-        const scope = this.pushScope("Function");
-        scope.signature = functionSymbol;
-        functionSymbol.body = scope;
+        if (!functionSymbol) {
+            return symbol;
+        }
         if (!isGetter) {
             // add parameter
-            const parameterSymbol = this.context.declare(this.value.param.name, "Parameter");
+            const parameterSymbol = this.declareSymbol(this.value.param.name, "Parameter", functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
-            scope.addParameter(parameterSymbol);
+            const functionScope = functionSymbol.childScope;
+            if (functionScope) {
+                functionScope.addParameter(parameterSymbol);
+            }
         }
         else {
             // TODO: add return type for getter
         }
-        scope.setBody((_a = handler_1.Handler.getHandler(this.value.body)) === null || _a === void 0 ? void 0 : _a.collectDeclarations());
-        this.popScope();
         return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const propertyType = this.value.propertyType;
+        const isGetter = propertyType === access_1.PropertyType.GET;
+        const scope = currentScope;
+        const functionSymbol = isGetter ? scope.getterSymbol : scope.setterSymbol;
+        if (!functionSymbol) {
+            return null;
+        }
+        const functionScope = functionSymbol.childScope;
+        if (!functionScope) {
+            return null;
+        }
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "parameter":
+                    {
+                        functionScope.addParameter(child);
+                    }
+                    break;
+                case "block":
+                    {
+                        functionScope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
     }
 }
 exports.PropertyHandler = PropertyHandler;
@@ -691,7 +766,13 @@ class EnumDeclarationHandler extends handler_1.Handler {
         this.baseTypeHandler = null;
         this.membersHandler = [];
         this.nameHandler = null;
-        this._symbol = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.baseTypeHandler,
+            ...this.membersHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -718,19 +799,19 @@ class EnumDeclarationHandler extends handler_1.Handler {
             baseType: (_b = this.baseTypeHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
-    _collectDeclarations() {
+    _createSymbolAndScope(parentScope) {
         const enumName = this.value.name.name;
-        const symbol = this.context.declare(enumName, "Enum");
-        const scope = this.pushScope("Enum");
-        scope.enumInfo = symbol;
-        symbol.table = scope;
-        for (const member of this.value.members) {
-            const handler = handler_1.Handler.getHandler(member);
-            scope.addMember(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        return this.declareSymbol(enumName, "Enum", parentScope);
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
         }
-        this.popScope();
-        this._symbol = symbol;
-        return symbol;
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            scope.addMember(child);
+        }
+        return scope.ownerSymbol;
     }
 }
 exports.EnumDeclarationHandler = EnumDeclarationHandler;
@@ -769,6 +850,12 @@ class EnumMemberHandler extends handler_1.Handler {
         this.nameHandler = null;
         this.valueHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.valueHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -786,12 +873,12 @@ class EnumMemberHandler extends handler_1.Handler {
             value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value,
         };
     }
-    _collectDeclarations() {
-        var _a;
+    _createSymbolAndScope(parentScope) {
         const name = this.value.name.name;
-        const symbol = this.context.declare(name, "Variable");
-        const value = this.value.value;
-        (_a = handler_1.Handler.getHandler(value)) === null || _a === void 0 ? void 0 : _a.collectDeclarations();
+        const symbol = this.declareSymbol(name, "Variable", parentScope);
+        if (!symbol) {
+            return null;
+        }
         return symbol;
     }
 }
@@ -822,6 +909,17 @@ class FunctionHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.genericHandler = null;
         this.bodyHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            ...this.decoratorHandlers,
+            this.bodyHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c, _d, _e;
@@ -875,33 +973,41 @@ class FunctionHandler extends handler_1.Handler {
             body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
         };
     }
-    _collectDeclarations() {
-        var _a, _b;
+    _createSymbolAndScope(parentScope) {
         const funcName = this.value.name.name;
-        const symbol = this.context.declare(funcName, "Function");
-        const scope = this.pushScope("Function");
-        scope.signature = symbol;
-        symbol.body = scope;
+        const symbol = this.declareSymbol(funcName, "Function", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = access_1.Access.PUBLIC;
         symbol.isStatic = true;
-        for (const decorator of this.value.decorators) {
-            const handler = handler_1.Handler.getHandler(decorator);
-            symbol.decorators.push(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
         }
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = handler_1.Handler.getHandler(generic);
-                scope.addGeneric(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic":
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case "parameter":
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case "block":
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
             }
         }
-        for (const parameter of this.value.parameters) {
-            const handler = handler_1.Handler.getHandler(parameter);
-            scope.addParameter(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        scope.setArgs((_a = handler_1.Handler.getHandler(this.value.args)) === null || _a === void 0 ? void 0 : _a.collectDeclarations());
-        scope.setBody((_b = handler_1.Handler.getHandler(this.value.body)) === null || _b === void 0 ? void 0 : _b.collectDeclarations());
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 exports.FunctionHandler = FunctionHandler;
@@ -984,6 +1090,12 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
         this.nameHandler = null;
         this.targetTypeHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.targetTypeHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -1038,10 +1150,18 @@ const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyze
 class InterfaceDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
-        this.nameHandler = null;
         this.membersHandler = [];
         this.inheritsHandler = [];
         this.genericHandler = null;
+        this.nameHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.inheritsHandler,
+            this.genericHandler,
+            ...this.membersHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -1100,32 +1220,40 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
             generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
-    _collectDeclarations() {
+    _createSymbolAndScope(parentScope) {
         const interfaceName = this.value.name.name;
-        const symbol = this.context.declare(interfaceName, "Interface");
-        const scope = this.pushScope("Interface");
-        scope.interfaceInfo = symbol;
-        symbol.table = scope;
-        if (this.value.generic) {
-            for (const generic of this.value.generic.typeArguments) {
-                const handler = handler_1.Handler.getHandler(generic);
-                scope.addGeneric(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
+        return this.declareSymbol(interfaceName, "Interface", parentScope);
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "generic":
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case "field":
+                    {
+                        scope.addField(child);
+                    }
+                    break;
+                case "function":
+                    {
+                        scope.addMethod(child);
+                    }
+                    break;
+                case "property":
+                    {
+                        scope.addProperty(child);
+                    }
+                    break;
             }
         }
-        for (const field of this.value.fields) {
-            const handler = handler_1.Handler.getHandler(field);
-            scope.addField(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const method of this.value.methods) {
-            const handler = handler_1.Handler.getHandler(method);
-            scope.addMethod(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const property of this.value.properties) {
-            const handler = handler_1.Handler.getHandler(property);
-            scope.addProperty(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 exports.InterfaceDeclarationHandler = InterfaceDeclarationHandler;
@@ -1152,6 +1280,15 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.genericHandler = null;
         this.nameHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+        ];
     }
     _handle(node) {
         var _a, _b, _c, _d;
@@ -1216,6 +1353,12 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
         this.typeInfoHandler = null;
         this.nameHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -1259,6 +1402,11 @@ class MetaHandler extends handler_1.Handler {
         super(...arguments);
         this.nameHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler
+        ];
+    }
     _handle(node) {
         var _a;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
@@ -1290,6 +1438,13 @@ class FieldHandler extends handler_1.Handler {
         this.nameHandler = null;
         this.typeInfoHandler = null;
         this.initHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler,
+            this.initHandler,
+        ];
     }
     _handle(node) {
         var _a, _b, _c;
@@ -1359,6 +1514,14 @@ class MetaFunctionHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.bodyHandler = null;
     }
+    get _children() {
+        return [
+            this.metaHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.bodyHandler
+        ];
+    }
     _handle(node) {
         var _a, _b, _c;
         super._handle(node);
@@ -1426,6 +1589,17 @@ class MethodHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.genericHandler = null;
         this.bodyHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+            ...this.decoratorHandlers,
+            this.bodyHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c, _d, _e;
@@ -1502,9 +1676,14 @@ const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyze
 class StructDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
-        this.nameHandler = null;
         this.membersHandler = [];
-        this._symbol = null;
+        this.nameHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler,
+            ...this.membersHandler
+        ];
     }
     _handle(node) {
         var _a;
@@ -1548,27 +1727,36 @@ class StructDeclarationHandler extends handler_1.Handler {
             metaFunctions
         };
     }
-    _collectDeclarations() {
+    _createSymbolAndScope(parentScope) {
         const structName = this.value.name.name;
-        const symbol = this.context.declare(structName, "Struct");
-        const scope = this.pushScope("Struct");
-        scope.structInfo = symbol;
-        symbol.table = scope;
-        for (const field of this.value.fields) {
-            const handler = handler_1.Handler.getHandler(field);
-            scope.addField(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const method of this.value.methods) {
-            const handler = handler_1.Handler.getHandler(method);
-            scope.addMethod(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        for (const metaFunction of this.value.metaFunctions) {
-            const handler = handler_1.Handler.getHandler(metaFunction);
-            scope.addMetaFunction(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-        }
-        this.popScope();
-        this._symbol = symbol;
+        const symbol = this.declareSymbol(structName, "Struct", parentScope);
         return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "field":
+                    {
+                        scope.addField(child);
+                    }
+                    break;
+                case "function":
+                    {
+                        scope.addMethod(child);
+                    }
+                    break;
+                case "meta":
+                    {
+                        scope.addMetaFunction(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
     }
 }
 exports.StructDeclarationHandler = StructDeclarationHandler;
@@ -1591,6 +1779,11 @@ class DestructuringObjectHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.keyHandlers = [];
+    }
+    get _children() {
+        return [
+            ...this.keyHandlers
+        ];
     }
     _handle(node) {
         super._handle(node);
@@ -1662,6 +1855,13 @@ class VariableHandler extends handler_1.Handler {
         this.valueHandler = null;
         this.typeHandler = null;
     }
+    get _children() {
+        return [
+            this.patternHandler,
+            this.valueHandler,
+            this.typeHandler
+        ];
+    }
     _handle(node) {
         var _a, _b, _c;
         this.patternHandler = handler_1.Handler.handle(node.pattern, this.context);
@@ -1679,11 +1879,9 @@ class VariableHandler extends handler_1.Handler {
             typeInfo: (_c = this.typeHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
-    _collectDeclarations() {
-        var _a;
-        const getDeclaration = (Identifier) => {
-            const handler = handler_1.Handler.getHandler(Identifier);
-            const symbol = this.context.declare(Identifier.name, "Variable", handler === null || handler === void 0 ? void 0 : handler.location);
+    _createSymbolAndScope(parentScope) {
+        const getDeclaration = (identifier) => {
+            const symbol = this.declareSymbol(identifier.name, "Variable", parentScope);
             return symbol;
         };
         const collect = () => {
@@ -1703,9 +1901,11 @@ class VariableHandler extends handler_1.Handler {
             }
         };
         const declaration = collect();
-        (_a = this.valueHandler) === null || _a === void 0 ? void 0 : _a.collectDeclarations();
         if (declaration instanceof Array) {
-            const symbol = this.context.declare("", "Variable");
+            const symbol = this.declareSymbol("", "Variable", parentScope);
+            if (!symbol) {
+                return null;
+            }
             for (const d of declaration) {
                 if (!d) {
                     continue;
@@ -1715,6 +1915,12 @@ class VariableHandler extends handler_1.Handler {
             return symbol;
         }
         return declaration;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        return currentScope.ownerSymbol;
     }
 }
 exports.VariableHandler = VariableHandler;
@@ -1737,6 +1943,11 @@ class ArrayLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.elementsHandler = [];
+    }
+    get _children() {
+        return [
+            ...this.elementsHandler
+        ];
     }
     _handle(node) {
         super._handle(node);
@@ -1767,12 +1978,17 @@ handler_1.Handler.registerHandler("ArrayLiteral", ArrayLiteralHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AssignmentHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
-const symbol_1 = __webpack_require__(/*! ../../static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 class AssignmentHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.leftHandler = null;
         this.rightHandler = null;
+    }
+    get _children() {
+        return [
+            this.leftHandler,
+            this.rightHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -1785,55 +2001,6 @@ class AssignmentHandler extends handler_1.Handler {
             right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
             op: node.op
         };
-    }
-    _collectDeclarations() {
-        switch (this.value.type) {
-            case "AssignmentExpression":
-                {
-                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
-                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
-                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
-                }
-                break;
-            case "ConditionalExpression":
-                {
-                    const conditionHandler = handler_1.Handler.getHandler(this.value.condition);
-                    const alternateHandler = handler_1.Handler.getHandler(this.value.alternate);
-                    const consequentHandler = handler_1.Handler.getHandler(this.value.consequent);
-                    return (0, symbol_1.makeSymbolSet)(conditionHandler, consequentHandler, alternateHandler);
-                }
-                break;
-            case "BinaryExpression":
-                {
-                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
-                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
-                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
-                }
-                break;
-            case "LogicalExpression":
-                {
-                    const leftHandler = handler_1.Handler.getHandler(this.value.left);
-                    const rightHandler = handler_1.Handler.getHandler(this.value.right);
-                    return (0, symbol_1.makeSymbolSet)(leftHandler, rightHandler);
-                }
-                break;
-            case "PrimaryExpression":
-                {
-                    const propertyHandler = handler_1.Handler.getHandler(this.value.property);
-                    const membersHandler = this.value.members.map(m => handler_1.Handler.getHandler(m));
-                    return (0, symbol_1.makeSymbolSet)(propertyHandler, ...membersHandler);
-                }
-                break;
-            case "UnaryExpression":
-                {
-                    const handler = handler_1.Handler.getHandler(this.value.arguments);
-                    return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
-                }
-                break;
-            default: {
-                return undefined;
-            }
-        }
     }
 }
 exports.AssignmentHandler = AssignmentHandler;
@@ -1857,6 +2024,12 @@ class BinaryHandler extends handler_1.Handler {
         super(...arguments);
         this.leftHandler = null;
         this.rightHandler = null;
+    }
+    get _children() {
+        return [
+            this.leftHandler,
+            this.rightHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -1894,6 +2067,13 @@ class ConditionalHandler extends handler_1.Handler {
         this.consequentHandler = null;
         this.alternateHandler = null;
     }
+    get _children() {
+        return [
+            this.conditionHandler,
+            this.consequentHandler,
+            this.alternateHandler
+        ];
+    }
     _handle(node) {
         var _a, _b, _c;
         super._handle(node);
@@ -1929,6 +2109,11 @@ class DecoratorExpressionHandler extends handler_1.Handler {
         super(...arguments);
         this.exprHandler = null;
     }
+    get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -1937,11 +2122,6 @@ class DecoratorExpressionHandler extends handler_1.Handler {
             type: 'DecoratorExpression',
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
-    }
-    _collectDeclarations() {
-        // if there is a block in expression
-        const handler = handler_1.Handler.getHandler(this.value.expr);
-        return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
     }
 }
 exports.DecoratorExpressionHandler = DecoratorExpressionHandler;
@@ -1967,6 +2147,14 @@ class ForLoopExpressionHandler extends handler_1.Handler {
         this.conditionHandler = null;
         this.stepHandler = null;
         this.blockHandler = null;
+    }
+    get _children() {
+        return [
+            this.initHandler,
+            this.conditionHandler,
+            this.stepHandler,
+            this.blockHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c;
@@ -2010,6 +2198,14 @@ class ForeachLoopExpressionHandler extends handler_1.Handler {
         this.exprHandler = null;
         this.blockHandler = null;
     }
+    get _children() {
+        return [
+            this.patternHandler,
+            this.typeHandler,
+            this.exprHandler,
+            this.blockHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -2050,6 +2246,11 @@ class FunctionCallHandler extends handler_1.Handler {
         super(...arguments);
         this.argsHandler = [];
     }
+    get _children() {
+        return [
+            ...this.argsHandler
+        ];
+    }
     _handle(node) {
         super._handle(node);
         this.argsHandler.length = 0;
@@ -2087,6 +2288,13 @@ class IfExpressionHandler extends handler_1.Handler {
         this.conditionHandler = null;
         this.thenHandler = null;
         this.elseHandler = null;
+    }
+    get _children() {
+        return [
+            this.conditionHandler,
+            this.thenHandler,
+            this.elseHandler
+        ];
     }
     _handle(node) {
         var _a, _b, _c;
@@ -2160,6 +2368,13 @@ class LambdaHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.blockHandler = null;
     }
+    get _children() {
+        return [
+            ...this.paramsHandler,
+            this.argsHandler,
+            this.blockHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -2200,6 +2415,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IdentifierLiteralHandler = exports.ValueLiteralHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 class ValueLiteralHandler extends handler_1.Handler {
+    constructor() {
+        super(...arguments);
+        this.valueHandler = null;
+    }
+    get _children() {
+        return [
+            this.valueHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -2249,6 +2473,12 @@ class LogicalHandler extends handler_1.Handler {
         this.leftHandler = null;
         this.rightHandler = null;
     }
+    get _children() {
+        return [
+            this.leftHandler,
+            this.rightHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -2282,6 +2512,11 @@ class MemberAccessHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.propertyHandler = null;
+    }
+    get _children() {
+        return [
+            this.propertyHandler
+        ];
     }
     _handle(node) {
         var _a;
@@ -2342,6 +2577,12 @@ class KeyValuePairHandler extends handler_1.Handler {
         this.keyHandler = null;
         this.valueHandler = null;
     }
+    get _children() {
+        return [
+            this.keyHandler,
+            this.valueHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -2375,6 +2616,12 @@ class PrimaryHandler extends handler_1.Handler {
         super(...arguments);
         this.propertyHandler = null;
         this.memberHandlers = [];
+    }
+    get _children() {
+        return [
+            this.propertyHandler,
+            ...this.memberHandlers
+        ];
     }
     _handle(node) {
         var _a;
@@ -2416,6 +2663,13 @@ class SwitchExpressionHandler extends handler_1.Handler {
         this.exprHandler = null;
         this.caseHandlers = [];
         this.defaultHandler = null;
+    }
+    get _children() {
+        return [
+            this.exprHandler,
+            ...this.caseHandlers,
+            this.defaultHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -2510,6 +2764,12 @@ class UnaryHandler extends handler_1.Handler {
         this.operatorHandler = null;
         this.argumentHandler = null;
     }
+    get _children() {
+        return [
+            this.operatorHandler,
+            this.argumentHandler
+        ];
+    }
     _handle(node) {
         var _a, _b;
         super._handle(node);
@@ -2543,6 +2803,12 @@ class WhileLoopExpressionHandler extends handler_1.Handler {
         super(...arguments);
         this.conditionHandler = null;
         this.blockHandler = null;
+    }
+    get _children() {
+        return [
+            this.conditionHandler,
+            this.blockHandler
+        ];
     }
     _handle(node) {
         var _a, _b;
@@ -2767,6 +3033,11 @@ class ModuleDeclarationHandler extends handler_1.Handler {
         super(...arguments);
         this.nameHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -2794,14 +3065,18 @@ handler_1.Handler.registerHandler("ModuleDeclaration", ModuleDeclarationHandler)
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScriptHandler = void 0;
 const handler_1 = __webpack_require__(/*! ./common/handler */ "./src/analyzer/semantic/common/handler.ts");
-const prettyPrint_1 = __webpack_require__(/*! ../../utils/prettyPrint */ "./src/utils/prettyPrint.ts");
 class ScriptHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         // 脚本模块
         this.moduleHandler = null;
         this.statementHandlers = [];
-        this._symbol = null;
+    }
+    get _children() {
+        return [
+            this.moduleHandler,
+            ...this.statementHandlers
+        ];
     }
     _handle(start) {
         var _a;
@@ -2824,8 +3099,8 @@ class ScriptHandler extends handler_1.Handler {
             statements: this.statementHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
-    _collectDeclarations() {
-        var _a, _b;
+    _createSymbolAndScope(parentScope) {
+        var _a;
         let moduleName = "module";
         const moduleNameContainer = (_a = this.value.module) === null || _a === void 0 ? void 0 : _a.name;
         if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === "Identifier") {
@@ -2837,59 +3112,54 @@ class ScriptHandler extends handler_1.Handler {
         else {
             moduleName = this.context.fileName;
         }
-        const symbol = this.context.declare(moduleName, "Module", (_b = this.moduleHandler) === null || _b === void 0 ? void 0 : _b.location);
-        const scope = this.pushScope("Module");
-        scope.moduleInfo = symbol;
-        symbol.table = scope;
+        const symbol = this.declareSymbol(moduleName, "Module", parentScope);
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
         // collect module statement declarations
-        for (const statement of this.value.statements) {
-            const handler = handler_1.Handler.getHandler(statement);
-            if (!handler) {
-                continue;
-            }
-            switch (statement.type) {
-                case "Class":
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "class":
                     {
-                        scope.addClass(handler.collectDeclarations());
+                        scope.addClass(child);
                     }
                     break;
-                case "Struct":
+                case "struct":
                     {
-                        scope.addStruct(handler.collectDeclarations());
+                        scope.addStruct(child);
                     }
                     break;
-                case "Interface":
+                case "interface":
                     {
-                        scope.addInterface(handler.collectDeclarations());
+                        scope.addInterface(child);
                     }
                     break;
-                case "Enum":
+                case "enum":
                     {
-                        scope.addEnum(handler.collectDeclarations());
+                        scope.addEnum(child);
                     }
                     break;
-                case "Function":
+                case "function":
                     {
-                        scope.addFunction(handler.collectDeclarations());
+                        scope.addFunction(child);
                     }
                     break;
-                case "VariableDeclaration":
+                case "variable":
                     {
-                        scope.addVariable(handler.collectDeclarations());
+                        scope.addVariable(child);
                     }
                     break;
                 default:
-                    {
-                        handler.collectDeclarations();
-                    }
                     break;
             }
         }
-        this.popScope();
-        this._symbol = symbol;
         // TODO: debug only
-        (0, prettyPrint_1.prettyPrintSymbolTables)(this._symbol);
-        return symbol;
+        // prettyPrintSymbolTables(this._symbol);
+        return currentScope.ownerSymbol;
     }
 }
 exports.ScriptHandler = ScriptHandler;
@@ -2913,6 +3183,11 @@ class BlockHandler extends handler_1.Handler {
         super(...arguments);
         this.bodyHandler = [];
     }
+    get _children() {
+        return [
+            ...this.bodyHandler
+        ];
+    }
     _handle(node) {
         super._handle(node);
         this.bodyHandler.length = 0;
@@ -2926,26 +3201,24 @@ class BlockHandler extends handler_1.Handler {
             body: this.bodyHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
-    _collectDeclarations() {
-        const symbol = this.context.declare("", "Block");
-        const scope = this.pushScope("Block");
-        symbol.body = scope;
-        scope.info = symbol;
-        for (const statement of this.value.body) {
-            const handler = handler_1.Handler.getHandler(statement);
-            const sym = handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
+    _createSymbolAndScope(parentScope) {
+        return this.declareSymbol("$Block", "Block", parentScope);
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
             // collect variables
-            if (sym) {
-                if (statement.type === "VariableDeclaration") {
-                    scope.addVariable(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-                }
-                else {
-                    scope.addSubScope(handler === null || handler === void 0 ? void 0 : handler.collectDeclarations());
-                }
+            if (child.type === "variable") {
+                scope.addVariable(child);
+            }
+            else {
+                scope.addSubScope(child);
             }
         }
-        this.popScope();
-        return symbol;
+        return scope.ownerSymbol;
     }
 }
 exports.BlockHandler = BlockHandler;
@@ -2968,6 +3241,11 @@ class BreakContinueHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.exprHandler = null;
+    }
+    get _children() {
+        return [
+            this.exprHandler
+        ];
     }
     _handle(node) {
         var _a;
@@ -3021,6 +3299,11 @@ class OutHandler extends handler_1.Handler {
         super(...arguments);
         this.exprHandler = null;
     }
+    get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -3056,6 +3339,11 @@ class ReturnStatementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.exprHandler = null;
+    }
+    get _children() {
+        return [
+            this.exprHandler
+        ];
     }
     _handle(node) {
         var _a;
@@ -3093,6 +3381,11 @@ class ExpressionStatementHandler extends handler_1.Handler {
         super(...arguments);
         this.exprHandler = null;
     }
+    get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
     _handle(node) {
         var _a;
         super._handle(node);
@@ -3101,10 +3394,6 @@ class ExpressionStatementHandler extends handler_1.Handler {
             type: 'ExpressionStatement',
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
-    }
-    _collectDeclarations() {
-        const handler = handler_1.Handler.getHandler(this.value.expr);
-        return handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
     }
 }
 exports.ExpressionStatementHandler = ExpressionStatementHandler;
@@ -3143,6 +3432,11 @@ class GenericDeclarationHandler extends handler_1.Handler {
         super(...arguments);
         this.typeArgumentsHandler = [];
     }
+    get _children() {
+        return [
+            ...this.typeArgumentsHandler
+        ];
+    }
     _handle(node) {
         super._handle(node);
         const typeArguments = node.params;
@@ -3177,6 +3471,11 @@ class GenericImplementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.typeArgumentsHandler = [];
+    }
+    get _children() {
+        return [
+            ...this.typeArgumentsHandler
+        ];
     }
     _handle(node) {
         super._handle(node);
@@ -3233,6 +3532,13 @@ class ParameterHandler extends handler_1.Handler {
         this.typeInfoHandler = null;
         this.defaultValueHandler = null;
     }
+    get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler,
+            this.defaultValueHandler
+        ];
+    }
     _handle(node) {
         var _a, _b, _c;
         super._handle(node);
@@ -3258,13 +3564,9 @@ class ParameterHandler extends handler_1.Handler {
             defaultValue: (_c = this.defaultValueHandler) === null || _c === void 0 ? void 0 : _c.value,
         };
     }
-    _collectDeclarations() {
-        var _a;
-        const symbol = this.context.declare(this.value.name.name, "Parameter");
-        this._symbol = symbol;
-        // if default value has block expression
-        (_a = handler_1.Handler.getHandler(this.value.defaultValue)) === null || _a === void 0 ? void 0 : _a.collectDeclarations();
-        return symbol;
+    _createSymbolAndScope(parentScope) {
+        const name = this.value.name.name;
+        return this.declareSymbol(name, "Parameter", parentScope);
     }
 }
 exports.ParameterHandler = ParameterHandler;
@@ -3287,6 +3589,11 @@ class TupleImplementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.elementsHandler = [];
+    }
+    get _children() {
+        return [
+            ...this.elementsHandler
+        ];
     }
     _handle(node) {
         super._handle(node);
@@ -3323,6 +3630,11 @@ class TypeHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.nameHandler = null;
+    }
+    get _children() {
+        return [
+            this.nameHandler
+        ];
     }
     _handle(node) {
         var _a;
@@ -3394,7 +3706,7 @@ class BlockScope extends scope_1.Scope {
         return success;
     }
     addSubScope(subScopes) {
-        const success = this.checkSymbolUnique(subScopes) && this.subScopeSymbols.addSymbol(subScopes);
+        const success = this.subScopeSymbols.addSymbol(subScopes);
         return success;
     }
     _getSymbol(_symbol) {
@@ -3439,7 +3751,7 @@ class ClassScope extends scope_1.Scope {
         return success;
     }
     addProperty(property) {
-        return (0, symbol_1.checkSymbolOrSymbolSet)(property, (property) => {
+        return (0, symbol_1.checkSymbolOrSymbolArray)(property, (property) => {
             var _a, _b;
             const definedProperty = this.properties.getSymbol(property.name);
             if (definedProperty) {
@@ -3458,15 +3770,18 @@ class ClassScope extends scope_1.Scope {
                 }
                 // merge getter and setter body if they are not defined yet
                 definedProperty.propertyType = access_1.PropertyType.GET_SET;
-                definedProperty.getterSymbol = (_a = property.getterSymbol) !== null && _a !== void 0 ? _a : definedProperty.getterSymbol;
-                definedProperty.setterSymbol = (_b = property.setterSymbol) !== null && _b !== void 0 ? _b : definedProperty.setterSymbol;
+                const definedPropertyScope = definedProperty.childScope;
+                const propertyScope = property.childScope;
+                definedPropertyScope.getterSymbol = (_a = propertyScope.getterSymbol) !== null && _a !== void 0 ? _a : definedPropertyScope.getterSymbol;
+                definedPropertyScope.setterSymbol = (_b = propertyScope.setterSymbol) !== null && _b !== void 0 ? _b : definedPropertyScope.setterSymbol;
+                return true;
             }
             const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
             return success;
         });
     }
     addMethod(method) {
-        return (0, symbol_1.checkSymbolOrSymbolSet)(method, (method) => {
+        return (0, symbol_1.checkSymbolOrSymbolArray)(method, (method) => {
             if (method) {
                 const definedMethod = this.methods.getSymbol(method.name);
                 if (definedMethod) {
@@ -3481,7 +3796,7 @@ class ClassScope extends scope_1.Scope {
         });
     }
     addMetaFunction(metaFunction) {
-        return (0, symbol_1.checkSymbolOrSymbolSet)(metaFunction, (metaFunction) => {
+        return (0, symbol_1.checkSymbolOrSymbolArray)(metaFunction, (metaFunction) => {
             if (metaFunction) {
                 const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
                 if (definedMetaFunction) {
@@ -3552,11 +3867,10 @@ class FunctionScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
         this.type = "FunctionScope";
+        this.body = null;
         this.generics = new symbol_1.SymbolTable();
         this.parameters = new symbol_1.SymbolTable();
-        this.args = null;
-        this.body = null;
-        this.symbolTableList = [this.generics, this.parameters, () => this.args, () => this.body];
+        this.symbolTableList = [this.generics, this.parameters, () => this.body];
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -3565,20 +3879,6 @@ class FunctionScope extends scope_1.Scope {
     addParameter(parameter) {
         const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
         return success;
-    }
-    setArgs(args) {
-        return (0, symbol_1.checkSymbolOrSymbolSet)(args, (args) => {
-            if (this.args == null) {
-                return true;
-            }
-            this.args = null;
-            const success = this.checkSymbolUnique(args);
-            if (success) {
-                this.args = args !== null && args !== void 0 ? args : null;
-                return true;
-            }
-            return false;
-        });
     }
     setBody(body) {
         if (body instanceof Array) {
@@ -3609,6 +3909,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 __webpack_require__(/*! ./blockScope */ "./src/analyzer/static/scope/blockScope.ts");
 __webpack_require__(/*! ./functionScope */ "./src/analyzer/static/scope/functionScope.ts");
+__webpack_require__(/*! ./propertyScope */ "./src/analyzer/static/scope/propertyScope.ts");
 __webpack_require__(/*! ./enumScope */ "./src/analyzer/static/scope/enumScope.ts");
 __webpack_require__(/*! ./classScope */ "./src/analyzer/static/scope/classScope.ts");
 __webpack_require__(/*! ./interfaceScope */ "./src/analyzer/static/scope/interfaceScope.ts");
@@ -3724,6 +4025,49 @@ scope_1.Scope.registerScope("Module", ModuleScope);
 
 /***/ }),
 
+/***/ "./src/analyzer/static/scope/propertyScope.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/scope/propertyScope.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PropertyScope = void 0;
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+class PropertyScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = "PropertyScope";
+        this.symbolTableList = [() => this.getterSymbol, () => this.setterSymbol];
+    }
+    setGetter(getter) {
+        if (getter instanceof Array) {
+            this.getterSymbol = getter[0];
+        }
+        else {
+            this.getterSymbol = getter !== null && getter !== void 0 ? getter : null;
+        }
+    }
+    setSetter(setter) {
+        if (setter instanceof Array) {
+            this.setterSymbol = setter[0];
+        }
+        else {
+            this.setterSymbol = setter !== null && setter !== void 0 ? setter : null;
+        }
+    }
+    _getSymbol(_symbol) {
+        var _a;
+        return (_a = (_symbol === "getter" ? this.getterSymbol : this.setterSymbol)) !== null && _a !== void 0 ? _a : undefined;
+    }
+}
+exports.PropertyScope = PropertyScope;
+scope_1.Scope.registerScope("Property", PropertyScope);
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/scope/scope.ts":
 /*!********************************************!*\
   !*** ./src/analyzer/static/scope/scope.ts ***!
@@ -3735,21 +4079,25 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Scope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 class Scope {
+    constructor(parentScope, ownerSymbol) {
+        this.symbolTableList = [];
+        this._parentScope = parentScope;
+        this._ownerSymbol = ownerSymbol;
+    }
+    //
+    get ownerSymbol() {
+        return this._ownerSymbol;
+    }
     static registerScope(scopeType, scope) {
         Scope.scopeMap.set(scopeType, scope);
     }
-    static createScope(scopeType, parent = null) {
+    static createScope(scopeType, parent, symbol) {
         const scope = Scope.scopeMap.get(scopeType);
         if (!scope) {
             return null;
         }
-        return new scope(parent);
+        return new scope(parent, symbol);
     }
-    constructor(parent = null) {
-        this.symbolTableList = [];
-        this.parent = parent;
-    }
-    // 
     // 定义一个公共方法 getSymbol，用于获取符号对象
     getSymbol(symbol) {
         // 调用私有方法 _getSymbol，尝试获取符号对象
@@ -3759,9 +4107,9 @@ class Scope {
             return sym;
         }
         // 如果当前对象没有父对象，则返回 null
-        if (this.parent) {
+        if (this._parentScope) {
             // 如果当前对象有父对象，则递归调用父对象的 getSymbol 方法，尝试从父对象中获取符号对象
-            return this.parent.getSymbol(symbol);
+            return this._parentScope.getSymbol(symbol);
         }
         // 如果当前对象及其父对象都没有找到符号对象，则返回 null
         return null;
@@ -4179,43 +4527,38 @@ symbol_1.Symbol.registerSymbol("Struct", StructSymbol);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymbolTable = exports.Symbol = void 0;
-exports.makeSymbolSet = makeSymbolSet;
-exports.checkSymbolOrSymbolSet = checkSymbolOrSymbolSet;
+exports.checkSymbolOrSymbolArray = checkSymbolOrSymbolArray;
 exports.reportDuplicatedSymbol = reportDuplicatedSymbol;
 const duplicatedIdentifierError_1 = __webpack_require__(/*! ../../../errors/duplicatedIdentifierError */ "./src/errors/duplicatedIdentifierError.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class Symbol {
-    static registerSymbol(symbolType, symbol) {
-        Symbol.symbolMap.set(symbolType, symbol);
-    }
-    static createSymbol(symbolType, name) {
-        const symbol = Symbol.symbolMap.get(symbolType);
-        if (!symbol) {
-            return null;
-        }
-        return new symbol(name);
-    }
     constructor(name) {
         // if symbols has sub symbols, like destruction patterns symbol
         this.subSymbols = [];
         this.name = name;
     }
+    static registerSymbol(symbolType, symbol) {
+        Symbol.symbolMap.set(symbolType, symbol);
+    }
+    static createSymbol(symbolName, symbolType, handler, parentScope, location) {
+        const symbolClass = Symbol.symbolMap.get(symbolType);
+        if (!symbolClass) {
+            return null;
+        }
+        const symbol = new symbolClass(symbolName);
+        if (!symbol) {
+            new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
+            return null;
+        }
+        symbol.location = location !== null && location !== void 0 ? location : handler.location;
+        symbol.ownerScope = parentScope;
+        symbol.context = handler.context;
+        return symbol;
+    }
 }
 exports.Symbol = Symbol;
 Symbol.symbolMap = new Map();
-function makeSymbolSet(...handlers) {
-    const symbolSet = [];
-    for (const handler of handlers) {
-        const symbol = handler === null || handler === void 0 ? void 0 : handler.collectDeclarations();
-        if (symbol instanceof Array) {
-            symbolSet.push(...symbol);
-        }
-        else if (symbol) {
-            symbolSet.push(symbol);
-        }
-    }
-    return symbolSet;
-}
-function checkSymbolOrSymbolSet(symbolOrSymbolSet, predicate) {
+function checkSymbolOrSymbolArray(symbolOrSymbolSet, predicate) {
     if (!symbolOrSymbolSet) {
         return true;
     }
@@ -4235,7 +4578,7 @@ class SymbolTable {
         this.symbolTable = [];
     }
     addSymbol(symbol) {
-        return checkSymbolOrSymbolSet(symbol, (symbol) => {
+        return checkSymbolOrSymbolArray(symbol, (symbol) => {
             if (symbol.type === "Function") {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
@@ -4249,6 +4592,11 @@ class SymbolTable {
                     finalResult = result && finalResult;
                 }
                 return finalResult;
+            }
+            // if the symbol is block symbol, we should add it to the symbol table without checking
+            if (symbol.name === "$Block") {
+                this.symbolTable.push(symbol);
+                return true;
             }
             const duplicatedCheckIndex = this.symbolTable.findIndex(s => s.name === symbol.name);
             if (duplicatedCheckIndex === -1) {
@@ -4335,6 +4683,75 @@ exports.TypeReference = TypeReference;
 
 /***/ }),
 
+/***/ "./src/analyzer/utils/zrHandlerDispatcher.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/utils/zrHandlerDispatcher.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrHandlerDispatcher = void 0;
+class ZrHandlerDispatcher {
+    constructor(topLevelHandler) {
+        this.topLevelHandler = topLevelHandler;
+    }
+    runTaskTopDown(predicate) {
+        return this._runTaskTopDownImpl(this.topLevelHandler, null, predicate);
+    }
+    runTaskBottomUp(predicate) {
+        return this._runTaskBottomUpImpl(this.topLevelHandler, predicate);
+    }
+    runTaskAround(topDownPredicate, bottomUpPredicate) {
+        return this._runTaskAroundImpl(this.topLevelHandler, null, topDownPredicate, bottomUpPredicate);
+    }
+    _runTaskTopDownImpl(handler, upperResult, predicate) {
+        const children = handler.children;
+        const result = predicate(handler, upperResult);
+        for (const child of children) {
+            // broadcast to children the parent or upper result
+            this._runTaskTopDownImpl(child, result !== null && result !== void 0 ? result : upperResult, predicate);
+        }
+        return result;
+    }
+    _runTaskBottomUpImpl(handler, predicate) {
+        var _a;
+        const children = handler.children;
+        const bottomUpResult = [];
+        for (const child of children) {
+            const result = this._runTaskBottomUpImpl(child, predicate);
+            if (result instanceof Array) {
+                bottomUpResult.push(...result);
+            }
+            else if (result) {
+                bottomUpResult.push(result);
+            }
+        }
+        // feedback to parent the children's result or lower result
+        return (_a = predicate(handler, bottomUpResult)) !== null && _a !== void 0 ? _a : bottomUpResult;
+    }
+    _runTaskAroundImpl(handler, upperResult, topDownPredicate, bottomUpPredicate) {
+        var _a;
+        const children = handler.children;
+        const thisResult = topDownPredicate(handler, upperResult);
+        const bottomUpResult = [];
+        for (const child of children) {
+            const result = this._runTaskAroundImpl(child, thisResult !== null && thisResult !== void 0 ? thisResult : upperResult, topDownPredicate, bottomUpPredicate);
+            if (result instanceof Array) {
+                bottomUpResult.push(...result);
+            }
+            else if (result) {
+                bottomUpResult.push(result);
+            }
+        }
+        return (_a = bottomUpPredicate(handler, bottomUpResult, thisResult)) !== null && _a !== void 0 ? _a : bottomUpResult;
+    }
+}
+exports.ZrHandlerDispatcher = ZrHandlerDispatcher;
+
+
+/***/ }),
+
 /***/ "./src/analyzer/zrSemanticAnalyzer.ts":
 /*!********************************************!*\
   !*** ./src/analyzer/zrSemanticAnalyzer.ts ***!
@@ -4347,13 +4764,24 @@ exports.ZrSemanticAnalyzer = void 0;
 const handler_1 = __webpack_require__(/*! ./semantic/common/handler */ "./src/analyzer/semantic/common/handler.ts");
 __webpack_require__(/*! ./semantic/index */ "./src/analyzer/semantic/index.ts");
 __webpack_require__(/*! ./static/index */ "./src/analyzer/static/index.ts");
+const zrHandlerDispatcher_1 = __webpack_require__(/*! ./utils/zrHandlerDispatcher */ "./src/analyzer/utils/zrHandlerDispatcher.ts");
+const prettyPrint_1 = __webpack_require__(/*! ../utils/prettyPrint */ "./src/utils/prettyPrint.ts");
 class ZrSemanticAnalyzer {
     constructor(context) {
         this.context = context;
     }
     analyze() {
         this.scriptHandler = handler_1.Handler.handle(this.context.ast, this.context);
-        this.scriptHandler.collectDeclarations();
+        this.handlerDispatcher = new zrHandlerDispatcher_1.ZrHandlerDispatcher(this.scriptHandler);
+        // create symbol and scope
+        const topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
+            var _a, _b;
+            return (_b = handler.createSymbolAndScope((_a = upperResult === null || upperResult === void 0 ? void 0 : upperResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : null;
+        }, (handler, lowerResult, selfTopDownResult) => {
+            var _a, _b;
+            return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
+        });
+        (0, prettyPrint_1.prettyPrintSymbolTables)(topSymbol);
     }
 }
 exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
@@ -4365,17 +4793,12 @@ exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
 /*!*************************************!*\
   !*** ./src/common/scriptContext.ts ***!
   \*************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScriptContext = void 0;
-const symbol_1 = __webpack_require__(/*! ../analyzer/static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
-const zrInternalError_1 = __webpack_require__(/*! ../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class ScriptContext {
-    get currentScope() {
-        return this._currentScope;
-    }
     constructor(info) {
         this.encoding = "utf-8";
         this._scopeStack = [];
@@ -4389,21 +4812,6 @@ class ScriptContext {
     }
     popHandler() {
         return this._handlerStack.pop();
-    }
-    get currentHandler() {
-        return this._handlerStack[this._handlerStack.length - 1];
-    }
-    declare(symbolName, symbolType, location) {
-        const symbol = symbol_1.Symbol.createSymbol(symbolType, symbolName);
-        if (!symbol) {
-            new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, this).report(); // TODO: throw 
-            return null;
-        }
-        symbol.location = location !== null && location !== void 0 ? location : this.currentHandler.location;
-        symbol.ownerScope = this._currentScope;
-        symbol.context = this;
-        this.currentSymbol = symbol;
-        return symbol;
     }
 }
 exports.ScriptContext = ScriptContext;

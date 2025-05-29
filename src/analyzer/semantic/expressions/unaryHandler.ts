@@ -1,15 +1,16 @@
-import { UnaryExpression, UnaryOperator } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import { Exp } from "./expression";
-import type { PrimaryType } from "./primaryHandler";
+import {UnaryExpression, UnaryOperator} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {PrimaryType} from "./primaryHandler";
+import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 
 export type UnaryOperatorType = {
-    type : "UnaryOperator",
-    operator: "!"|"~"|"+"|"-"|"$"|"new"| string
+    type: "UnaryOperator",
+    operator: "!" | "~" | "+" | "-" | "$" | "new" | string
 }
 
-export class UnaryOperatorHandler extends Handler{
+export class UnaryOperatorHandler extends Handler {
     public value: UnaryOperatorType;
+
     _handle(node: UnaryOperator) {
         super._handle(node);
         this.value = {
@@ -28,12 +29,19 @@ export type UnaryType = {
 } | PrimaryType;
 
 
-export class UnaryHandler extends Handler{
+export class UnaryHandler extends Handler {
     public value: UnaryType;
-    private operatorHandler: Handler | null = null;
-    private argumentHandler: Handler | null = null;
+    private operatorHandler: TNullable<Handler> = null;
+    private argumentHandler: TNullable<Handler> = null;
 
-    _handle(node: Exp<UnaryExpression, "Unary">) {
+    protected get _children() {
+        return [
+            this.operatorHandler,
+            this.argumentHandler
+        ];
+    }
+
+    _handle(node: TExpression<UnaryExpression, "Unary">) {
         super._handle(node);
         this.operatorHandler = Handler.handle(node.op, this.context);
         this.argumentHandler = Handler.handle(node.argument, this.context);

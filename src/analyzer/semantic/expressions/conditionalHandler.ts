@@ -1,8 +1,8 @@
-import type { ExpressionType } from ".";
-import { ConditionalExpression } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import { Exp } from "./expression";
-import type { LogicalType } from "./logicalHandler";
+import type {ExpressionType} from ".";
+import {ConditionalExpression} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {LogicalType} from "./logicalHandler";
+import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 
 export type ConditionalType = {
     type: "ConditionalExpression",
@@ -11,12 +11,21 @@ export type ConditionalType = {
     alternate: ConditionalType
 } | LogicalType;
 
-export class ConditionalHandler extends Handler{
-    private conditionHandler: Handler | null = null;
-    private consequentHandler: Handler | null = null;
-    private alternateHandler: Handler | null = null;
+export class ConditionalHandler extends Handler {
     public value: ConditionalType;
-    public _handle(node: Exp<ConditionalExpression, "Conditional">) {
+    private conditionHandler: TNullable<Handler> = null;
+    private consequentHandler: TNullable<Handler> = null;
+    private alternateHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.conditionHandler,
+            this.consequentHandler,
+            this.alternateHandler
+        ];
+    }
+
+    public _handle(node: TExpression<ConditionalExpression, "Conditional">) {
         super._handle(node);
         this.conditionHandler = Handler.handle(node.test, this.context);
         this.consequentHandler = Handler.handle(node.consequent, this.context);

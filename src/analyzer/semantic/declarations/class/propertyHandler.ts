@@ -5,11 +5,15 @@ import type {IdentifierType} from "../identifierHandler";
 import type {AllType} from "../../types/types";
 import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
 import type {BlockType} from "../../statements/blockHandler";
-import { Symbol } from "../../../static/symbol/symbol";
-import { PropertySymbol } from "../../../static/symbol/propertySymbol";
-import { FunctionScope } from "../../../static/scope/functionScope";
-import { FunctionSymbol } from "../../../static/symbol/functionSymbol";
-import { ParameterSymbol } from "../../../static/symbol/parameterSymbol";
+import {PropertySymbol} from "../../../static/symbol/propertySymbol";
+import {FunctionScope} from "../../../static/scope/functionScope";
+import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
+import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration, Symbol} from "../../../static/symbol/symbol";
+import {Scope} from "../../../static/scope/scope";
+import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {PropertyScope} from "../../../static/scope/propertyScope";
 
 export type ClassPropertyType = {
     type: "ClassProperty";
@@ -26,10 +30,20 @@ export type ClassPropertyType = {
 export class PropertyHandler extends Handler {
     public value: ClassPropertyType;
     private readonly decoratorHandlers: Handler[] = [];
-    private targetTypeHandler: Handler | null = null;
-    private bodyHandler: Handler | null = null;
-    private nameHandler: Handler | null = null;
-    private paramHandler: Handler | null = null;
+    private targetTypeHandler: TNullable<Handler> = null;
+    private bodyHandler: TNullable<Handler> = null;
+    private nameHandler: TNullable<Handler> = null;
+    private paramHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler,
+            this.targetTypeHandler,
+            ...this.decoratorHandlers,
+            this.paramHandler,
+            this.bodyHandler
+        ];
+    }
 
     public _handle(node: Property) {
         super._handle(node);
@@ -75,46 +89,76 @@ export class PropertyHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations(){
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const propertyName: string = this.value.name.name;
-        const symbol = this.context.declare<PropertySymbol>(propertyName, "Property");
+        const symbol = this.declareSymbol<PropertySymbol>(propertyName, "Property", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
         const propertyType = this.value.propertyType;
         symbol.propertyType = propertyType;
 
-        for(const decorator of this.value.decorators) {
-            const handler = Handler.getHandler(decorator);
-            symbol.decorators.push(handler?.collectDeclarations());
-        }
         const isGetter = propertyType === PropertyType.GET;
-        let functionSymbol: FunctionSymbol;
-        if(isGetter) {
-            const getterSymbol = this.context.declare<FunctionSymbol>(propertyName + "$Get", "Function");
-            symbol.getterSymbol = getterSymbol;
+        let functionSymbol: TNullable<FunctionSymbol>;
+        const scope = symbol.childScope as PropertyScope;
+        if (isGetter) {
+            const getterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + "$Get", "Function", symbol.childScope);
+            scope.setGetter(getterSymbol);
             functionSymbol = getterSymbol;
-        }else{
-            const setterSymbol = this.context.declare<FunctionSymbol>(propertyName + "$Set", "Function");
-            symbol.setterSymbol = setterSymbol;
+        } else {
+            const setterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + "$Set", "Function", symbol.childScope);
+            scope.setSetter(setterSymbol);
             functionSymbol = setterSymbol;
         }
-        functionSymbol.accessibility = this.value.access;
-        functionSymbol.isStatic = this.value.static;
-        functionSymbol.decorators.push(...symbol.decorators);
-        const scope = this.pushScope<FunctionScope>("Function");
-        scope.signature = functionSymbol;
-        functionSymbol.body = scope;
-        if(!isGetter){
+        if (!functionSymbol) {
+            return symbol;
+        }
+        if (!isGetter) {
             // add parameter
-            const parameterSymbol = this.context.declare<ParameterSymbol>(this.value.param.name, "Parameter");
+            const parameterSymbol = this.declareSymbol<ParameterSymbol>(this.value.param.name, "Parameter", functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
-            scope.addParameter(parameterSymbol);
-        }else{
+            const functionScope = functionSymbol.childScope as TNullable<FunctionScope>;
+            if (functionScope) {
+                functionScope.addParameter(parameterSymbol);
+            }
+        } else {
             // TODO: add return type for getter
         }
-        scope.setBody(Handler.getHandler(this.value.body)?.collectDeclarations());
-        this.popScope();
         return symbol;
+    }
+
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
+        }
+        const propertyType = this.value.propertyType;
+
+        const isGetter = propertyType === PropertyType.GET;
+        const scope = currentScope as PropertyScope;
+
+        const functionSymbol = isGetter ? scope.getterSymbol : scope.setterSymbol;
+        if (!functionSymbol) {
+            return null;
+        }
+        const functionScope = functionSymbol.childScope as TNullable<FunctionScope>;
+        if (!functionScope) {
+            return null;
+        }
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "parameter": {
+                    functionScope.addParameter(child as ParameterSymbol);
+                }
+                    break;
+                case "block": {
+                    functionScope.setBody(child as BlockSymbol);
+                }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
     }
 }
 

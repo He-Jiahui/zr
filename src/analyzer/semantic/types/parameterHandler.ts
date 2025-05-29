@@ -5,6 +5,8 @@ import type {ExpressionType} from "../expressions";
 import type {AllType} from "./types";
 import {Symbol} from "../../static/symbol/symbol";
 import {ParameterSymbol} from "../../static/symbol/parameterSymbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
+import {Scope} from "../../static/scope/scope";
 
 export type ParameterType = {
     type: "Parameter",
@@ -15,10 +17,17 @@ export type ParameterType = {
 
 export class ParameterHandler extends Handler {
     public value: ParameterType;
-    private nameHandler: Handler | null = null;
-    private typeInfoHandler: Handler | null = null;
-    private defaultValueHandler: Handler | null = null;
-    private _symbol: ParameterSymbol;
+    private nameHandler: TNullable<Handler> = null;
+    private typeInfoHandler: TNullable<Handler> = null;
+    private defaultValueHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler,
+            this.defaultValueHandler
+        ];
+    }
 
     public _handle(node: Parameter) {
         super._handle(node);
@@ -43,13 +52,11 @@ export class ParameterHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
-        const symbol = this.context.declare<ParameterSymbol>(this.value.name.name, "Parameter");
-        this._symbol = symbol;
-        // if default value has block expression
-        Handler.getHandler(this.value.defaultValue)?.collectDeclarations();
-        return symbol;
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
+        const name = this.value.name.name;
+        return this.declareSymbol<ParameterSymbol>(name, "Parameter", parentScope);
     }
+
 }
 
 Handler.registerHandler("Parameter", ParameterHandler);

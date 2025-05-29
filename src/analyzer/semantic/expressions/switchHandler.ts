@@ -2,6 +2,7 @@ import type {ExpressionType} from "."
 import {SwitchCase, SwitchExpression} from "../../../parser/generated/parser"
 import {Handler} from "../common/handler"
 import type {BlockType} from "../statements/blockHandler"
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type SwitchExpressionType = {
     type: "SwitchExpression",
@@ -15,9 +16,17 @@ export type SwitchExpressionType = {
 export class SwitchExpressionHandler extends Handler {
     public value: SwitchExpressionType;
 
-    private exprHandler: Handler | null = null;
+    private exprHandler: TNullable<Handler> = null;
     private readonly caseHandlers: Handler[] = [];
-    private defaultHandler: Handler | null = null;
+    private defaultHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.exprHandler,
+            ...this.caseHandlers,
+            this.defaultHandler
+        ];
+    }
 
     public _handle(node: SwitchExpression): void {
         super._handle(node);
@@ -54,8 +63,8 @@ export type SwitchCaseType = {
 export class SwitchCaseHandler extends Handler {
     public value: SwitchCaseType;
 
-    private testHandler: Handler | null = null;
-    private blockHandler: Handler | null = null;
+    private testHandler: TNullable<Handler> = null;
+    private blockHandler: TNullable<Handler> = null;
 
     public _handle(node: SwitchCase): void {
         super._handle(node);
@@ -81,7 +90,7 @@ export type SwitchDefaultType = {
 export class SwitchDefaultHandler extends Handler {
     public value: SwitchDefaultType;
 
-    private blockHandler: Handler | null = null;
+    private blockHandler: TNullable<Handler> = null;
 
     public _handle(node: SwitchDefaultType): void {
         super._handle(node);

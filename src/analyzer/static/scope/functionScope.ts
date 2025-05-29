@@ -1,7 +1,6 @@
-import type {FunctionSymbol} from "../symbol/functionSymbol";
 import type {GenericSymbol} from "../symbol/genericSymbol";
 import type {ParameterSymbol} from "../symbol/parameterSymbol";
-import {checkSymbolOrSymbolSet, type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {BlockSymbol} from "../symbol/blockSymbol";
 
@@ -9,42 +8,26 @@ import {BlockSymbol} from "../symbol/blockSymbol";
 export class FunctionScope extends Scope {
     public readonly type: string = "FunctionScope";
 
-    public signature: FunctionSymbol;
+    public body: BlockSymbol | null = null;
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
-    public args: ParameterSymbol | null = null;
-    public body: BlockSymbol | null = null;
-    protected symbolTableList = [this.generics, this.parameters, () => this.args, () => this.body];
+    protected symbolTableList = [this.generics, this.parameters, () => this.body];
 
-    public addGeneric(generic: TSymbolOrSymbolSet<GenericSymbol>): boolean {
+    public addGeneric(generic: TSymbolOrSymbolArray<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
     }
 
-    public addParameter(parameter: TSymbolOrSymbolSet<ParameterSymbol>): boolean {
+    public addParameter(parameter: TSymbolOrSymbolArray<ParameterSymbol>): boolean {
         const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
         return success;
     }
 
-    public setArgs(args: TSymbolOrSymbolSet<ParameterSymbol>): boolean {
-        return checkSymbolOrSymbolSet(args, (args)=>{
-            if (this.args == null) {
-                return true;
-            }
-            this.args = null;
-            const success = this.checkSymbolUnique(args!);
-            if (success) {
-                this.args = args ?? null;
-                return true;
-            }
-            return false;
-        });
-    }
 
-    public setBody(body: TSymbolOrSymbolSet<BlockSymbol>): void {
-        if(body instanceof Array){
+    public setBody(body: TSymbolOrSymbolArray<BlockSymbol>): void {
+        if (body instanceof Array) {
             this.body = body[0];
-        }else{
+        } else {
             this.body = body ?? null;
         }
     }

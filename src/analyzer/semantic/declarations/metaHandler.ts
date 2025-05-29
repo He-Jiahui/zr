@@ -1,15 +1,22 @@
-import { MetaIdentifier } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import type { IdentifierType } from "./identifierHandler"
+import {MetaIdentifier} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {IdentifierType} from "./identifierHandler"
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type MetaType = {
-    type:"Meta",
+    type: "Meta",
     name: IdentifierType;
 }
 
-export class MetaHandler extends Handler{
+export class MetaHandler extends Handler {
     public value: MetaType;
-    private nameHandler: Handler|null = null;
+    private nameHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler
+        ];
+    }
 
     public _handle(node: MetaIdentifier): void {
         this.nameHandler = Handler.handle(node.name, this.context);

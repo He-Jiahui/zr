@@ -4,7 +4,15 @@ import {ModuleSymbol} from "../static/symbol/moduleSymbol";
 import {Handler} from "./common/handler";
 import type {ModuleDeclarationHandler, ModuleDeclarationType} from "./moduleDeclarationHandler";
 import type {TopLevelStatementType} from "./statements";
-import {prettyPrintSymbolTables} from "../../utils/prettyPrint";
+import {TNullable} from "../utils/zrCompilerTypes";
+import {Symbol as SymbolDeclaration} from "../static/symbol/symbol";
+import {Scope} from "../static/scope/scope";
+import {ClassSymbol} from "../static/symbol/classSymbol";
+import {StructSymbol} from "../static/symbol/structSymbol";
+import {InterfaceSymbol} from "../static/symbol/interfaceSymbol";
+import {EnumSymbol} from "../static/symbol/enumSymbol";
+import {FunctionSymbol} from "../static/symbol/functionSymbol";
+import {VariableSymbol} from "../static/symbol/variableSymbol";
 
 export type ScriptType = {
     type: "Script",
@@ -15,8 +23,15 @@ export type ScriptType = {
 export class ScriptHandler extends Handler {
     public value: ScriptType;
     // 脚本模块
-    public moduleHandler: ModuleDeclarationHandler | null = null;
+    public moduleHandler: TNullable<ModuleDeclarationHandler> = null;
     private readonly statementHandlers: Handler[] = [];
+
+    protected get _children() {
+        return [
+            this.moduleHandler,
+            ...this.statementHandlers
+        ];
+    }
 
     public _handle(start: parser.Start) {
         super._handle(start);
@@ -38,9 +53,7 @@ export class ScriptHandler extends Handler {
         }
     }
 
-    private _symbol: ModuleSymbol | null = null;
-
-    protected _collectDeclarations() {
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>) {
         let moduleName = "module";
         const moduleNameContainer = this.value.module?.name;
         if (moduleNameContainer?.type === "Identifier") {
@@ -50,56 +63,49 @@ export class ScriptHandler extends Handler {
         } else {
             moduleName = this.context.fileName;
         }
+        const symbol = this.declareSymbol<ModuleSymbol>(moduleName, "Module", parentScope);
+        return symbol;
+    }
 
-        const symbol = this.context.declare<ModuleSymbol>(moduleName, "Module", this.moduleHandler?.location);
-        const scope = this.pushScope<ModuleScope>("Module");
-        scope.moduleInfo = symbol;
-        symbol.table = scope;
-
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope as ModuleScope;
         // collect module statement declarations
-        for (const statement of this.value.statements) {
-            const handler = Handler.getHandler(statement);
-            if (!handler) {
-                continue;
-            }
-            switch (statement.type) {
-                case "Class": {
-                    scope.addClass(handler.collectDeclarations());
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case "class": {
+                    scope.addClass(child as ClassSymbol);
                 }
                     break;
-                case "Struct": {
-                    scope.addStruct(handler.collectDeclarations());
+                case "struct": {
+                    scope.addStruct(child as StructSymbol);
                 }
                     break;
-                case "Interface": {
-                    scope.addInterface(handler.collectDeclarations());
+                case "interface": {
+                    scope.addInterface(child as InterfaceSymbol);
                 }
                     break;
-                case "Enum": {
-                    scope.addEnum(handler.collectDeclarations());
+                case "enum": {
+                    scope.addEnum(child as EnumSymbol);
                 }
                     break;
-                case "Function": {
-                    scope.addFunction(handler.collectDeclarations());
+                case "function": {
+                    scope.addFunction(child as FunctionSymbol);
                 }
                     break;
-                case "VariableDeclaration": {
-                    scope.addVariable(handler.collectDeclarations());
+                case "variable": {
+                    scope.addVariable(child as VariableSymbol);
                 }
                     break;
-                default: {
-                    handler.collectDeclarations();
-                }
+                default:
                     break;
             }
         }
-
-        this.popScope();
-
-        this._symbol = symbol;
         // TODO: debug only
-        prettyPrintSymbolTables(this._symbol);
-        return symbol;
+        // prettyPrintSymbolTables(this._symbol);
+        return currentScope.ownerSymbol;
     }
 }
 

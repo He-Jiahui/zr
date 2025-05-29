@@ -1,12 +1,14 @@
-import { Handler } from "../../common/handler";
-import { StructMethod } from "../../../../parser/generated/parser";
-import { Access } from "../../../../types/access";
-import type { IdentifierType } from "../identifierHandler";
-import type { AllType } from "../../types/types";
-import type { ParameterType } from "../../types/parameterHandler";
-import type { GenericDeclarationType } from "../../types/genericDeclarationHandler";
-import type { DecoratorExpressionType } from "../../expressions/decoratorHandler";
-import type { BlockType } from "../../statements/blockHandler";
+import {Handler} from "../../common/handler";
+import {StructMethod} from "../../../../parser/generated/parser";
+import {Access} from "../../../../types/access";
+import type {IdentifierType} from "../identifierHandler";
+import type {AllType} from "../../types/types";
+import type {ParameterType} from "../../types/parameterHandler";
+import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
+import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
+import type {BlockType} from "../../statements/blockHandler";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+
 export type StructMethodType = {
     type: "StructMethod";
     access: Access;
@@ -20,28 +22,40 @@ export type StructMethodType = {
     body: BlockType;
 };
 
-export class MethodHandler extends Handler{
+export class MethodHandler extends Handler {
     public value: StructMethodType;
-    private nameHandler: Handler | null = null;
+    private nameHandler: TNullable<Handler> = null;
     private readonly decoratorHandlers: Handler[] = [];
-    private returnTypeHandler: Handler | null = null;
+    private returnTypeHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
-    private argsHandler: Handler | null = null;
-    private genericHandler: Handler | null = null;
-    private bodyHandler: Handler | null = null;
+    private argsHandler: TNullable<Handler> = null;
+    private genericHandler: TNullable<Handler> = null;
+    private bodyHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.nameHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+            this.genericHandler,
+            this.returnTypeHandler,
+            ...this.decoratorHandlers,
+            this.bodyHandler
+        ];
+    }
 
     public _handle(node: StructMethod) {
         super._handle(node);
         const access = node.access;
         this.nameHandler = Handler.handle(node.name, this.context);
-        if(node.generic){
+        if (node.generic) {
             this.genericHandler = Handler.handle(node.generic, this.context);
-        }else{
+        } else {
             this.genericHandler = null;
         }
-        if(node.returnType){
+        if (node.returnType) {
             this.returnTypeHandler = Handler.handle(node.returnType, this.context);
-        }else{
+        } else {
             this.returnTypeHandler = null;
         }
         const parameters = node.params;
@@ -49,22 +63,22 @@ export class MethodHandler extends Handler{
         const body = node.body;
         this.parameterHandlers.length = 0;
         this.decoratorHandlers.length = 0;
-        for(const parameter of parameters){
+        for (const parameter of parameters) {
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
         }
-        if(node.args){
+        if (node.args) {
             this.argsHandler = Handler.handle(node.args, this.context);
-        }else{
+        } else {
             this.argsHandler = null;
         }
-        for(const decorator of decorators){
+        for (const decorator of decorators) {
             const handler = Handler.handle(decorator, this.context);
             this.decoratorHandlers.push(handler);
         }
-        if(body){
+        if (body) {
             this.bodyHandler = Handler.handle(body, this.context);
-        }else{
+        } else {
             this.bodyHandler = null;
         }
         this.value = {

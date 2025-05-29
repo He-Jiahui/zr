@@ -1,38 +1,35 @@
+import type {FieldSymbol} from "../symbol/fieldSymbol";
+import type {FunctionSymbol} from "../symbol/functionSymbol";
+import type {GenericSymbol} from "../symbol/genericSymbol";
+import type {PropertySymbol} from "../symbol/propertySymbol";
+import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import {Scope} from "./scope";
 
-import type { FieldSymbol } from "../symbol/fieldSymbol";
-import type { FunctionSymbol } from "../symbol/functionSymbol";
-import type { GenericSymbol } from "../symbol/genericSymbol";
-import type { InterfaceSymbol } from "../symbol/interfaceSymbol";
-import type { PropertySymbol } from "../symbol/propertySymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolSet} from "../symbol/symbol";
-import { Scope } from "./scope";
 export class InterfaceScope extends Scope {
     public readonly type: string = "InterfaceScope";
 
-    public interfaceInfo: InterfaceSymbol;
-    
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly fields: SymbolTable<FieldSymbol> = new SymbolTable<FieldSymbol>();
     protected readonly properties: SymbolTable<PropertySymbol> = new SymbolTable<PropertySymbol>();
     protected readonly methods: SymbolTable<FunctionSymbol> = new SymbolTable<FunctionSymbol>();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.properties, this.methods];
 
-    public addGeneric(generic: TSymbolOrSymbolSet<GenericSymbol>): boolean {
+    public addGeneric(generic: TSymbolOrSymbolArray<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
     }
 
-    public addField(field: TSymbolOrSymbolSet<FieldSymbol>): boolean {
+    public addField(field: TSymbolOrSymbolArray<FieldSymbol>): boolean {
         const success = this.checkSymbolUnique(field) && this.fields.addSymbol(field);
         return success;
     }
 
-    public addProperty(property: TSymbolOrSymbolSet<PropertySymbol>): boolean {
+    public addProperty(property: TSymbolOrSymbolArray<PropertySymbol>): boolean {
         const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
         return success;
     }
 
-    public addMethod(method: TSymbolOrSymbolSet<FunctionSymbol>): boolean {
+    public addMethod(method: TSymbolOrSymbolArray<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
         return success;
     }

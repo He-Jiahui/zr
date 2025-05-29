@@ -1,7 +1,7 @@
+import {TupleType as TupleImplementType} from "../../../parser/generated/parser"
+import {Handler} from "../common/handler"
+import type {TypeType} from "./typeHandler";
 
-import { TupleType as TupleImplementType } from "../../../parser/generated/parser"
-import { Handler } from "../common/handler"
-import type { TypeType } from "./typeHandler";
 export type TupleType = {
     type: "Tuple",
     elements: TypeType[]
@@ -9,18 +9,25 @@ export type TupleType = {
 
 export class TupleImplementHandler extends Handler {
     private readonly elementsHandler: Handler[] = [];
-    public _handle(node: TupleImplementType){
+
+    protected get _children() {
+        return [
+            ...this.elementsHandler
+        ];
+    }
+
+    public _handle(node: TupleImplementType) {
         super._handle(node);
         this.elementsHandler.length = 0;
-        if(node.elements){
-            for(const element of node.elements){
+        if (node.elements) {
+            for (const element of node.elements) {
                 const handler = Handler.handle(element, this.context);
                 this.elementsHandler.push(handler);
             }
         }
         this.value = {
             type: "Tuple",
-            elements: this.elementsHandler.map(handler=>handler?.value),
+            elements: this.elementsHandler.map(handler => handler?.value),
         };
     }
 }

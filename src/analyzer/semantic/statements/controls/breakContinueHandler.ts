@@ -1,6 +1,7 @@
 import {Handler} from "../../common/handler";
 import type {ExpressionType} from "../../expressions";
 import {BreakContinueStatement} from "../../../../parser/generated/parser";
+import {TNullable} from "../../../utils/zrCompilerTypes";
 
 export type BreakContinueStatementType = {
     type: "BreakContinueStatement",
@@ -11,7 +12,13 @@ export type BreakContinueStatementType = {
 export class BreakContinueHandler extends Handler {
     public value: BreakContinueStatementType;
 
-    private exprHandler: Handler | null = null;
+    private exprHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
 
     public _handle(node: BreakContinueStatement): void {
         super._handle(node);

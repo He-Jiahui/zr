@@ -7,6 +7,7 @@ import type {ExpressionType} from "./index"
 import type {AllType} from "../types/types"
 import type {BlockType} from "../statements/blockHandler"
 import type {ExpressionStatementType} from "../statements/expressionHandler"
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type ForLoopExpressionType = {
     type: "ForLoopExpression",
@@ -19,10 +20,19 @@ export type ForLoopExpressionType = {
 
 export class ForLoopExpressionHandler extends Handler {
     public value: ForLoopExpressionType;
-    private initHandler: Handler | null = null;
-    private conditionHandler: Handler | null = null;
-    private stepHandler: Handler | null = null;
-    private blockHandler: Handler | null = null;
+    private initHandler: TNullable<Handler> = null;
+    private conditionHandler: TNullable<Handler> = null;
+    private stepHandler: TNullable<Handler> = null;
+    private blockHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.initHandler,
+            this.conditionHandler,
+            this.stepHandler,
+            this.blockHandler
+        ];
+    }
 
     public _handle(node: ForLoop): void {
         super._handle(node);
@@ -66,10 +76,19 @@ export type ForeachLoopExpressionType = {
 
 export class ForeachLoopExpressionHandler extends Handler {
     public value: ForeachLoopExpressionType;
-    private patternHandler: Handler | null = null;
-    private typeHandler: Handler | null = null;
-    private exprHandler: Handler | null = null;
-    private blockHandler: Handler | null = null;
+    private patternHandler: TNullable<Handler> = null;
+    private typeHandler: TNullable<Handler> = null;
+    private exprHandler: TNullable<Handler> = null;
+    private blockHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.patternHandler,
+            this.typeHandler,
+            this.exprHandler,
+            this.blockHandler
+        ];
+    }
 
     public _handle(node: ForeachLoop): void {
         super._handle(node);

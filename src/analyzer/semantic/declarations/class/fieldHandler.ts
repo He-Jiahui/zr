@@ -7,6 +7,8 @@ import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
 import type {ExpressionType} from "../../expressions";
 import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Scope} from "../../../static/scope/scope";
 
 export type ClassFieldType = {
     type: "ClassField";
@@ -20,12 +22,19 @@ export type ClassFieldType = {
 
 export class FieldHandler extends Handler {
     public value: ClassFieldType;
-    private nameHandler: Handler | null = null;
-    private typeInfoHandler: Handler | null = null;
-    private initHandler: Handler | null = null;
+    private nameHandler: TNullable<Handler> = null;
+    private typeInfoHandler: TNullable<Handler> = null;
+    private initHandler: TNullable<Handler> = null;
     private readonly decoratorsHandlers: Handler[] = [];
 
-    private _symbol: FieldSymbol;
+    protected get _children() {
+        return [
+            this.nameHandler,
+            this.typeInfoHandler,
+            this.initHandler,
+            ...this.decoratorsHandlers
+        ];
+    }
 
     public _handle(node: Field) {
         super._handle(node);
@@ -60,15 +69,14 @@ export class FieldHandler extends Handler {
         };
     }
 
-    protected _collectDeclarations(): Symbol | undefined {
-        const symbol = this.context.declare<FieldSymbol>(this.value.name.name, "Field");
-        this._symbol = symbol;
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
+        const name = this.value.name.name;
+        const symbol = this.declareSymbol<FieldSymbol>(name, "Field", parentScope);
+        if (!symbol) {
+            return null;
+        }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
-        for (const decorator of this.value.decorators) {
-            const handler = Handler.getHandler(decorator);
-            symbol.decorators.push(handler?.collectDeclarations());
-        }
         return symbol;
     }
 }

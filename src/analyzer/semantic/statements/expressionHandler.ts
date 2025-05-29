@@ -1,17 +1,23 @@
-import { ExpressionStatement } from "../../../parser/generated/parser";
-import { Handler } from "../common/handler";
-import { ExpressionType } from "../expressions";
-import {Symbol} from "../../static/symbol/symbol";
+import {ExpressionStatement} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import {ExpressionType} from "../expressions";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 export type ExpressionStatementType = {
     type: 'ExpressionStatement';
     expr: ExpressionType;
 }
 
-export class ExpressionStatementHandler extends Handler{
+export class ExpressionStatementHandler extends Handler {
     public value: ExpressionStatementType;
 
-    private exprHandler: Handler| null = null;
+    private exprHandler: TNullable<Handler> = null;
+
+    protected get _children() {
+        return [
+            this.exprHandler
+        ];
+    }
 
     public _handle(node: ExpressionStatement): void {
         super._handle(node);
@@ -20,11 +26,6 @@ export class ExpressionStatementHandler extends Handler{
             type: 'ExpressionStatement',
             expr: this.exprHandler?.value as ExpressionType
         }
-    }
-
-    protected _collectDeclarations() {
-        const handler = Handler.getHandler(this.value.expr);
-        return handler?.collectDeclarations();
     }
 }
 

@@ -161,3 +161,8 @@ test "type_system"() {
     // Test interface implementation
     assert.implements(Man, Student, "Student should implement Man interface");
 }
+
+
+test "throw_anything"() {
+     assert.throws(() => {throw "anything";}, "Should throw anything");
+}

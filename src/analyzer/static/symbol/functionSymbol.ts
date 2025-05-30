@@ -1,5 +1,5 @@
 import {Access} from "../../../types/access";
-import type {TypeReference} from "../type/type";
+import type {TypeReference} from "../type/typeReference";
 import {Symbol} from "./symbol";
 
 export class FunctionSymbol extends Symbol {

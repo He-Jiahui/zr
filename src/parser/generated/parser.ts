@@ -10001,7 +10001,7 @@ peg$parseDestructuringArrayPattern() {
 // @ts-ignore
         s4 = peg$parse_();
 // @ts-ignore
-        s5 = peg$parseLBRACKET();
+        s5 = peg$parseRBRACKET();
 // @ts-ignore
         if (s5 !== peg$FAILED) {
 // @ts-ignore

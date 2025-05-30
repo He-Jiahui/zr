@@ -1,4 +1,4 @@
-import {DestructuringPattern} from "../../../../parser/generated/parser";
+import {DestructuringArrayPattern, DestructuringPattern} from "../../../../parser/generated/parser";
 import {Handler} from "../../common/handler"
 import type {IdentifierType} from "../identifierHandler"
 
@@ -42,7 +42,13 @@ export class DestructuringArrayHandler extends Handler {
     public value: DestructuringArrayType;
     private readonly keyHandlers: Handler[] = [];
 
-    public _handle(node: DestructuringPattern): void {
+    protected get _children() {
+        return [
+            ...this.keyHandlers
+        ];
+    }
+
+    public _handle(node: DestructuringArrayPattern): void {
         super._handle(node);
         this.keyHandlers.length = 0;
         for (const key of node.keys) {

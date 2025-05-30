@@ -1,23 +1,23 @@
-import {ScriptContext} from "../../../common/scriptContext";
+import {ScriptContext, ScriptContextAccessibleObject} from "../../../common/scriptContext";
 import {DuplicatedIdentifierError} from "../../../errors/duplicatedIdentifierError";
 import {FileRange} from "../../../parser/generated/parser";
 import type {Scope} from "../scope/scope";
-import {TMaybeArray, TNullable} from "../../utils/zrCompilerTypes";
+import {TMaybeArray, TMaybeUndefined, TNullable} from "../../utils/zrCompilerTypes";
 import {ZrInternalError} from "../../../errors/zrInternalError";
 import type {Handler} from "../../semantic/common/handler";
 
-export class Symbol {
+export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
     private static readonly symbolMap: Map<string, typeof Symbol> = new Map<string, typeof Symbol>();
     public readonly type: string;
-    public name: string | undefined;
+    public name: TMaybeUndefined<string>;
     public ownerScope: TNullable<Scope>; // TODO: owner scope
     public childScope: TNullable<Scope>;
     public location?: FileRange;
-    public context: ScriptContext;
     // if symbols has sub symbols, like destruction patterns symbol
     public readonly subSymbols: Symbol[] = [];
 
-    constructor(name: string | undefined) {
+    constructor(name: TMaybeUndefined<string>, context: ScriptContext) {
+        super(context);
         this.name = name;
     }
 
@@ -30,14 +30,13 @@ export class Symbol {
         if (!symbolClass) {
             return null;
         }
-        const symbol = new symbolClass(symbolName) as T;
+        const symbol = new symbolClass(symbolName, handler.context) as T;
         if (!symbol) {
             new ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
             return null;
         }
         symbol.location = location ?? handler.location;
         symbol.ownerScope = parentScope;
-        symbol.context = handler.context;
         return symbol;
     }
 }
@@ -123,6 +122,8 @@ export class SymbolTable<T extends Symbol> {
 export function reportDuplicatedSymbol(triggerSymbol: Symbol, conflictSymbol: Symbol) {
     // TODO: check duplicated identifier
     // before throw error, we should set the location of the symbol to the duplicated symbol
-    triggerSymbol.context.location = triggerSymbol.location!;
+    if (triggerSymbol.context) {
+        triggerSymbol.context.location = triggerSymbol.location!;
+    }
     new DuplicatedIdentifierError(triggerSymbol.name!, triggerSymbol.context, conflictSymbol.location).report();
 }

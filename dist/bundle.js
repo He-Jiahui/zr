@@ -11,12 +11,13 @@
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Handler = void 0;
+const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
 const noHandlerError_1 = __webpack_require__(/*! ../../../errors/noHandlerError */ "./src/errors/noHandlerError.ts");
 const scope_1 = __webpack_require__(/*! ../../static/scope/scope */ "./src/analyzer/static/scope/scope.ts");
 const symbol_1 = __webpack_require__(/*! ../../static/symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
-class Handler {
+class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(context) {
-        this.context = context;
+        super(context);
     }
     get children() {
         return this._children.filter(child => child !== null).map(child => child);
@@ -1804,6 +1805,11 @@ class DestructuringArrayHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.keyHandlers = [];
+    }
+    get _children() {
+        return [
+            ...this.keyHandlers
+        ];
     }
     _handle(node) {
         super._handle(node);
@@ -4560,10 +4566,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymbolTable = exports.Symbol = void 0;
 exports.checkSymbolOrSymbolArray = checkSymbolOrSymbolArray;
 exports.reportDuplicatedSymbol = reportDuplicatedSymbol;
+const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
 const duplicatedIdentifierError_1 = __webpack_require__(/*! ../../../errors/duplicatedIdentifierError */ "./src/errors/duplicatedIdentifierError.ts");
 const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
-class Symbol {
-    constructor(name) {
+class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
+    constructor(name, context) {
+        super(context);
         // if symbols has sub symbols, like destruction patterns symbol
         this.subSymbols = [];
         this.name = name;
@@ -4576,14 +4584,13 @@ class Symbol {
         if (!symbolClass) {
             return null;
         }
-        const symbol = new symbolClass(symbolName);
+        const symbol = new symbolClass(symbolName, handler.context);
         if (!symbol) {
             new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
             return null;
         }
         symbol.location = location !== null && location !== void 0 ? location : handler.location;
         symbol.ownerScope = parentScope;
-        symbol.context = handler.context;
         return symbol;
     }
 }
@@ -4661,7 +4668,9 @@ exports.SymbolTable = SymbolTable;
 function reportDuplicatedSymbol(triggerSymbol, conflictSymbol) {
     // TODO: check duplicated identifier
     // before throw error, we should set the location of the symbol to the duplicated symbol
-    triggerSymbol.context.location = triggerSymbol.location;
+    if (triggerSymbol.context) {
+        triggerSymbol.context.location = triggerSymbol.location;
+    }
     new duplicatedIdentifierError_1.DuplicatedIdentifierError(triggerSymbol.name, triggerSymbol.context, conflictSymbol.location).report();
 }
 
@@ -4698,15 +4707,86 @@ symbol_1.Symbol.registerSymbol("Variable", VariableSymbol);
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__webpack_require__(/*! ./type */ "./src/analyzer/static/type/type.ts");
+__webpack_require__(/*! ./typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
+__webpack_require__(/*! ./typeReference */ "./src/analyzer/static/type/typeReference.ts");
+__webpack_require__(/*! ./predefined/index */ "./src/analyzer/static/type/predefined/index.ts");
+__webpack_require__(/*! ./meta/index */ "./src/analyzer/static/type/meta/index.ts");
 
 
 /***/ }),
 
-/***/ "./src/analyzer/static/type/type.ts":
-/*!******************************************!*\
-  !*** ./src/analyzer/static/type/type.ts ***!
-  \******************************************/
+/***/ "./src/analyzer/static/type/meta/index.ts":
+/*!************************************************!*\
+  !*** ./src/analyzer/static/type/meta/index.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/metaType.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/static/type/meta/metaType.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MetaType = void 0;
+const typeDefinition_1 = __webpack_require__(/*! ../typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
+class MetaType extends typeDefinition_1.TypeDefinition {
+}
+exports.MetaType = MetaType;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/index.ts":
+/*!******************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/index.ts ***!
+  \******************************************************/
+/***/ (() => {
+
+
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/typeDefinition.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/type/typeDefinition.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DefinedTypeSet = exports.TypeDefinition = void 0;
+class TypeDefinition {
+    constructor(name) {
+        this.name = name;
+    }
+}
+exports.TypeDefinition = TypeDefinition;
+class DefinedTypeSet {
+    constructor() {
+        this._types = new Map();
+    }
+    registerType() {
+    }
+}
+exports.DefinedTypeSet = DefinedTypeSet;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/typeReference.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/static/type/typeReference.ts ***!
+  \***************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -4833,7 +4913,40 @@ exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScriptContext = void 0;
+exports.ScriptContext = exports.ScriptContextAccessibleObject = void 0;
+class ScriptContextAccessibleObject {
+    constructor(context) {
+        if (context) {
+            ScriptContextAccessibleObject.objectScriptContextMap.set(this, context);
+        }
+    }
+    get context() {
+        return ScriptContextAccessibleObject.objectScriptContextMap.get(this);
+    }
+    set context(value) {
+        if (ScriptContextAccessibleObject.objectScriptContextMap.has(this)) {
+            if (value) {
+                ScriptContextAccessibleObject.objectScriptContextMap.set(this, value);
+            }
+            else {
+                ScriptContextAccessibleObject.objectScriptContextMap.delete(this);
+            }
+        }
+    }
+    static removeContextRegistrationOfAll(context) {
+        const waitToDeleteRegistry = [];
+        for (const [object, objectContext] of ScriptContextAccessibleObject.objectScriptContextMap.entries()) {
+            if (objectContext === context) {
+                waitToDeleteRegistry.push(object);
+            }
+        }
+        for (const registry of waitToDeleteRegistry) {
+            ScriptContextAccessibleObject.objectScriptContextMap.delete(registry);
+        }
+    }
+}
+exports.ScriptContextAccessibleObject = ScriptContextAccessibleObject;
+ScriptContextAccessibleObject.objectScriptContextMap = new Map();
 class ScriptContext {
     constructor(info) {
         this.encoding = "utf-8";
@@ -4889,9 +5002,6 @@ exports.DuplicatedIdentifierError = void 0;
 const zrErrorCode_1 = __webpack_require__(/*! ../configurations/zrErrorCode */ "./src/configurations/zrErrorCode.ts");
 const zrSemanticError_1 = __webpack_require__(/*! ./zrSemanticError */ "./src/errors/zrSemanticError.ts");
 class DuplicatedIdentifierError extends zrSemanticError_1.ZrSemanticError {
-    get isFault() {
-        return false;
-    }
     constructor(identifier, context, duplicatedAt) {
         super(zrErrorCode_1.ZrErrorCode.DuplicatedIdentifier, context);
         if (duplicatedAt) {
@@ -4902,6 +5012,9 @@ class DuplicatedIdentifierError extends zrSemanticError_1.ZrSemanticError {
         else {
             this.message = i("duplicatedIdentifierError", { identifier, start: "?", end: "?" });
         }
+    }
+    get isFault() {
+        return false;
     }
 }
 exports.DuplicatedIdentifierError = DuplicatedIdentifierError;
@@ -4945,14 +5058,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZrError = void 0;
 const logger_1 = __webpack_require__(/*! ../utils/logger */ "./src/utils/logger.ts");
 class ZrError extends Error {
-    get isFault() {
-        return false;
-    }
     constructor(errCode, fileName, location) {
         super();
         this.errCode = errCode;
         this.location = location;
         this.fileName = fileName;
+    }
+    get isFault() {
+        return false;
     }
     report() {
         var _a, _b, _c, _d, _e, _f;
@@ -5047,7 +5160,7 @@ exports.ZrSemanticError = void 0;
 const zrError_1 = __webpack_require__(/*! ./zrError */ "./src/errors/zrError.ts");
 class ZrSemanticError extends zrError_1.ZrError {
     constructor(errCode, context) {
-        super(errCode, context.fileName, context.location);
+        super(errCode, context === null || context === void 0 ? void 0 : context.fileName, context === null || context === void 0 ? void 0 : context.location);
         this.errCode = errCode;
     }
 }
@@ -15079,7 +15192,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     s4 = peg$parse_();
                     // @ts-ignore
-                    s5 = peg$parseLBRACKET();
+                    s5 = peg$parseRBRACKET();
                     // @ts-ignore
                     if (s5 !== peg$FAILED) {
                         // @ts-ignore
@@ -18434,7 +18547,7 @@ exports.ZrParser = ZrParser;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MetaType = exports.PropertyType = exports.Access = void 0;
+exports.MetaFunctionType = exports.PropertyType = exports.Access = void 0;
 var Access;
 (function (Access) {
     Access["PUBLIC"] = "pub";
@@ -18447,19 +18560,19 @@ var PropertyType;
     PropertyType["SET"] = "set";
     PropertyType["GET_SET"] = "get_set";
 })(PropertyType || (exports.PropertyType = PropertyType = {}));
-var MetaType;
-(function (MetaType) {
-    MetaType[MetaType["CONSTRUCTOR"] = 1] = "CONSTRUCTOR";
-    MetaType[MetaType["ADD"] = 2] = "ADD";
-    MetaType[MetaType["SUB"] = 3] = "SUB";
-    MetaType[MetaType["MUL"] = 4] = "MUL";
-    MetaType[MetaType["DIV"] = 5] = "DIV";
-    MetaType[MetaType["MOD"] = 6] = "MOD";
-    MetaType[MetaType["NEG"] = 7] = "NEG";
-    MetaType[MetaType["COMPARE"] = 8] = "COMPARE";
-    MetaType[MetaType["TO_BOOL"] = 9] = "TO_BOOL";
-    MetaType[MetaType["TO_STRING"] = 10] = "TO_STRING";
-})(MetaType || (exports.MetaType = MetaType = {}));
+var MetaFunctionType;
+(function (MetaFunctionType) {
+    MetaFunctionType[MetaFunctionType["CONSTRUCTOR"] = 1] = "CONSTRUCTOR";
+    MetaFunctionType[MetaFunctionType["ADD"] = 2] = "ADD";
+    MetaFunctionType[MetaFunctionType["SUB"] = 3] = "SUB";
+    MetaFunctionType[MetaFunctionType["MUL"] = 4] = "MUL";
+    MetaFunctionType[MetaFunctionType["DIV"] = 5] = "DIV";
+    MetaFunctionType[MetaFunctionType["MOD"] = 6] = "MOD";
+    MetaFunctionType[MetaFunctionType["NEG"] = 7] = "NEG";
+    MetaFunctionType[MetaFunctionType["COMPARE"] = 8] = "COMPARE";
+    MetaFunctionType[MetaFunctionType["TO_BOOL"] = 9] = "TO_BOOL";
+    MetaFunctionType[MetaFunctionType["TO_STRING"] = 10] = "TO_STRING";
+})(MetaFunctionType || (exports.MetaFunctionType = MetaFunctionType = {}));
 
 
 /***/ }),

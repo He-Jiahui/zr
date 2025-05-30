@@ -1,5 +1,5 @@
 import {Symbol} from "./symbol";
-import {TypeReference} from "../type/type";
+import {TypeReference} from "../type/typeReference";
 
 export class BlockSymbol extends Symbol {
     public readonly type: string = "block";

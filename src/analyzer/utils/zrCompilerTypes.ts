@@ -15,3 +15,5 @@ export type TReadonly<T> = {
 };
 
 export type TExpression<T, R extends string> = Extract<T, { type: R }>;
+
+export type TSemanticType<T> = T extends { type: string } ? T : never;

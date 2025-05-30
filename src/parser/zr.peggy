@@ -895,7 +895,7 @@ DestructuringPattern
     } 
   }
 DestructuringArrayPattern
-  = LBRACKET _ keys:IdentifierList _ LBRACKET _ { 
+  = LBRACKET _ keys:IdentifierList _ RBRACKET _ { 
     return {
       type: "DestructuringArray",
       keys,

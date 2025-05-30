@@ -1,9 +1,9 @@
-import {ScriptContext} from "../../../common/scriptContext";
+import {ScriptContext, ScriptContextAccessibleObject} from "../../../common/scriptContext";
 import {NoHandlerError} from "../../../errors/noHandlerError";
 import {FileRange} from "../../../parser/generated/parser";
 import {Scope} from "../../static/scope/scope";
 import {Symbol as SymbolDeclaration, SymbolOrSymbolArray, TSymbolOrSymbolArray} from "../../static/symbol/symbol";
-import {TNullable} from "../../utils/zrCompilerTypes";
+import {TNullable, TSemanticType} from "../../utils/zrCompilerTypes";
 
 export type AnyNode = {
     type: string;
@@ -11,16 +11,15 @@ export type AnyNode = {
     [key: string | number | symbol]: any;
 }
 
-export class Handler {
+export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     private static handlers: Map<string, typeof Handler> = new Map();
-    private static semanticHandlerMap: Map<any, Handler> = new Map();
-    public context: ScriptContext;
-    public value: any;
+    private static semanticHandlerMap: Map<TSemanticType<any>, Handler> = new Map();
+    public value: TSemanticType<any>;
     public location: FileRange;
     protected _symbol: TNullable<SymbolDeclaration>;
 
     public constructor(context: ScriptContext) {
-        this.context = context;
+        super(context);
     }
 
     public get children(): Array<Handler> {

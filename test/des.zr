@@ -1,0 +1,3 @@
+module des;
+var arr3:[string, int, bool, object] = ["root", 1, true, null];
+var [x] = arr3;

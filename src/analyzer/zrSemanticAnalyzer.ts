@@ -30,5 +30,7 @@ export class ZrSemanticAnalyzer {
                 return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;
             }) as SymbolDeclaration;
         prettyPrintSymbolTables(topSymbol);
+
+
     }
 }

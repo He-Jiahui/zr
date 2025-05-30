@@ -1,0 +1,163 @@
+module "test_zr_language";
+
+// Import required modules
+var math = import("math");
+var assert = import("test_utils"); // Hypothetical testing framework
+
+// 1. Module System Tests
+test "module_import_syntax"() {
+    assert.equal(typeof(math), "module", "Should correctly identify module type");
+    assert.throws(() => {return import(123);}, "Should throw error when importing non-string");
+}
+
+// 2. Variable Declaration Tests
+test "variable_declarations"() {
+    var num = 42;
+    var str = "hello";
+    var bool = true;
+    var nil = null;
+
+    assert.equal(num, 42, "Basic number assignment");
+    assert.equal(str, "hello", "String assignment");
+    assert.equal(bool, true, "Boolean assignment");
+    assert.equal(nil, null, "Null assignment");
+}
+
+// 3. Struct Tests
+test "struct_operations"() {
+    // Test constructor
+    var v1 = $Vector3(1, 2, 3);
+    assert.equal(v1.x, 1, "Struct x assignment");
+    assert.equal(v1.y, 2, "Struct y assignment");
+    assert.equal(v1.z, 3, "Struct z assignment");
+
+    // Test static member
+    assert.exists(Vector3.ZERO, "Static ZERO member should exist");
+
+    // Test method
+    var v2 = $Vector3(2, 3, 4);
+    var v3 = Vector3.add(v1, v2);
+    assert.equal(v3.x, 3, "Static add method x");
+    assert.equal(v3.y, 5, "Static add method y");
+    assert.equal(v3.z, 7, "Static add method z");
+}
+
+// 4. Class Inheritance Tests
+test "class_inheritance"() {
+    var student = new Student("123");
+
+    // Test constructor
+    assert.exists(student, "Student instance created");
+
+    // Test property access
+    student.id = "456";
+    assert.equal(student.id, "456", "Public property assignment");
+
+    // Test private member (should not be directly accessible)
+    assert.throws(() => {return student._address;}, "Should not access private member");
+
+    // Test interface implementation
+    assert.equal(typeof(student.address), "string", "Interface property access");
+}
+
+// 5. Array & Tuple Tests
+test "array_operations"() {
+    var arr = [1, 2, 3];
+    assert.equal(arr[1], 2, "Array indexing");
+
+    var arr2:int[] = [4;5;6;];
+    assert.equal(arr2.length, 3, "Typed array length");
+
+    var arr3:[string, int, bool, object] = ["root", 1, true, null];
+    assert.equal(arr3[0], "root", "Tuple string value");
+    assert.equal(arr3[1], 1, "Tuple int value");
+    assert.equal(arr3[2], true, "Tuple bool value");
+    assert.equal(arr3[3], null, "Tuple null value");
+
+    // Test destructuring
+    var [x] = arr3;
+    assert.equal(x, "root", "Array destructuring");
+}
+
+// 6. Object Literal Tests
+test "object_literals"() {
+    var obj = {
+        a: 1,
+        b: "test",
+        [2+2]: "dynamic"
+    };
+
+    assert.equal(obj.a, 1, "Object literal numeric value");
+    assert.equal(obj.b, "test", "Object literal string value");
+    assert.equal(obj[4], "dynamic", "Computed property name");
+
+    // Destructuring
+    var {a, b} = obj;
+    assert.equal(a, 1, "Object destructuring");
+    assert.equal(b, "test", "Object destructuring");
+}
+
+// 7. Control Flow Tests
+test "control_flow"() {
+    // Test if statement
+    var result = if (true) {
+        42;
+    } else {
+        0;
+    };
+    assert.equal(result, 42, "If statement evaluation");
+
+    // Test switch
+    var val = switch (2) {
+        (1) { "one"; }
+        (2) { "two"; }
+        () { "default"; }
+    };
+    assert.equal(val, "two", "Switch statement evaluation");
+
+    // Test loop
+    var sum = 0;
+    for (var i in [1, 2, 3, 4]) {
+        if (i % 2 == 0) {
+            continue i;
+        }
+        sum += i;
+    }
+    assert.equal(sum, 4, "Loop with continue");
+}
+
+// 8. Enum Tests
+test "enum_operations"() {
+    assert.equal(RGBA.R, "R", "Enum string value");
+    assert.equal(Dimension.x, 0, "Enum default int value");
+
+    // Test enum iteration
+    var count = 0;
+    for (var dim in Dimension) {
+        count += 1;
+    }
+    assert.equal(count, 3, "Enum iteration count");
+}
+
+// 9. Function Tests
+test "function_overloading"() {
+    // Test variadic function
+    var arr = [];
+    testArgs(...arr);
+    assert.equal(arr.length, 0, "Variadic function with spread");
+
+    // Test lambda
+    var doubler = (x) => {return x * 2;};
+    assert.equal(doubler(5), 10, "Lambda function");
+}
+
+// 10. Type System Tests
+test "type_system"() {
+    // Test type coercion
+    var mixed = [1, "two", true];
+    assert.equal(typeof(mixed[0]), "int", "Type preservation in mixed array");
+    assert.equal(typeof(mixed[1]), "string", "Type preservation in mixed array");
+
+    // Test interface implementation
+    assert.implements(Man, Student, "Student should implement Man interface");
+}

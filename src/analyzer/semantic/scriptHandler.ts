@@ -13,6 +13,7 @@ import {InterfaceSymbol} from "../static/symbol/interfaceSymbol";
 import {EnumSymbol} from "../static/symbol/enumSymbol";
 import {FunctionSymbol} from "../static/symbol/functionSymbol";
 import {VariableSymbol} from "../static/symbol/variableSymbol";
+import {TestSymbol} from "../static/symbol/testSymbol";
 
 export type ScriptType = {
     type: "Script",
@@ -89,6 +90,10 @@ export class ScriptHandler extends Handler {
                     break;
                 case "enum": {
                     scope.addEnum(child as EnumSymbol);
+                }
+                    break;
+                case "test": {
+                    scope.addTest(child as TestSymbol);
                 }
                     break;
                 case "function": {

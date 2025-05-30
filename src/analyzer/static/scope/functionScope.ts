@@ -3,12 +3,13 @@ import type {ParameterSymbol} from "../symbol/parameterSymbol";
 import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {BlockSymbol} from "../symbol/blockSymbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
 
 // 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
 export class FunctionScope extends Scope {
     public readonly type: string = "FunctionScope";
 
-    public body: BlockSymbol | null = null;
+    public body: TNullable<BlockSymbol> = null;
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     protected symbolTableList = [this.generics, this.parameters, () => this.body];

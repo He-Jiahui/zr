@@ -1,6 +1,7 @@
 import "./scope";
 import "./blockScope";
 import "./functionScope";
+import "./testScope";
 import "./propertyScope";
 import "./enumScope";
 import "./classScope";

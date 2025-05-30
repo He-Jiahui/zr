@@ -4,6 +4,7 @@ import "./propertySymbol";
 import "./blockSymbol";
 
 import "./functionSymbol";
+import "./testSymbol";
 import "./parameterSymbol";
 
 import "./fieldSymbol";

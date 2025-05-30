@@ -6,6 +6,7 @@ import "./whileHandler";
 import "./lambdaHandler";
 import "./arrayLiteralHandler";
 import "./objectLiteralHandler";
+import "./unpackLiteralHandler";
 
 import "./primaryHandler";
 import "./memberAccessHandler";

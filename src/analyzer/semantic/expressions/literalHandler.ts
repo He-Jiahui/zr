@@ -10,11 +10,13 @@ import type {SwitchExpressionType} from "./switchHandler";
 import type {ForeachLoopExpressionType, ForLoopExpressionType} from "./forHandler";
 import type {WhileLoopExpressionType} from "./whileHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {UnpackLiteralType} from "./unpackLiteralHandler";
 
 export type LiteralExpressionType = ValueLiteralType |
     IdentifierLiteralType |
     ObjectLiteralType |
     ArrayLiteralType |
+    UnpackLiteralType |
     LambdaType |
     IfExpressionType |
     SwitchExpressionType |

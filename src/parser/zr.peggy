@@ -18,7 +18,9 @@ TopLevelStatement
   / InterfaceDeclaration
   / VariableDeclaration
   / FunctionDeclaration
+  / TestDeclaration
   / ExpressionStatement
+  
 
 
 
@@ -383,6 +385,7 @@ Statement
   / ReturnStatement
   / BreakContinueStatement
   / OutStatement
+  / ThrowStatement
   / Block) _  {
     // Block 本身也是语句（如 if 的 then 块） 
     return dec;
@@ -440,6 +443,15 @@ OutStatement
   = OUT _ expr:Expression _ SEMICOLON {
     return {
       type: "OutStatement",
+      expr,
+      location: location()
+    }
+  }
+
+ThrowStatement
+  = THROW _ expr:Expression _ SEMICOLON {
+    return {
+      type: "ThrowStatement",
       expr,
       location: location()
     }
@@ -678,6 +690,7 @@ PrimaryExpression
   = value:Literal {return {type: "ValueLiteral", value, location: location()}}
   / ObjectLiteral
   / ArrayLiteral
+  / UnpackLiteral
   / LambdaExpression
   / IfExpression
   / SwitchExpression
@@ -697,6 +710,15 @@ ArrayLiteral
       elements: elements? ([elements[0], ...(elements[1]?elements[1].map(v=>v[3]):[])]) :[], 
       location: location()
     } 
+  }
+
+UnpackLiteral
+  = PARAMS _ element: Expression _ {
+    return { 
+      type: 'UnpackLiteral', 
+      element, 
+      location: location() 
+    }
   }
 // 对象字面量（支持动态键）
 ObjectLiteral
@@ -751,7 +773,7 @@ IfExpression
       }
     }
 
-  // 自定义 switch 语法
+// 自定义 switch 语法
 SwitchExpression
   = SWITCH _ LPAREN _ expr:Expression _ RPAREN _ LBRACE _ 
   cases:SwitchCase* defaultCase:SwitchDefault? _ RBRACE {
@@ -821,6 +843,18 @@ FunctionDeclaration
     }
   }
 
+// === 测试代码 ===
+TestDeclaration
+  = TEST _ name: STRING _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ body:Block {
+    return {
+      type: "TestDeclaration",
+      name,
+      params: params || [],
+      args: args? args[4] : null,
+      body,
+      location: location()
+    }
+  }
 
 
 // === 工具规则 ===
@@ -923,6 +957,8 @@ STRUCT = "struct"
 CLASS = "class"
 INTERFACE = "interface"
 ENUM = "enum"
+TEST = "test"
+
 VAR = "var"
 PUB = "pub"
 PRI = "pri"
@@ -942,6 +978,7 @@ GET = "get"
 STATIC = "static"
 IN = "in"
 OUT = "out"
+THROW = "throw"
 
 // 符号
 PARAMS = "..."

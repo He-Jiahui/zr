@@ -64,15 +64,18 @@ export class FunctionHandler extends Handler {
         }
         const parameters = node.params;
         const decorators = node.decorator;
+        const args = node.args;
         const body = node.body;
         this.parameterHandlers.length = 0;
         this.decoratorHandlers.length = 0;
-        for (const parameter of parameters) {
-            const handler = Handler.handle(parameter, this.context);
-            this.parameterHandlers.push(handler);
+        if (parameters) {
+            for (const parameter of parameters) {
+                const handler = Handler.handle(parameter, this.context);
+                this.parameterHandlers.push(handler);
+            }
         }
-        if (node.args) {
-            this.argsHandler = Handler.handle(node.args, this.context);
+        if (args) {
+            this.argsHandler = Handler.handle(args, this.context);
         } else {
             this.argsHandler = null;
         }

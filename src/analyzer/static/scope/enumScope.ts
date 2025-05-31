@@ -15,7 +15,7 @@ export class EnumScope extends Scope {
         return this.checkSymbolUnique(member) && this.enumMembers.addSymbol(member);
     }
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
+    protected _getSymbol(_symbol: string) {
         return this.enumMembers.getSymbol(_symbol);
     }
 }

@@ -1,4 +1,4 @@
-import {TMaybeUndefined} from "../../utils/zrCompilerTypes";
+import {TMaybeUndefined, TNullable} from "../../utils/zrCompilerTypes";
 import {FileRange} from "../../../parser/generated/parser";
 
 export class TypeDefinition {
@@ -7,8 +7,23 @@ export class TypeDefinition {
 
     public location?: FileRange;
 
-    public constructor(name: TMaybeUndefined<string>) {
-        this.name = name;
+    public constructor() {
+    }
+
+    public get typeName() {
+        return this._typeName;
+    }
+
+    protected get _typeName(): string {
+        return this.name ?? "unknown";
+    }
+
+    protected _canBeAssignedBy(targetType: TypeDefinition): boolean {
+        return false;
+    }
+
+    protected _convertFrom<TFrom, TTo>(targetData: TFrom): TNullable<TTo> {
+        return null;
     }
 }
 

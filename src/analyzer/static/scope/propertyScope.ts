@@ -1,4 +1,4 @@
-import {type Symbol, TSymbolOrSymbolArray} from "../symbol/symbol";
+import {TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import type {FunctionSymbol} from "../symbol/functionSymbol";
@@ -28,8 +28,8 @@ export class PropertyScope extends Scope {
     }
 
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
-        return (_symbol === "getter" ? this.getterSymbol : this.setterSymbol) ?? undefined;
+    protected _getSymbol(_symbol: string) {
+        return (_symbol === "getter" ? this.getterSymbol : this.setterSymbol) ?? null;
     }
 
 }

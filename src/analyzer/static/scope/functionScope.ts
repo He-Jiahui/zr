@@ -1,6 +1,6 @@
 import type {GenericSymbol} from "../symbol/genericSymbol";
 import type {ParameterSymbol} from "../symbol/parameterSymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import {SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {BlockSymbol} from "../symbol/blockSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
@@ -34,7 +34,7 @@ export class FunctionScope extends Scope {
     }
 
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
+    protected _getSymbol(_symbol: string) {
         return this.parameters.getSymbol(_symbol);
     }
 

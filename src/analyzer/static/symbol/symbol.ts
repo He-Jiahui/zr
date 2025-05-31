@@ -107,9 +107,9 @@ export class SymbolTable<T extends Symbol> {
     }
 
     // not for function symbol table
-    public getSymbol(name: string | undefined) {
+    public getSymbol(name: TMaybeUndefined<string>) {
         // TODO: if this symbol table is not for function
-        return this.symbolTable.find(s => s.name === name);
+        return this.symbolTable.find(s => s.name === name) ?? null;
     }
 
     // for function symbol table

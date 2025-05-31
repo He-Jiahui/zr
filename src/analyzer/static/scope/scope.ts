@@ -1,5 +1,7 @@
 import {reportDuplicatedSymbol, Symbol, SymbolOrSymbolArray, SymbolTable} from "../symbol/symbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {TypeDefinition} from "../type/typeDefinition";
+import {PredefinedType} from "../type/predefined/predefinedType";
 
 type SymbolGetter = () => Symbol | null;
 
@@ -50,6 +52,18 @@ export class Scope {
         return null;
     }
 
+    public getType(typeName: string): TNullable<TypeDefinition> {
+        let currentScope: TNullable<Scope> = this as Scope;
+        while (currentScope) {
+            const type = currentScope._getType(typeName);
+            if (type) {
+                return type;
+            }
+            currentScope = currentScope._parentScope;
+        }
+        return PredefinedType.getPredefinedType(typeName);
+    }
+
     protected checkSymbolUnique(symbol: SymbolOrSymbolArray): boolean {
         if (!symbol) {
             return false;
@@ -87,8 +101,12 @@ export class Scope {
         return allSymbolUnique;
     }
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
-        return undefined;
+    protected _getSymbol(symbol: string): TNullable<Symbol> {
+        return null;
+    }
+
+    protected _getType(type: string): TNullable<TypeDefinition> {
+        return null;
     }
 
 

@@ -21,7 +21,7 @@ export class BlockScope extends Scope {
         return success;
     }
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
+    protected _getSymbol(_symbol: string) {
         return this.variables.getSymbol(_symbol);
     }
 }

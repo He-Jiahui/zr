@@ -35,31 +35,8 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
             return null;
         }
         const h = new handler(context);
-        h.handleInternal(node);
-        Handler.semanticHandlerMap.set(h.value, h);
+        h._handleInternal(node);
         return h;
-    }
-    static getHandler(semanticType) {
-        if (!semanticType) {
-            return null;
-        }
-        if (Handler.semanticHandlerMap.has(semanticType)) {
-            return Handler.semanticHandlerMap.get(semanticType);
-        }
-        else {
-            return null;
-        }
-    }
-    handleInternal(node) {
-        // clear previous value
-        this.value = null;
-        // set location
-        const { location } = node;
-        this.location = location;
-        this.context.location = location;
-        this.context.pushHandler(this);
-        this._handle(node);
-        this.context.popHandler();
     }
     createSymbolAndScope(parentScope) {
         return this._createSymbolAndScope(parentScope);
@@ -89,10 +66,20 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         }
         return createdSymbol;
     }
+    _handleInternal(node) {
+        // clear previous value
+        this.value = null;
+        // set location
+        const location = node.location;
+        this.location = location;
+        this.context.location = location;
+        this.context.pushHandler(this);
+        this._handle(node);
+        this.context.popHandler();
+    }
 }
 exports.Handler = Handler;
 Handler.handlers = new Map();
-Handler.semanticHandlerMap = new Map();
 
 
 /***/ }),
@@ -3897,6 +3884,17 @@ __webpack_require__(/*! ./tupleHandler */ "./src/analyzer/semantic/types/tupleHa
 
 /***/ }),
 
+/***/ "./src/analyzer/static/data/index.ts":
+/*!*******************************************!*\
+  !*** ./src/analyzer/static/data/index.ts ***!
+  \*******************************************/
+/***/ (() => {
+
+
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/index.ts":
 /*!**************************************!*\
   !*** ./src/analyzer/static/index.ts ***!
@@ -3908,6 +3906,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./scope/index */ "./src/analyzer/static/scope/index.ts");
 __webpack_require__(/*! ./type/index */ "./src/analyzer/static/type/index.ts");
 __webpack_require__(/*! ./symbol/index */ "./src/analyzer/static/symbol/index.ts");
+__webpack_require__(/*! ./data/index */ "./src/analyzer/static/data/index.ts");
 
 
 /***/ }),
@@ -4295,7 +4294,7 @@ class PropertyScope extends scope_1.Scope {
     }
     _getSymbol(_symbol) {
         var _a;
-        return (_a = (_symbol === "getter" ? this.getterSymbol : this.setterSymbol)) !== null && _a !== void 0 ? _a : undefined;
+        return (_a = (_symbol === "getter" ? this.getterSymbol : this.setterSymbol)) !== null && _a !== void 0 ? _a : null;
     }
 }
 exports.PropertyScope = PropertyScope;
@@ -4314,6 +4313,7 @@ scope_1.Scope.registerScope("Property", PropertyScope);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Scope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const predefinedType_1 = __webpack_require__(/*! ../type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class Scope {
     constructor(parentScope, ownerSymbol) {
         this.symbolTableList = [];
@@ -4349,6 +4349,17 @@ class Scope {
         }
         // 如果当前对象及其父对象都没有找到符号对象，则返回 null
         return null;
+    }
+    getType(typeName) {
+        let currentScope = this;
+        while (currentScope) {
+            const type = currentScope._getType(typeName);
+            if (type) {
+                return type;
+            }
+            currentScope = currentScope._parentScope;
+        }
+        return predefinedType_1.PredefinedType.getPredefinedType(typeName);
     }
     checkSymbolUnique(symbol) {
         if (!symbol) {
@@ -4388,8 +4399,11 @@ class Scope {
         }
         return allSymbolUnique;
     }
-    _getSymbol(_symbol) {
-        return undefined;
+    _getSymbol(symbol) {
+        return null;
+    }
+    _getType(type) {
+        return null;
     }
 }
 exports.Scope = Scope;
@@ -4896,8 +4910,9 @@ class SymbolTable {
     }
     // not for function symbol table
     getSymbol(name) {
+        var _a;
         // TODO: if this symbol table is not for function
-        return this.symbolTable.find(s => s.name === name);
+        return (_a = this.symbolTable.find(s => s.name === name)) !== null && _a !== void 0 ? _a : null;
     }
     // for function symbol table
     getSymbols(name) {
@@ -5008,13 +5023,285 @@ exports.MetaType = MetaType;
 
 /***/ }),
 
+/***/ "./src/analyzer/static/type/predefined/arrayType.ts":
+/*!**********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/arrayType.ts ***!
+  \**********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ArrayType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class ArrayType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super();
+        this.name = "array";
+    }
+    get _typeName() {
+        return "array";
+    }
+}
+exports.ArrayType = ArrayType;
+predefinedType_1.PredefinedType.registerType("array", new ArrayType());
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/boolType.ts":
+/*!*********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/boolType.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BoolType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class BoolType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super();
+        this.name = "bool";
+        this.size = 1;
+    }
+    get _typeName() {
+        return "bool";
+    }
+}
+exports.BoolType = BoolType;
+predefinedType_1.PredefinedType.registerType("bool", new BoolType());
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/bufferType.ts":
+/*!***********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/bufferType.ts ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BufferType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class BufferType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super(...arguments);
+        this.name = "buffer";
+    }
+    get _typeName() {
+        return "buffer";
+    }
+}
+exports.BufferType = BufferType;
+predefinedType_1.PredefinedType.registerType("buffer", new BufferType());
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/floatType.ts":
+/*!**********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/floatType.ts ***!
+  \**********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FloatType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class FloatType extends predefinedType_1.PredefinedType {
+    constructor(size) {
+        super();
+        this.name = "float";
+        this.size = size;
+    }
+    get _typeName() {
+        return `float${this.size}`;
+    }
+}
+exports.FloatType = FloatType;
+const floatTypes = {
+    float32: new FloatType(32),
+    float64: new FloatType(64)
+};
+predefinedType_1.PredefinedType.registerType("float", floatTypes.float32);
+predefinedType_1.PredefinedType.registerType("float32", floatTypes.float32);
+predefinedType_1.PredefinedType.registerType("double", floatTypes.float64);
+predefinedType_1.PredefinedType.registerType("float64", floatTypes.float64);
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/type/predefined/index.ts":
 /*!******************************************************!*\
   !*** ./src/analyzer/static/type/predefined/index.ts ***!
   \******************************************************/
-/***/ (() => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+__webpack_require__(/*! ./nullType */ "./src/analyzer/static/type/predefined/nullType.ts");
+__webpack_require__(/*! ./boolType */ "./src/analyzer/static/type/predefined/boolType.ts");
+__webpack_require__(/*! ./intType */ "./src/analyzer/static/type/predefined/intType.ts");
+__webpack_require__(/*! ./floatType */ "./src/analyzer/static/type/predefined/floatType.ts");
+__webpack_require__(/*! ./stringType */ "./src/analyzer/static/type/predefined/stringType.ts");
+__webpack_require__(/*! ./bufferType */ "./src/analyzer/static/type/predefined/bufferType.ts");
+__webpack_require__(/*! ./objectType */ "./src/analyzer/static/type/predefined/objectType.ts");
+__webpack_require__(/*! ./arrayType */ "./src/analyzer/static/type/predefined/arrayType.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/intType.ts":
+/*!********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/intType.ts ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.IntType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class IntType extends predefinedType_1.PredefinedType {
+    constructor(unsigned, size) {
+        super();
+        this.name = "int";
+        this.unsigned = unsigned;
+        this.size = size;
+    }
+    get _typeName() {
+        return `${this.unsigned ? "u" : ""}int${this.size}`;
+    }
+}
+exports.IntType = IntType;
+const intTypes = {
+    int8: new IntType(false, 8),
+    int16: new IntType(false, 16),
+    int32: new IntType(false, 32),
+    int64: new IntType(false, 64),
+    uint8: new IntType(true, 8),
+    uint16: new IntType(true, 16),
+    uint32: new IntType(true, 32),
+    uint64: new IntType(true, 64)
+};
+predefinedType_1.PredefinedType.registerType("char", intTypes.int8);
+predefinedType_1.PredefinedType.registerType("int8", intTypes.int8);
+predefinedType_1.PredefinedType.registerType("byte", intTypes.uint8);
+predefinedType_1.PredefinedType.registerType("uint8", intTypes.uint8);
+predefinedType_1.PredefinedType.registerType("short", intTypes.int16);
+predefinedType_1.PredefinedType.registerType("int16", intTypes.int16);
+predefinedType_1.PredefinedType.registerType("ushort", intTypes.uint16);
+predefinedType_1.PredefinedType.registerType("uint16", intTypes.uint16);
+predefinedType_1.PredefinedType.registerType("int", intTypes.int32);
+predefinedType_1.PredefinedType.registerType("int32", intTypes.int32);
+predefinedType_1.PredefinedType.registerType("uint", intTypes.uint32);
+predefinedType_1.PredefinedType.registerType("uint32", intTypes.uint32);
+predefinedType_1.PredefinedType.registerType("long", intTypes.int64);
+predefinedType_1.PredefinedType.registerType("int64", intTypes.int64);
+predefinedType_1.PredefinedType.registerType("ulong", intTypes.uint64);
+predefinedType_1.PredefinedType.registerType("uint64", intTypes.uint64);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/nullType.ts":
+/*!*********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/nullType.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NullType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class NullType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super();
+        this.name = "null";
+    }
+    get _typeName() {
+        return "null";
+    }
+}
+exports.NullType = NullType;
+const nullType = new NullType();
+predefinedType_1.PredefinedType.registerType("null", nullType);
+predefinedType_1.PredefinedType.registerType("void", nullType);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/objectType.ts":
+/*!***********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/objectType.ts ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ObjectType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class ObjectType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super();
+        this.name = "object";
+    }
+    get _typeName() {
+        return "object";
+    }
+}
+exports.ObjectType = ObjectType;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/predefinedType.ts":
+/*!***************************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/predefinedType.ts ***!
+  \***************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PredefinedType = void 0;
+const typeDefinition_1 = __webpack_require__(/*! ../typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
+class PredefinedType extends typeDefinition_1.TypeDefinition {
+    static registerType(typeName, type) {
+        PredefinedType.typeDefinitionMap.set(typeName, type);
+    }
+    static getPredefinedType(typeName) {
+        var _a;
+        return (_a = PredefinedType.typeDefinitionMap.get(typeName)) !== null && _a !== void 0 ? _a : null;
+    }
+}
+exports.PredefinedType = PredefinedType;
+PredefinedType.typeDefinitionMap = new Map();
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/predefined/stringType.ts":
+/*!***********************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/stringType.ts ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StringType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class StringType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super();
+        this.name = "string";
+    }
+    get _typeName() {
+        return "string";
+    }
+}
+exports.StringType = StringType;
+predefinedType_1.PredefinedType.registerType("string", new StringType());
 
 
 /***/ }),
@@ -5029,8 +5316,20 @@ exports.MetaType = MetaType;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefinedTypeSet = exports.TypeDefinition = void 0;
 class TypeDefinition {
-    constructor(name) {
-        this.name = name;
+    constructor() {
+    }
+    get typeName() {
+        return this._typeName;
+    }
+    get _typeName() {
+        var _a;
+        return (_a = this.name) !== null && _a !== void 0 ? _a : "unknown";
+    }
+    _canBeAssignedBy(targetType) {
+        return false;
+    }
+    _convertFrom(targetData) {
+        return null;
     }
 }
 exports.TypeDefinition = TypeDefinition;

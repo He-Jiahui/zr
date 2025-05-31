@@ -12,8 +12,7 @@ export type AnyNode = {
 }
 
 export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
-    private static handlers: Map<string, typeof Handler> = new Map();
-    private static semanticHandlerMap: Map<TSemanticType<any>, Handler> = new Map();
+    private static readonly handlers: Map<string, typeof Handler> = new Map();
     public value: TSemanticType<any>;
     public location: FileRange;
     protected _symbol: TNullable<SymbolDeclaration>;
@@ -41,32 +40,8 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
             return null!;
         }
         const h = new handler(context);
-        h.handleInternal(node);
-        Handler.semanticHandlerMap.set(h.value, h);
+        h._handleInternal(node);
         return h;
-    }
-
-    protected static getHandler(semanticType: any): TNullable<Handler> {
-        if (!semanticType) {
-            return null;
-        }
-        if (Handler.semanticHandlerMap.has(semanticType)) {
-            return Handler.semanticHandlerMap.get(semanticType)!;
-        } else {
-            return null;
-        }
-    }
-
-    public handleInternal(node: AnyNode | any): void {
-        // clear previous value
-        this.value = null;
-        // set location
-        const {location} = node;
-        this.location = location;
-        this.context.location = location;
-        this.context.pushHandler(this);
-        this._handle(node);
-        this.context.popHandler();
     }
 
     public createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
@@ -102,5 +77,17 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
             createdSymbol.childScope = createdScope;
         }
         return createdSymbol;
+    }
+
+    private _handleInternal(node: AnyNode): void {
+        // clear previous value
+        this.value = null;
+        // set location
+        const location = node.location;
+        this.location = location;
+        this.context.location = location;
+        this.context.pushHandler(this);
+        this._handle(node);
+        this.context.popHandler();
     }
 }

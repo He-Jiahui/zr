@@ -1,7 +1,7 @@
 import {Scope} from "./scope";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {BlockSymbol} from "../symbol/blockSymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import {SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {ParameterSymbol} from "../symbol/parameterSymbol";
 
 export class TestScope extends Scope {
@@ -25,7 +25,7 @@ export class TestScope extends Scope {
         }
     }
 
-    protected _getSymbol(_symbol: string): Symbol | undefined {
+    protected _getSymbol(_symbol: string) {
         return this.parameters.getSymbol(_symbol);
     }
 }

@@ -8,6 +8,11 @@ export class ClassSymbol extends Symbol {
     public interfaces: InterfaceSymbol[] = [];
 
     public readonly decorators: any[] = [];
+
+    protected _onTypeCreated() {
+
+
+    }
 }
 
 Symbol.registerSymbol("Class", ClassSymbol);

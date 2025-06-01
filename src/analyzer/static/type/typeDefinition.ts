@@ -1,13 +1,15 @@
 import {TMaybeUndefined, TNullable} from "../../utils/zrCompilerTypes";
 import {FileRange} from "../../../parser/generated/parser";
+import {type ScriptContext, ScriptContextAccessibleObject} from "../../../common/scriptContext";
 
-export class TypeDefinition {
+export class TypeDefinition<T extends (ScriptContext | TMaybeUndefined<ScriptContext>)> extends ScriptContextAccessibleObject<T> {
 
     public name: TMaybeUndefined<string>;
 
     public location?: FileRange;
 
-    public constructor() {
+    public constructor(context: T) {
+        super(context);
     }
 
     public get typeName() {
@@ -18,7 +20,7 @@ export class TypeDefinition {
         return this.name ?? "unknown";
     }
 
-    protected _canBeAssignedBy(targetType: TypeDefinition): boolean {
+    protected _canBeAssignedBy(targetType: TypeDefinition<any>): boolean {
         return false;
     }
 
@@ -28,7 +30,7 @@ export class TypeDefinition {
 }
 
 export class DefinedTypeSet {
-    private readonly _types: Map<string, TypeDefinition> = new Map<string, TypeDefinition>();
+    private readonly _types: Map<string, TypeDefinition<any>> = new Map<string, TypeDefinition<any>>();
 
 
     public registerType() {

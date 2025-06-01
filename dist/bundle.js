@@ -47,6 +47,12 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         this.context.popHandler();
         return declarationSymbols;
     }
+    inferType(upperTypeInferContext) {
+        return this._inferType(upperTypeInferContext);
+    }
+    assignType(childrenContexts, currentInferContext) {
+        return this._assignType(childrenContexts, currentInferContext);
+    }
     // handles node
     _handle(node) {
     }
@@ -65,6 +71,12 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
             createdSymbol.childScope = createdScope;
         }
         return createdSymbol;
+    }
+    _inferType(upperTypeInferContext) {
+        return null;
+    }
+    _assignType(childrenContexts, currentInferContext) {
+        return null;
     }
     _handleInternal(node) {
         // clear previous value
@@ -4540,6 +4552,8 @@ class ClassSymbol extends symbol_1.Symbol {
         this.interfaces = [];
         this.decorators = [];
     }
+    _onTypeCreated() {
+    }
 }
 exports.ClassSymbol = ClassSymbol;
 symbol_1.Symbol.registerSymbol("Class", ClassSymbol);
@@ -4824,6 +4838,7 @@ exports.reportDuplicatedSymbol = reportDuplicatedSymbol;
 const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
 const duplicatedIdentifierError_1 = __webpack_require__(/*! ../../../errors/duplicatedIdentifierError */ "./src/errors/duplicatedIdentifierError.ts");
 const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
+const metaType_1 = __webpack_require__(/*! ../type/meta/metaType */ "./src/analyzer/static/type/meta/metaType.ts");
 class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(name, context) {
         super(context);
@@ -4846,6 +4861,11 @@ class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
         }
         symbol.location = location !== null && location !== void 0 ? location : handler.location;
         symbol.ownerScope = parentScope;
+        const context = symbol.context;
+        const symbolCreatedType = metaType_1.MetaType.createType(symbol.type, symbol);
+        if (symbolCreatedType) {
+            context.linkTypeAndSymbol(symbolCreatedType, symbol);
+        }
         return symbol;
     }
 }
@@ -4987,8 +5007,30 @@ symbol_1.Symbol.registerSymbol("Variable", VariableSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
 __webpack_require__(/*! ./typeReference */ "./src/analyzer/static/type/typeReference.ts");
+__webpack_require__(/*! ./typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+__webpack_require__(/*! ./typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
 __webpack_require__(/*! ./predefined/index */ "./src/analyzer/static/type/predefined/index.ts");
 __webpack_require__(/*! ./meta/index */ "./src/analyzer/static/type/meta/index.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/classMetaType.ts":
+/*!********************************************************!*\
+  !*** ./src/analyzer/static/type/meta/classMetaType.ts ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ClassMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+class ClassMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+    }
+}
+exports.ClassMetaType = ClassMetaType;
+metaType_1.MetaType.registerType("class", ClassMetaType);
 
 
 /***/ }),
@@ -5002,6 +5044,7 @@ __webpack_require__(/*! ./meta/index */ "./src/analyzer/static/type/meta/index.t
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+__webpack_require__(/*! ./classMetaType */ "./src/analyzer/static/type/meta/classMetaType.ts");
 
 
 /***/ }),
@@ -5017,8 +5060,24 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaType = void 0;
 const typeDefinition_1 = __webpack_require__(/*! ../typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
 class MetaType extends typeDefinition_1.TypeDefinition {
+    static registerType(typeName, type) {
+        MetaType.metaTypeMap.set(typeName, type);
+    }
+    static createType(typeName, symbol) {
+        const context = symbol.context;
+        const prototype = MetaType.metaTypeMap.get(typeName);
+        if (!prototype) {
+            return null;
+        }
+        const instance = new prototype(context);
+        instance._onTypeCreated(symbol);
+        return instance;
+    }
+    _onTypeCreated(symbol) {
+    }
 }
 exports.MetaType = MetaType;
+MetaType.metaTypeMap = new Map();
 
 
 /***/ }),
@@ -5132,6 +5191,31 @@ predefinedType_1.PredefinedType.registerType("float64", floatTypes.float64);
 
 /***/ }),
 
+/***/ "./src/analyzer/static/type/predefined/functionType.ts":
+/*!*************************************************************!*\
+  !*** ./src/analyzer/static/type/predefined/functionType.ts ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FunctionType = void 0;
+const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+class FunctionType extends predefinedType_1.PredefinedType {
+    constructor() {
+        super(...arguments);
+        this.name = "function";
+    }
+    get _typeName() {
+        return "function";
+    }
+}
+exports.FunctionType = FunctionType;
+predefinedType_1.PredefinedType.registerType("function", new FunctionType());
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/type/predefined/index.ts":
 /*!******************************************************!*\
   !*** ./src/analyzer/static/type/predefined/index.ts ***!
@@ -5149,6 +5233,7 @@ __webpack_require__(/*! ./stringType */ "./src/analyzer/static/type/predefined/s
 __webpack_require__(/*! ./bufferType */ "./src/analyzer/static/type/predefined/bufferType.ts");
 __webpack_require__(/*! ./objectType */ "./src/analyzer/static/type/predefined/objectType.ts");
 __webpack_require__(/*! ./arrayType */ "./src/analyzer/static/type/predefined/arrayType.ts");
+__webpack_require__(/*! ./functionType */ "./src/analyzer/static/type/predefined/functionType.ts");
 
 
 /***/ }),
@@ -5267,6 +5352,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PredefinedType = void 0;
 const typeDefinition_1 = __webpack_require__(/*! ../typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
 class PredefinedType extends typeDefinition_1.TypeDefinition {
+    constructor() {
+        super(undefined);
+    }
     static registerType(typeName, type) {
         PredefinedType.typeDefinitionMap.set(typeName, type);
     }
@@ -5306,17 +5394,35 @@ predefinedType_1.PredefinedType.registerType("string", new StringType());
 
 /***/ }),
 
-/***/ "./src/analyzer/static/type/typeDefinition.ts":
-/*!****************************************************!*\
-  !*** ./src/analyzer/static/type/typeDefinition.ts ***!
-  \****************************************************/
+/***/ "./src/analyzer/static/type/typeAssignContext.ts":
+/*!*******************************************************!*\
+  !*** ./src/analyzer/static/type/typeAssignContext.ts ***!
+  \*******************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TypeAssignContext = void 0;
+class TypeAssignContext {
+}
+exports.TypeAssignContext = TypeAssignContext;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/typeDefinition.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/static/type/typeDefinition.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefinedTypeSet = exports.TypeDefinition = void 0;
-class TypeDefinition {
-    constructor() {
+const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
+class TypeDefinition extends scriptContext_1.ScriptContextAccessibleObject {
+    constructor(context) {
+        super(context);
     }
     get typeName() {
         return this._typeName;
@@ -5341,6 +5447,22 @@ class DefinedTypeSet {
     }
 }
 exports.DefinedTypeSet = DefinedTypeSet;
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/typeInferContext.ts":
+/*!******************************************************!*\
+  !*** ./src/analyzer/static/type/typeInferContext.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TypeInferContext = void 0;
+class TypeInferContext {
+}
+exports.TypeInferContext = TypeInferContext;
 
 
 /***/ }),
@@ -5439,9 +5561,9 @@ exports.ZrHandlerDispatcher = ZrHandlerDispatcher;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZrSemanticAnalyzer = void 0;
-const handler_1 = __webpack_require__(/*! ./semantic/common/handler */ "./src/analyzer/semantic/common/handler.ts");
 __webpack_require__(/*! ./semantic/index */ "./src/analyzer/semantic/index.ts");
 __webpack_require__(/*! ./static/index */ "./src/analyzer/static/index.ts");
+const handler_1 = __webpack_require__(/*! ./semantic/common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const zrHandlerDispatcher_1 = __webpack_require__(/*! ./utils/zrHandlerDispatcher */ "./src/analyzer/utils/zrHandlerDispatcher.ts");
 const prettyPrint_1 = __webpack_require__(/*! ../utils/prettyPrint */ "./src/utils/prettyPrint.ts");
 class ZrSemanticAnalyzer {
@@ -5452,14 +5574,14 @@ class ZrSemanticAnalyzer {
         this.scriptHandler = handler_1.Handler.handle(this.context.ast, this.context);
         this.handlerDispatcher = new zrHandlerDispatcher_1.ZrHandlerDispatcher(this.scriptHandler);
         // create symbol and scope
-        const topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
+        this.topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
             var _a, _b;
             return (_b = handler.createSymbolAndScope((_a = upperResult === null || upperResult === void 0 ? void 0 : upperResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : null;
         }, (handler, lowerResult, selfTopDownResult) => {
             var _a, _b;
             return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
         });
-        (0, prettyPrint_1.prettyPrintSymbolTables)(topSymbol);
+        (0, prettyPrint_1.prettyPrintSymbolTables)(this.topSymbol);
     }
 }
 exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
@@ -5512,8 +5634,9 @@ ScriptContextAccessibleObject.objectScriptContextMap = new Map();
 class ScriptContext {
     constructor(info) {
         this.encoding = "utf-8";
-        this._scopeStack = [];
         this._handlerStack = [];
+        this._typeSymbolMap = new Map();
+        this._symbolTypeMap = new Map();
         this.compilingDirectory = info.compilingDirectory;
         this.fileRelativePath = info.fileRelativePath;
         this.encoding = info.encoding;
@@ -5523,6 +5646,18 @@ class ScriptContext {
     }
     popHandler() {
         return this._handlerStack.pop();
+    }
+    linkTypeAndSymbol(type, symbol) {
+        this._typeSymbolMap.set(type, symbol);
+        this._symbolTypeMap.set(symbol, type);
+    }
+    getTypeFromSymbol(symbol) {
+        var _a;
+        return (_a = this._symbolTypeMap.get(symbol)) !== null && _a !== void 0 ? _a : null;
+    }
+    getSymbolFromType(type) {
+        var _a;
+        return (_a = this._typeSymbolMap.get(type)) !== null && _a !== void 0 ? _a : null;
     }
 }
 exports.ScriptContext = ScriptContext;

@@ -4,6 +4,8 @@ import {FileRange} from "../../../parser/generated/parser";
 import {Scope} from "../../static/scope/scope";
 import {Symbol as SymbolDeclaration, SymbolOrSymbolArray, TSymbolOrSymbolArray} from "../../static/symbol/symbol";
 import {TNullable, TSemanticType} from "../../utils/zrCompilerTypes";
+import {TypeInferContext} from "../../static/type/typeInferContext";
+import {TypeAssignContext} from "../../static/type/typeAssignContext";
 
 export type AnyNode = {
     type: string;
@@ -55,6 +57,14 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return declarationSymbols;
     }
 
+    public inferType(upperTypeInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        return this._inferType(upperTypeInferContext);
+    }
+
+    public assignType(childrenContexts: Array<TypeAssignContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeAssignContext> {
+        return this._assignType(childrenContexts, currentInferContext);
+    }
+
     // handles node
     protected _handle(node: AnyNode | any): void {
 
@@ -77,6 +87,14 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
             createdSymbol.childScope = createdScope;
         }
         return createdSymbol;
+    }
+
+    protected _inferType(upperTypeInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        return null;
+    }
+
+    protected _assignType(childrenContexts: Array<TypeAssignContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeAssignContext> {
+        return null;
     }
 
     private _handleInternal(node: AnyNode): void {

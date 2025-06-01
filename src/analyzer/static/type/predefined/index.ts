@@ -8,3 +8,5 @@ import "./stringType";
 import "./bufferType";
 import "./objectType";
 import "./arrayType";
+
+import "./functionType";

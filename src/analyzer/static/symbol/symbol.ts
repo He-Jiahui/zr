@@ -5,6 +5,7 @@ import type {Scope} from "../scope/scope";
 import {TMaybeArray, TMaybeUndefined, TNullable} from "../../utils/zrCompilerTypes";
 import {ZrInternalError} from "../../../errors/zrInternalError";
 import type {Handler} from "../../semantic/common/handler";
+import {MetaType} from "../type/meta/metaType";
 
 export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
     private static readonly symbolMap: Map<string, typeof Symbol> = new Map<string, typeof Symbol>();
@@ -37,8 +38,16 @@ export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
         }
         symbol.location = location ?? handler.location;
         symbol.ownerScope = parentScope;
+
+        const context = symbol.context;
+        const symbolCreatedType = MetaType.createType(symbol.type, symbol);
+        if (symbolCreatedType) {
+            context.linkTypeAndSymbol(symbolCreatedType, symbol);
+        }
+
         return symbol;
     }
+
 }
 
 export type SymbolOrSymbolArray = TNullable<TMaybeArray<Symbol>>;

@@ -3,7 +3,7 @@ import {TNullable} from "../../utils/zrCompilerTypes";
 import {TypeDefinition} from "../type/typeDefinition";
 import {PredefinedType} from "../type/predefined/predefinedType";
 
-type SymbolGetter = () => Symbol | null;
+type SymbolGetter = () => TNullable<Symbol>;
 
 export class Scope {
     private static readonly scopeMap: Map<string, typeof Scope> = new Map<string, typeof Scope>();
@@ -36,7 +36,7 @@ export class Scope {
     }
 
     // 定义一个公共方法 getSymbol，用于获取符号对象
-    public getSymbol(symbol: string): Symbol | null {
+    public getSymbol(symbol: string): TNullable<Symbol> {
         // 调用私有方法 _getSymbol，尝试获取符号对象
         const sym = this._getSymbol(symbol);
         // 如果获取到了符号对象，则直接返回该符号对象
@@ -52,16 +52,16 @@ export class Scope {
         return null;
     }
 
-    public getType(typeName: string): TNullable<TypeDefinition> {
+    public getType<T extends TypeDefinition<any>>(typeName: string): TNullable<T> {
         let currentScope: TNullable<Scope> = this as Scope;
         while (currentScope) {
             const type = currentScope._getType(typeName);
             if (type) {
-                return type;
+                return type as T;
             }
             currentScope = currentScope._parentScope;
         }
-        return PredefinedType.getPredefinedType(typeName);
+        return PredefinedType.getPredefinedType(typeName) as T;
     }
 
     protected checkSymbolUnique(symbol: SymbolOrSymbolArray): boolean {
@@ -105,7 +105,7 @@ export class Scope {
         return null;
     }
 
-    protected _getType(type: string): TNullable<TypeDefinition> {
+    protected _getType(type: string): TNullable<TypeDefinition<any>> {
         return null;
     }
 

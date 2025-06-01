@@ -1,8 +1,9 @@
 import {ScriptInfo} from "./scriptInfo";
 import {FileRange, Start} from "../parser/generated/parser";
-import type {Scope} from "../analyzer/static/scope/scope";
 import type {Handler} from "../analyzer/semantic/common/handler";
-import {TMaybeUndefined} from "../analyzer/utils/zrCompilerTypes";
+import {TMaybeUndefined, TNullable} from "../analyzer/utils/zrCompilerTypes";
+import type {Symbol as SymbolDeclaration} from "../analyzer/static/symbol/symbol";
+import type {TypeDefinition} from "../analyzer/static/type/typeDefinition";
 
 export class ScriptContextAccessibleObject<T extends (ScriptContext | TMaybeUndefined<ScriptContext>)> {
     private static readonly objectScriptContextMap: Map<any, ScriptContext> = new Map();
@@ -61,8 +62,10 @@ export class ScriptContext {
     // only available when handler is calling Handle function
     public location: FileRange;
 
-    public readonly _scopeStack: Scope[] = [];
     private readonly _handlerStack: Handler[] = [];
+
+    private readonly _typeSymbolMap: Map<TypeDefinition<ScriptContext>, SymbolDeclaration> = new Map();
+    private readonly _symbolTypeMap: Map<SymbolDeclaration, TypeDefinition<ScriptContext>> = new Map();
 
     public constructor(info: ScriptInfo) {
         this.compilingDirectory = info.compilingDirectory;
@@ -76,6 +79,19 @@ export class ScriptContext {
 
     public popHandler() {
         return this._handlerStack.pop();
+    }
+
+    public linkTypeAndSymbol(type: TypeDefinition<ScriptContext>, symbol: SymbolDeclaration) {
+        this._typeSymbolMap.set(type, symbol);
+        this._symbolTypeMap.set(symbol, type);
+    }
+
+    public getTypeFromSymbol(symbol: SymbolDeclaration): TNullable<TypeDefinition<ScriptContext>> {
+        return this._symbolTypeMap.get(symbol) ?? null;
+    }
+
+    public getSymbolFromType(type: TypeDefinition<ScriptContext>): TNullable<SymbolDeclaration> {
+        return this._typeSymbolMap.get(type) ?? null;
     }
 
 

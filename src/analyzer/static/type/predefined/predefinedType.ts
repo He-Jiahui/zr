@@ -1,14 +1,19 @@
 import {TypeDefinition} from "../typeDefinition";
-import {TNullable} from "../../../utils/zrCompilerTypes";
+import {TMaybeUndefined, TNullable} from "../../../utils/zrCompilerTypes";
+import type {ScriptContext} from "../../../../common/scriptContext";
 
-export class PredefinedType extends TypeDefinition {
-    private static readonly typeDefinitionMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>();
+export class PredefinedType extends TypeDefinition<TMaybeUndefined<ScriptContext>> {
+    private static readonly typeDefinitionMap: Map<string, PredefinedType> = new Map<string, PredefinedType>();
+
+    public constructor() {
+        super(undefined);
+    }
 
     public static registerType(typeName: string, type: PredefinedType) {
         PredefinedType.typeDefinitionMap.set(typeName, type);
     }
 
-    public static getPredefinedType(typeName: string): TNullable<TypeDefinition> {
+    public static getPredefinedType(typeName: string): TNullable<PredefinedType> {
         return PredefinedType.typeDefinitionMap.get(typeName) ?? null;
     }
 }

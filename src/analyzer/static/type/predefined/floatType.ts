@@ -1,7 +1,8 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class FloatType extends PredefinedType {
-    public readonly name: string = "float";
+    public readonly name: string = TypeKeywords.Float;
     public readonly size: number;
 
     public constructor(size: number) {
@@ -10,7 +11,7 @@ export class FloatType extends PredefinedType {
     }
 
     protected get _typeName(): string {
-        return `float${this.size}`;
+        return `${TypeKeywords.Float}${this.size}`;
     }
 }
 
@@ -19,8 +20,7 @@ const floatTypes = {
     float64: new FloatType(64)
 };
 
-PredefinedType.registerType("float", floatTypes.float32);
-PredefinedType.registerType("float32", floatTypes.float32);
-
-PredefinedType.registerType("double", floatTypes.float64);
-PredefinedType.registerType("float64", floatTypes.float64);
+PredefinedType.registerType(TypeKeywords.Float, floatTypes.float32);
+PredefinedType.registerType(TypeKeywords.Float32, floatTypes.float32);
+PredefinedType.registerType(TypeKeywords.Double, floatTypes.float64);
+PredefinedType.registerType(TypeKeywords.Float64, floatTypes.float64);

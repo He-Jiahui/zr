@@ -14,9 +14,10 @@ import {Symbol as SymbolDeclaration, Symbol} from "../../../static/symbol/symbol
 import {Scope} from "../../../static/scope/scope";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {PropertyScope} from "../../../static/scope/propertyScope";
+import {Keywords, SpecialSymbols} from "../../../../types/keywords";
 
 export type ClassPropertyType = {
-    type: "ClassProperty";
+    type: Keywords.ClassProperty;
     access: Access;
     propertyType: PropertyType;
     static: boolean;
@@ -77,7 +78,7 @@ export class PropertyHandler extends Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "ClassProperty",
+            type: Keywords.ClassProperty,
             access: access as Access,
             static: !!node.static,
             name: this.nameHandler?.value,
@@ -91,7 +92,7 @@ export class PropertyHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const propertyName: string = this.value.name.name;
-        const symbol = this.declareSymbol<PropertySymbol>(propertyName, "Property", parentScope);
+        const symbol = this.declareSymbol<PropertySymbol>(propertyName, Keywords.Property, parentScope);
         if (!symbol) {
             return null;
         }
@@ -104,11 +105,11 @@ export class PropertyHandler extends Handler {
         let functionSymbol: TNullable<FunctionSymbol>;
         const scope = symbol.childScope as PropertyScope;
         if (isGetter) {
-            const getterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + "$Get", "Function", symbol.childScope);
+            const getterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + SpecialSymbols.Get, Keywords.Function, symbol.childScope);
             scope.setGetter(getterSymbol);
             functionSymbol = getterSymbol;
         } else {
-            const setterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + "$Set", "Function", symbol.childScope);
+            const setterSymbol = this.declareSymbol<FunctionSymbol>(propertyName + SpecialSymbols.Set, Keywords.Function, symbol.childScope);
             scope.setSetter(setterSymbol);
             functionSymbol = setterSymbol;
         }
@@ -117,7 +118,7 @@ export class PropertyHandler extends Handler {
         }
         if (!isGetter) {
             // add parameter
-            const parameterSymbol = this.declareSymbol<ParameterSymbol>(this.value.param.name, "Parameter", functionSymbol.childScope);
+            const parameterSymbol = this.declareSymbol<ParameterSymbol>(this.value.param.name, Keywords.Parameter, functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
             const functionScope = functionSymbol.childScope as TNullable<FunctionScope>;
             if (functionScope) {
@@ -148,11 +149,11 @@ export class PropertyHandler extends Handler {
         }
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter": {
+                case Keywords.Parameter: {
                     functionScope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     functionScope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -162,4 +163,4 @@ export class PropertyHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ClassProperty", PropertyHandler);
+Handler.registerHandler(Keywords.ClassProperty, PropertyHandler);

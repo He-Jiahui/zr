@@ -3,9 +3,10 @@ import {SwitchCase, SwitchExpression} from "../../../parser/generated/parser"
 import {Handler} from "../common/handler"
 import type {BlockType} from "../statements/blockHandler"
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type SwitchExpressionType = {
-    type: "SwitchExpression",
+    type: Keywords.SwitchExpression,
     isStatement: boolean,
     expr: ExpressionType,
     cases: SwitchCaseType[],
@@ -43,7 +44,7 @@ export class SwitchExpressionHandler extends Handler {
         }
 
         this.value = {
-            type: "SwitchExpression",
+            type: Keywords.SwitchExpression,
             isStatement: node.isStatement,
             expr: this.exprHandler?.value,
             cases: this.caseHandlers.map(handler => handler?.value),
@@ -52,10 +53,10 @@ export class SwitchExpressionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("SwitchExpression", SwitchExpressionHandler);
+Handler.registerHandler(Keywords.SwitchExpression, SwitchExpressionHandler);
 
 export type SwitchCaseType = {
-    type: "SwitchCase",
+    type: Keywords.SwitchCase,
     test: ExpressionType,
     block: BlockType
 }
@@ -73,17 +74,17 @@ export class SwitchCaseHandler extends Handler {
         this.blockHandler = Handler.handle(node.block, this.context);
 
         this.value = {
-            type: "SwitchCase",
+            type: Keywords.SwitchCase,
             test: this.testHandler.value,
             block: this.blockHandler.value
         }
     }
 }
 
-Handler.registerHandler("SwitchCase", SwitchCaseHandler);
+Handler.registerHandler(Keywords.SwitchCase, SwitchCaseHandler);
 
 export type SwitchDefaultType = {
-    type: "SwitchDefault",
+    type: Keywords.SwitchDefault,
     block: BlockType
 }
 
@@ -98,10 +99,10 @@ export class SwitchDefaultHandler extends Handler {
         this.blockHandler = Handler.handle(node.block, this.context);
 
         this.value = {
-            type: "SwitchDefault",
+            type: Keywords.SwitchDefault,
             block: this.blockHandler?.value
         }
     }
 }
 
-Handler.registerHandler("SwitchDefault", SwitchDefaultHandler);
+Handler.registerHandler(Keywords.SwitchDefault, SwitchDefaultHandler);

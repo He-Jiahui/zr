@@ -1,18 +1,17 @@
 import type {InterfaceSymbol} from './interfaceSymbol';
 import {Symbol} from './symbol';
+import type {ClassMetaType} from "../type/meta/classMetaType";
+import {Keywords} from "../../../types/keywords";
 
 export class ClassSymbol extends Symbol {
-    public readonly type: string = "class";
+    public readonly type: string = Keywords.Class;
 
     public superClass?: ClassSymbol;
     public interfaces: InterfaceSymbol[] = [];
 
     public readonly decorators: any[] = [];
 
-    protected _onTypeCreated() {
-
-
-    }
+    public generatedType: ClassMetaType;
 }
 
-Symbol.registerSymbol("Class", ClassSymbol);
+Symbol.registerSymbol(Keywords.Class, ClassSymbol);

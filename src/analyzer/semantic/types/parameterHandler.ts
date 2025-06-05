@@ -7,9 +7,10 @@ import {Symbol} from "../../static/symbol/symbol";
 import {ParameterSymbol} from "../../static/symbol/parameterSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Scope} from "../../static/scope/scope";
+import {Keywords} from "../../../types/keywords";
 
 export type ParameterType = {
-    type: "Parameter",
+    type: Keywords.Parameter,
     name: IdentifierType,
     typeInfo: AllType,
     defaultValue: ExpressionType | null
@@ -45,7 +46,7 @@ export class ParameterHandler extends Handler {
             this.defaultValueHandler = null;
         }
         this.value = {
-            type: "Parameter",
+            type: Keywords.Parameter,
             name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
             defaultValue: this.defaultValueHandler?.value,
@@ -54,9 +55,9 @@ export class ParameterHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const name = this.value.name.name;
-        return this.declareSymbol<ParameterSymbol>(name, "Parameter", parentScope);
+        return this.declareSymbol<ParameterSymbol>(name, Keywords.Parameter, parentScope);
     }
 
 }
 
-Handler.registerHandler("Parameter", ParameterHandler);
+Handler.registerHandler(Keywords.Parameter, ParameterHandler);

@@ -2,9 +2,10 @@ import {Handler} from "../../common/handler";
 import type {ExpressionType} from "../../expressions";
 import {OutStatement} from "../../../../parser/generated/parser";
 import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Keywords} from "../../../../types/keywords";
 
 export type OutStatementType = {
-    type: "OutStatement",
+    type: Keywords.OutStatement,
     expr: ExpressionType | null
 }
 
@@ -27,10 +28,10 @@ export class OutHandler extends Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "OutStatement",
+            type: Keywords.OutStatement,
             expr: this.exprHandler?.value
         }
     }
 }
 
-Handler.registerHandler("OutStatement", OutHandler);
+Handler.registerHandler(Keywords.OutStatement, OutHandler);

@@ -1,9 +1,10 @@
 import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import type {VariableSymbol} from "../symbol/variableSymbol";
 import {Scope} from "./scope";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 export class EnumScope extends Scope {
-    public readonly type: string = "EnumScope";
+    public readonly type: string = ScopeKeywords.EnumScope;
 
     // 枚举类型
     private readonly enumMembers: SymbolTable<VariableSymbol> = new SymbolTable<VariableSymbol>();
@@ -20,4 +21,4 @@ export class EnumScope extends Scope {
     }
 }
 
-Scope.registerScope("Enum", EnumScope);
+Scope.registerScope(Keywords.Enum, EnumScope);

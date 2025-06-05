@@ -1,11 +1,13 @@
 import {Symbol} from './symbol';
+import {Keywords} from "../../../types/keywords";
 
 export class InterfaceSymbol extends Symbol {
-    public readonly type: string = "interface";
+    public readonly type: string = Keywords.Interface;
 
     public interfaces: InterfaceSymbol[] = [];
 
     public readonly decorators: any[] = [];
+
 }
 
-Symbol.registerSymbol("Interface", InterfaceSymbol);
+Symbol.registerSymbol(Keywords.Interface, InterfaceSymbol);

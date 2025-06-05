@@ -4,10 +4,11 @@ import {SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {BlockSymbol} from "../symbol/blockSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 // 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
 export class FunctionScope extends Scope {
-    public readonly type: string = "FunctionScope";
+    public readonly type: string = ScopeKeywords.FunctionScope;
 
     public body: TNullable<BlockSymbol> = null;
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
@@ -40,4 +41,4 @@ export class FunctionScope extends Scope {
 
 }
 
-Scope.registerScope("Function", FunctionScope);
+Scope.registerScope(Keywords.Function, FunctionScope);

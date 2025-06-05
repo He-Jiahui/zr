@@ -17,9 +17,10 @@ import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
 import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {MetaSymbol} from "../../../static/symbol/metaSymbol";
 import {PropertySymbol} from "../../../static/symbol/propertySymbol";
+import {Keywords} from "../../../../types/keywords";
 
 export type ClassType = {
-    type: "Class";
+    type: Keywords.Class;
     name: IdentifierType;
     inherits: IdentifierType[];
     decorators: DecoratorExpressionType[];
@@ -84,26 +85,26 @@ export class ClassDeclarationHandler extends Handler {
                 continue;
             }
             switch (value.type) {
-                case "ClassField": {
+                case Keywords.ClassField: {
                     fields.push(value);
                 }
                     break;
-                case "ClassMethod": {
+                case Keywords.ClassMethod: {
                     methods.push(value);
                 }
                     break;
-                case "ClassMetaFunction": {
+                case Keywords.ClassMetaFunction: {
                     metaFunctions.push(value);
                 }
                     break;
-                case "ClassProperty": {
+                case Keywords.ClassProperty: {
                     properties.push(value);
                 }
                     break;
             }
         }
         this.value = {
-            type: "Class",
+            type: Keywords.Class,
             name: this.nameHandler?.value,
             inherits: this.inheritsHandler.map(handler => handler?.value),
             decorators: this.decoratorsHandler.map(handler => handler?.value),
@@ -117,7 +118,7 @@ export class ClassDeclarationHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>) {
         const className: string = this.value.name.name;
-        const symbol = this.declareSymbol<ClassSymbol>(className, "Class", parentScope);
+        const symbol = this.declareSymbol<ClassSymbol>(className, Keywords.Class, parentScope);
         // we can not decide super class
         return symbol;
     }
@@ -129,23 +130,23 @@ export class ClassDeclarationHandler extends Handler {
         const scope = currentScope as ClassScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic": {
+                case Keywords.Generic: {
                     scope.addGeneric(child as GenericSymbol);
                 }
                     break;
-                case "field": {
+                case Keywords.Field: {
                     scope.addField(child as FieldSymbol);
                 }
                     break;
-                case "function": {
+                case Keywords.Function: {
                     scope.addMethod(child as FunctionSymbol);
                 }
                     break;
-                case "meta": {
+                case Keywords.Meta: {
                     scope.addMetaFunction(child as MetaSymbol);
                 }
                     break;
-                case "property": {
+                case Keywords.Property: {
                     scope.addProperty(child as PropertySymbol);
                 }
                     break;
@@ -156,4 +157,4 @@ export class ClassDeclarationHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ClassDeclaration", ClassDeclarationHandler);
+Handler.registerHandler(Keywords.ClassDeclaration, ClassDeclarationHandler);

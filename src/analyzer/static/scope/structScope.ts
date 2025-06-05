@@ -2,11 +2,12 @@ import type {FieldSymbol} from "../symbol/fieldSymbol";
 import type {FunctionSymbol} from "../symbol/functionSymbol";
 import type {GenericSymbol} from "../symbol/genericSymbol";
 import type {MetaSymbol} from "../symbol/metaSymbol";
-import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
+import {checkSymbolOrSymbolArray, type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 export class StructScope extends Scope {
-    public readonly type: string = "StructScope";
+    public readonly type: string = ScopeKeywords.StructScope;
 
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly fields: SymbolTable<FieldSymbol> = new SymbolTable<FieldSymbol>();
@@ -25,13 +26,33 @@ export class StructScope extends Scope {
     }
 
     public addMethod(method: TSymbolOrSymbolArray<FunctionSymbol>): boolean {
-        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
-        return success;
+        return checkSymbolOrSymbolArray(method, (method) => {
+            if (method) {
+                const definedMethod = this.methods.getSymbol(method.name);
+                if (definedMethod) {
+                    // now we are not able to check overloads signatures, just add into overload list
+                    // it will be checked later when type is resolved
+                    definedMethod.overloads.push(method);
+                    return true;
+                }
+            }
+            const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+            return success;
+        });
     }
 
     public addMetaFunction(metaFunction: TSymbolOrSymbolArray<MetaSymbol>): boolean {
-        const success = this.metaFunctions.addSymbol(metaFunction);
-        return success;
+        return checkSymbolOrSymbolArray(metaFunction, (metaFunction) => {
+            if (metaFunction) {
+                const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
+                if (definedMetaFunction) {
+                    definedMetaFunction.overloads.push(metaFunction);
+                    return true;
+                }
+            }
+            const success = this.metaFunctions.addSymbol(metaFunction);
+            return success;
+        });
     }
 
     protected _getSymbol(name: string) {
@@ -40,4 +61,4 @@ export class StructScope extends Scope {
     }
 }
 
-Scope.registerScope("Struct", StructScope);
+Scope.registerScope(Keywords.Struct, StructScope);

@@ -6,9 +6,10 @@ import type {ExpressionType} from "../../expressions";
 import type {IdentifierType} from "../identifierHandler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
+import {Keywords} from "../../../../types/keywords";
 
 export type EnumMemberType = {
-    type: "EnumMember",
+    type: Keywords.EnumMember,
     name: IdentifierType,
     value: ExpressionType
 }
@@ -35,7 +36,7 @@ export class EnumMemberHandler extends Handler {
             this.valueHandler = null;
         }
         this.value = {
-            type: "EnumMember",
+            type: Keywords.EnumMember,
             name: this.nameHandler?.value,
             value: this.valueHandler?.value,
         };
@@ -43,7 +44,7 @@ export class EnumMemberHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const name = this.value.name.name;
-        const symbol = this.declareSymbol<VariableSymbol>(name, "Variable", parentScope);
+        const symbol = this.declareSymbol<VariableSymbol>(name, Keywords.Variable, parentScope);
         if (!symbol) {
             return null;
         }
@@ -51,4 +52,4 @@ export class EnumMemberHandler extends Handler {
     }
 }
 
-Handler.registerHandler("EnumMember", EnumMemberHandler);
+Handler.registerHandler(Keywords.EnumMember, EnumMemberHandler);

@@ -1,19 +1,22 @@
-import { Handler } from "../common/handler";
-import { CHAR } from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import {CHAR} from "../../../parser/generated/parser";
+import {Keywords} from "../../../types/keywords";
+
 export type CharType = {
-    type: "CharLiteral",
+    type: Keywords.CharLiteral,
     value: string
 }
-export class CharHandler extends Handler{
+
+export class CharHandler extends Handler {
     public value: CharType;
-    
+
     public _handle(node: CHAR) {
         super._handle(node);
         this.value = {
-            type: "CharLiteral",
+            type: Keywords.CharLiteral,
             value: node.value
         };
     }
 }
 
-Handler.registerHandler("Char", CharHandler);
+Handler.registerHandler(Keywords.Char, CharHandler);

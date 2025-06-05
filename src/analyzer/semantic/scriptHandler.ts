@@ -14,9 +14,10 @@ import {EnumSymbol} from "../static/symbol/enumSymbol";
 import {FunctionSymbol} from "../static/symbol/functionSymbol";
 import {VariableSymbol} from "../static/symbol/variableSymbol";
 import {TestSymbol} from "../static/symbol/testSymbol";
+import {Keywords} from "../../types/keywords";
 
 export type ScriptType = {
-    type: "Script",
+    type: Keywords.Script,
     module: ModuleDeclarationType | undefined,
     statements: TopLevelStatementType[]
 }
@@ -48,7 +49,7 @@ export class ScriptHandler extends Handler {
             this.statementHandlers.push(handler);
         }
         this.value = {
-            type: "Script",
+            type: Keywords.Script,
             module: this.moduleHandler?.value,
             statements: this.statementHandlers.map(handler => handler?.value)
         }
@@ -57,14 +58,14 @@ export class ScriptHandler extends Handler {
     protected _createSymbolAndScope(parentScope: TNullable<Scope>) {
         let moduleName = "module";
         const moduleNameContainer = this.value.module?.name;
-        if (moduleNameContainer?.type === "Identifier") {
+        if (moduleNameContainer?.type === Keywords.Identifier) {
             moduleName = moduleNameContainer.name;
-        } else if (moduleNameContainer?.type === "StringLiteral") {
+        } else if (moduleNameContainer?.type === Keywords.StringLiteral) {
             moduleName = moduleNameContainer.value;
         } else {
             moduleName = this.context.fileName;
         }
-        const symbol = this.declareSymbol<ModuleSymbol>(moduleName, "Module", parentScope);
+        const symbol = this.declareSymbol<ModuleSymbol>(moduleName, Keywords.Module, parentScope);
         return symbol;
     }
 
@@ -76,31 +77,31 @@ export class ScriptHandler extends Handler {
         // collect module statement declarations
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "class": {
+                case Keywords.Class: {
                     scope.addClass(child as ClassSymbol);
                 }
                     break;
-                case "struct": {
+                case Keywords.Struct: {
                     scope.addStruct(child as StructSymbol);
                 }
                     break;
-                case "interface": {
+                case Keywords.Interface: {
                     scope.addInterface(child as InterfaceSymbol);
                 }
                     break;
-                case "enum": {
+                case Keywords.Enum: {
                     scope.addEnum(child as EnumSymbol);
                 }
                     break;
-                case "test": {
+                case Keywords.Test: {
                     scope.addTest(child as TestSymbol);
                 }
                     break;
-                case "function": {
+                case Keywords.Function: {
                     scope.addFunction(child as FunctionSymbol);
                 }
                     break;
-                case "variable": {
+                case Keywords.Variable: {
                     scope.addVariable(child as VariableSymbol);
                 }
                     break;
@@ -114,4 +115,4 @@ export class ScriptHandler extends Handler {
     }
 }
 
-Handler.registerHandler("Script", ScriptHandler);
+Handler.registerHandler(Keywords.Script, ScriptHandler);

@@ -12,9 +12,10 @@ import {TNullable} from "../../../utils/zrCompilerTypes";
 import type {Scope} from "../../../static/scope/scope";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {Keywords, SpecialSigns} from "../../../../types/keywords";
 
 export type ClassMetaFunctionType = {
-    type: "ClassMetaFunction";
+    type: Keywords.ClassMetaFunction;
     access: Access,
     static: boolean,
     meta: MetaType,
@@ -79,7 +80,7 @@ export class MetaFunctionHandler extends Handler {
         }
 
         this.value = {
-            type: "ClassMetaFunction",
+            type: Keywords.ClassMetaFunction,
             access: node.access as Access,
             static: !!node.static,
             meta: this.metaHandler?.value,
@@ -92,8 +93,8 @@ export class MetaFunctionHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>) {
         const metaType = this.value.meta.name.name;
-        const metaName = "@" + metaType;
-        const symbol = this.declareSymbol<MetaSymbol>(metaName, "Meta", parentScope);
+        const metaName = SpecialSigns.MetaSign + metaType;
+        const symbol = this.declareSymbol<MetaSymbol>(metaName, Keywords.Meta, parentScope);
         if (symbol) {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
@@ -111,11 +112,11 @@ export class MetaFunctionHandler extends Handler {
         const scope = currentScope as FunctionScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter": {
+                case Keywords.Parameter: {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     scope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -125,4 +126,4 @@ export class MetaFunctionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ClassMetaFunction", MetaFunctionHandler);
+Handler.registerHandler(Keywords.ClassMetaFunction, MetaFunctionHandler);

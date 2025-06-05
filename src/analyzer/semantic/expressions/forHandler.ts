@@ -8,9 +8,10 @@ import type {AllType} from "../types/types"
 import type {BlockType} from "../statements/blockHandler"
 import type {ExpressionStatementType} from "../statements/expressionHandler"
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type ForLoopExpressionType = {
-    type: "ForLoopExpression",
+    type: Keywords.ForLoopExpression,
     isStatement: boolean,
     init: VariableType | null,
     condition: ExpressionStatementType | null,
@@ -53,7 +54,7 @@ export class ForLoopExpressionHandler extends Handler {
         }
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {
-            type: "ForLoopExpression",
+            type: Keywords.ForLoopExpression,
             isStatement: node.isStatement,
             init: this.initHandler?.value as VariableType | null,
             condition: this.conditionHandler?.value as ExpressionStatementType | null,
@@ -63,10 +64,10 @@ export class ForLoopExpressionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ForLoop", ForLoopExpressionHandler);
+Handler.registerHandler(Keywords.ForLoop, ForLoopExpressionHandler);
 
 export type ForeachLoopExpressionType = {
-    type: "ForeachLoopExpression",
+    type: Keywords.ForeachLoopExpression,
     isStatement: boolean,
     pattern: DestructuringObjectType | DestructuringArrayType | IdentifierType,
     typeInfo: AllType | null,
@@ -100,7 +101,7 @@ export class ForeachLoopExpressionHandler extends Handler {
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {
-            type: "ForeachLoopExpression",
+            type: Keywords.ForeachLoopExpression,
             isStatement: node.isStatement,
             pattern: this.patternHandler.value as DestructuringObjectType | DestructuringArrayType | IdentifierType,
             typeInfo: this.typeHandler?.value as AllType | null,
@@ -110,4 +111,4 @@ export class ForeachLoopExpressionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ForeachLoop", ForeachLoopExpressionHandler);
+Handler.registerHandler(Keywords.ForeachLoop, ForeachLoopExpressionHandler);

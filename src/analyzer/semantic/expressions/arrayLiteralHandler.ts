@@ -1,9 +1,10 @@
 import type {ExpressionType} from "."
 import {ArrayLiteral} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler"
+import {Keywords} from "../../../types/keywords";
 
 export type ArrayLiteralType = {
-    type: "ArrayLiteralExpression",
+    type: Keywords.ArrayLiteralExpression,
     elements: ExpressionType[]
 }
 
@@ -25,10 +26,10 @@ export class ArrayLiteralHandler extends Handler {
             this.elementsHandler.push(handler);
         }
         this.value = {
-            type: "ArrayLiteralExpression",
+            type: Keywords.ArrayLiteralExpression,
             elements: this.elementsHandler.map(handler => handler?.value)
         }
     }
 }
 
-Handler.registerHandler("ArrayLiteral", ArrayLiteralHandler);
+Handler.registerHandler(Keywords.ArrayLiteral, ArrayLiteralHandler);

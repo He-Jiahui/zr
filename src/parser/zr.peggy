@@ -284,7 +284,7 @@ InterfaceDeclaration
     }
 // ====================== 接口成员 ======================
 InterfaceMember
-  = _ dec:(InterfaceMethodSignature / InterfacePropertySignature / InterfaceFieldDeclaration) _ {
+  = _ dec:(InterfaceMethodSignature / InterfaceMetaSignature / InterfacePropertySignature / InterfaceFieldDeclaration) _ {
     return dec;
   }
 
@@ -315,6 +315,30 @@ InterfaceMethodSignature
         location: location()
       }
     }
+
+InterfaceMetaSignature
+  = access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ SEMICOLON  {
+      return { 
+        type: "InterfaceMetaSignature", 
+        meta, 
+        params: params || [], 
+        args: args? args[4] : null,
+        access,
+        location: location()
+      }
+    }
+  /
+    access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ SEMICOLON  {
+      return { 
+        type: "InterfaceMetaSignature", 
+        meta, 
+        params: [], 
+        args,
+        access,
+        location: location()
+      }
+    }
+
 
 // 接口属性签名
 InterfacePropertySignature
@@ -416,9 +440,21 @@ ControlStatement
   = IfStatement
   / SwitchStatement
   / LoopStatement
+  / TryCatchFinallyStatement
   / ReturnStatement
   / BreakContinueStatement
 
+TryCatchFinallyStatement
+  = TRY _ block:Block _ catchPart:(CATCH _ LPAREN _ ParameterList? _ RPAREN _ Block)? _ finallyPart:(FINALLY _ Block)? {
+    return {
+      type: "TryCatchFinallyStatement",
+      block,
+      catchPattern: catchPart ? catchPart[4] : [],
+      catchBlock: catchPart ? catchPart[8] : null,
+      finallyBlock: finallyPart ? finallyPart[2] : null,
+      location: location()
+    }
+  }
 
 ReturnStatement
   = RETURN _ expr:Expression? _ SEMICOLON{
@@ -979,6 +1015,9 @@ STATIC = "static"
 IN = "in"
 OUT = "out"
 THROW = "throw"
+TRY = "try"
+CATCH = "catch"
+FINALLY = "finally"
 
 // 符号
 PARAMS = "..."
@@ -1093,5 +1132,3 @@ Whitespace = [ \t\n\r]+
 _ = (Whitespace / Comment)* {
   return undefined;
 }
-
-

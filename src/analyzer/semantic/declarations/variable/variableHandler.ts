@@ -8,9 +8,10 @@ import type {IdentifierType} from "../identifierHandler"
 import type {DestructuringArrayType, DestructuringObjectType} from "./destructuringHandler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
+import {Keywords} from "../../../../types/keywords";
 
 export type VariableType = {
-    type: "VariableDeclaration",
+    type: Keywords.VariableDeclaration,
     pattern: IdentifierType | DestructuringArrayType | DestructuringObjectType;
     value: ExpressionType;
     typeInfo: AllType;
@@ -41,7 +42,7 @@ export class VariableHandler extends Handler {
         }
 
         this.value = {
-            type: "VariableDeclaration",
+            type: Keywords.VariableDeclaration,
             pattern: this.patternHandler?.value,
             value: this.valueHandler?.value,
             typeInfo: this.typeHandler?.value
@@ -50,28 +51,29 @@ export class VariableHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
         const getDeclaration = (identifier: IdentifierType) => {
-            const symbol = this.declareSymbol<VariableSymbol>(identifier.name, "Variable", parentScope);
+            const symbol = this.declareSymbol<VariableSymbol>(identifier.name, Keywords.Variable, parentScope);
             return symbol;
         }
         const collect = () => {
             switch (this.value.pattern.type) {
-                case "Identifier":
+                case Keywords.Identifier:
                     return getDeclaration(this.value.pattern);
-                case "DestructuringArray": {
+                case Keywords.DestructuringArray: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);
                     });
                 }
-                case "DestructuringObject": {
+                case Keywords.DestructuringObject: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);
                     });
                 }
             }
+            return null;
         }
         const declaration = collect();
         if (declaration instanceof Array) {
-            const symbol = this.declareSymbol<VariableSymbol>("", "Variable", parentScope);
+            const symbol = this.declareSymbol<VariableSymbol>("", Keywords.Variable, parentScope);
             if (!symbol) {
                 return null;
             }
@@ -94,4 +96,4 @@ export class VariableHandler extends Handler {
     }
 }
 
-Handler.registerHandler("VariableDeclaration", VariableHandler);
+Handler.registerHandler(Keywords.VariableDeclaration, VariableHandler);

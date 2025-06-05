@@ -7,9 +7,10 @@ import {type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import type {VariableSymbol} from "../symbol/variableSymbol";
 import {Scope} from "./scope";
 import {TestSymbol} from "../symbol/testSymbol";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 export class ModuleScope extends Scope {
-    public readonly type: string = "ModuleScope";
+    public readonly type: string = ScopeKeywords.ModuleScope;
 
     protected readonly functions: SymbolTable<FunctionSymbol> = new SymbolTable();
     protected readonly variables: SymbolTable<VariableSymbol> = new SymbolTable();
@@ -62,4 +63,4 @@ export class ModuleScope extends Scope {
     }
 }
 
-Scope.registerScope("Module", ModuleScope);
+Scope.registerScope(Keywords.Module, ModuleScope);

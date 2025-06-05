@@ -1,14 +1,17 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class ObjectType extends PredefinedType {
-    public readonly name: string = "object";
+    public readonly name: string = TypeKeywords.Object;
 
     public constructor() {
         super();
     }
 
     protected get _typeName(): string {
-        return "object";
+        return TypeKeywords.Object;
     }
 
 }
+
+PredefinedType.registerType(TypeKeywords.Object, new ObjectType());

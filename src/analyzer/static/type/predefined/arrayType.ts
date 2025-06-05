@@ -1,15 +1,16 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class ArrayType extends PredefinedType {
-    public readonly name: string = "array";
+    public readonly name: string = TypeKeywords.Array;
 
     public constructor() {
         super();
     }
 
     protected get _typeName(): string {
-        return "array";
+        return TypeKeywords.Array;
     }
 }
 
-PredefinedType.registerType("array", new ArrayType());
+PredefinedType.registerType(TypeKeywords.Array, new ArrayType());

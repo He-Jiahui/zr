@@ -15,9 +15,10 @@ import {Scope} from "../../../static/scope/scope";
 import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {Keywords} from "../../../../types/keywords";
 
 export type ClassMethodType = {
-    type: "ClassMethod";
+    type: Keywords.ClassMethod;
     access: Access;
     static: boolean;
     name: IdentifierType;
@@ -89,7 +90,7 @@ export class MethodHandler extends Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "ClassMethod",
+            type: Keywords.ClassMethod,
             access: access as Access,
             static: !!node.static,
             name: this.nameHandler?.value,
@@ -104,7 +105,7 @@ export class MethodHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const funcName: string = this.value.name.name;
-        const symbol = this.declareSymbol<FunctionSymbol>(funcName, "Function", parentScope);
+        const symbol = this.declareSymbol<FunctionSymbol>(funcName, Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -121,15 +122,15 @@ export class MethodHandler extends Handler {
 
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic": {
+                case Keywords.Generic: {
                     scope.addGeneric(child as GenericSymbol);
                 }
                     break;
-                case "parameter": {
+                case Keywords.Parameter: {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     scope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -139,4 +140,4 @@ export class MethodHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ClassMethod", MethodHandler);
+Handler.registerHandler(Keywords.ClassMethod, MethodHandler);

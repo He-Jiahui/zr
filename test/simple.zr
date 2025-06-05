@@ -1,4 +1,4 @@
-module "sample";
+module "simple";
 // 命名模块同文件名 走标识符规则  如果包含特殊符号则需要当做字符串
 // 也可以写作 module "sample";
 // 可以在任意地方引入和使用模块
@@ -18,6 +18,19 @@ var {matrix, pi, e, ln} = import("math");
 test(){
     if(true){
         var i = 4;
+        try{
+            var j = 5;
+        }
+
+        try{
+            var k = 6;
+        }
+        catch(e){
+            var l = 7;
+        }
+        finally{
+            var m = 8;
+        }
         return 0;
     }
     return 1;
@@ -110,6 +123,8 @@ interface Man: arr{
     pro var _address:string;
     // 访问器可以让getter 和 setter 返回不同的类型
     pub get set address:int;
+
+    pub @constructor(id: string);
 }
 #singleton#
 class Person{

@@ -15,9 +15,10 @@ import {Scope} from "../../../static/scope/scope";
 import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {Keywords} from "../../../../types/keywords";
 
 export type FunctionType = {
-    type: "Function",
+    type: Keywords.Function,
     name: IdentifierType,
     returnType: AllType;
     parameters: ParameterType[];
@@ -89,7 +90,7 @@ export class FunctionHandler extends Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "Function",
+            type: Keywords.Function,
             name: this.nameHandler?.value,
             returnType: this.returnTypeHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
@@ -102,7 +103,7 @@ export class FunctionHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const funcName: string = this.value.name.name;
-        const symbol = this.declareSymbol<FunctionSymbol>(funcName, "Function", parentScope);
+        const symbol = this.declareSymbol<FunctionSymbol>(funcName, Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -120,15 +121,15 @@ export class FunctionHandler extends Handler {
 
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic": {
+                case Keywords.Generic: {
                     scope.addGeneric(child as GenericSymbol);
                 }
                     break;
-                case "parameter": {
+                case Keywords.Parameter: {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     scope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -138,4 +139,4 @@ export class FunctionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("FunctionDeclaration", FunctionHandler);
+Handler.registerHandler(Keywords.FunctionDeclaration, FunctionHandler);

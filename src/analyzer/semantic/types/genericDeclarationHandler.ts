@@ -1,9 +1,10 @@
 import {GenericDeclaration} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import {ParameterType} from "./parameterHandler";
+import {Keywords} from "../../../types/keywords";
 
 export type GenericDeclarationType = {
-    type: "Generic",
+    type: Keywords.GenericDeclaration,
     typeArguments: ParameterType[]
 }
 
@@ -26,10 +27,10 @@ export class GenericDeclarationHandler extends Handler {
             this.typeArgumentsHandler.push(handler);
         }
         this.value = {
-            type: "Generic",
+            type: Keywords.GenericDeclaration,
             typeArguments: this.typeArgumentsHandler.map(handler => handler?.value),
         };
     }
 }
 
-Handler.registerHandler("GenericDeclaration", GenericDeclarationHandler);
+Handler.registerHandler(Keywords.GenericDeclaration, GenericDeclarationHandler);

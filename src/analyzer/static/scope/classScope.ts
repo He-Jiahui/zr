@@ -7,9 +7,10 @@ import type {PropertySymbol} from "../symbol/propertySymbol";
 import {checkSymbolOrSymbolArray, type Symbol, SymbolTable, TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {PropertyScope} from "./propertyScope";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 export class ClassScope extends Scope {
-    public readonly type: string = "ClassScope";
+    public readonly type: string = ScopeKeywords.ClassScope;
 
     protected readonly generics: SymbolTable<GenericSymbol> = new SymbolTable<GenericSymbol>();
     protected readonly fields: SymbolTable<FieldSymbol> = new SymbolTable<FieldSymbol>();
@@ -95,4 +96,4 @@ export class ClassScope extends Scope {
     }
 }
 
-Scope.registerScope("Class", ClassScope);
+Scope.registerScope(Keywords.Class, ClassScope);

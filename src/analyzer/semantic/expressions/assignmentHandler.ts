@@ -2,9 +2,10 @@ import {AssignmentExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler"
 import type {ConditionalType} from "./conditionalHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type AssignmentType = {
-    type: "AssignmentExpression",
+    type: Keywords.AssignmentExpression,
     left: ConditionalType,
     right: AssignmentType | ConditionalType,
     op: string
@@ -27,7 +28,7 @@ export class AssignmentHandler extends Handler {
         this.leftHandler = Handler.handle(node.left, this.context);
         this.rightHandler = Handler.handle(node.right, this.context);
         this.value = {
-            type: "AssignmentExpression",
+            type: Keywords.AssignmentExpression,
             left: this.leftHandler?.value,
             right: this.rightHandler?.value,
             op: node.op
@@ -36,4 +37,4 @@ export class AssignmentHandler extends Handler {
 
 }
 
-Handler.registerHandler("Assignment", AssignmentHandler);
+Handler.registerHandler(Keywords.Assignment, AssignmentHandler);

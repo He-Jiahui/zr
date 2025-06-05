@@ -3,9 +3,10 @@ import {ConditionalExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {LogicalType} from "./logicalHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type ConditionalType = {
-    type: "ConditionalExpression",
+    type: Keywords.ConditionalExpression,
     condition: LogicalType,
     consequent: ExpressionType,
     alternate: ConditionalType
@@ -31,7 +32,7 @@ export class ConditionalHandler extends Handler {
         this.consequentHandler = Handler.handle(node.consequent, this.context);
         this.alternateHandler = Handler.handle(node.alternate, this.context);
         this.value = {
-            type: "ConditionalExpression",
+            type: Keywords.ConditionalExpression,
             condition: this.conditionHandler?.value,
             consequent: this.consequentHandler?.value,
             alternate: this.alternateHandler?.value
@@ -39,4 +40,4 @@ export class ConditionalHandler extends Handler {
     }
 }
 
-Handler.registerHandler("Conditional", ConditionalHandler);
+Handler.registerHandler(Keywords.Conditional, ConditionalHandler);

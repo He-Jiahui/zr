@@ -1,7 +1,8 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class BoolType extends PredefinedType {
-    public readonly name: string = "bool";
+    public readonly name: string = TypeKeywords.Boolean;
     public readonly size: number = 1;
 
     public constructor() {
@@ -9,8 +10,8 @@ export class BoolType extends PredefinedType {
     }
 
     protected get _typeName(): string {
-        return "bool";
+        return TypeKeywords.Boolean;
     }
 }
 
-PredefinedType.registerType("bool", new BoolType());
+PredefinedType.registerType(TypeKeywords.Boolean, new BoolType());

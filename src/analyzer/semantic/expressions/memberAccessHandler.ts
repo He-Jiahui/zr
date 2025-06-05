@@ -3,10 +3,11 @@ import {MemberAccess} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {IdentifierType} from "../declarations/identifierHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 
 export type MemberAccessType = {
-    type: "MemberExpression",
+    type: Keywords.MemberExpression,
     property: IdentifierType | ExpressionType,
     computed: boolean,
 }
@@ -31,11 +32,11 @@ export class MemberAccessHandler extends Handler {
         }
 
         this.value = {
-            type: "MemberExpression",
+            type: Keywords.MemberExpression,
             property: this.propertyHandler?.value,
             computed,
         };
     }
 }
 
-Handler.registerHandler("MemberExpression", MemberAccessHandler);
+Handler.registerHandler(Keywords.MemberExpression, MemberAccessHandler);

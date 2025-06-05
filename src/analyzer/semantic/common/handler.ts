@@ -46,6 +46,10 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return h;
     }
 
+    public signByParentHandler(sign: string) {
+        this._signByParentHandler(sign);
+    }
+
     public createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
         return this._createSymbolAndScope(parentScope);
     }
@@ -65,6 +69,20 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return this._assignType(childrenContexts, currentInferContext);
     }
 
+    public declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
+        const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
+        this._symbol = createdSymbol;
+        const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
+        if (createdSymbol) {
+            createdSymbol.childScope = createdScope;
+        }
+        return createdSymbol;
+    }
+
+    protected _signByParentHandler(sign: string) {
+
+    }
+
     // handles node
     protected _handle(node: AnyNode | any): void {
 
@@ -77,16 +95,6 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     // collects
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>): SymbolOrSymbolArray {
         return null;
-    }
-
-    protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
-        const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
-        this._symbol = createdSymbol;
-        const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
-        if (createdSymbol) {
-            createdSymbol.childScope = createdScope;
-        }
-        return createdSymbol;
     }
 
     protected _inferType(upperTypeInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {

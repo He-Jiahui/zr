@@ -4,9 +4,10 @@ import {Handler} from "../common/handler"
 import type {IdentifierType} from "../declarations/identifierHandler";
 import type {StringType} from "../literals/stringHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type ObjectLiteralType = {
-    type: 'ObjectLiteralExpression',
+    type: Keywords.ObjectLiteralExpression,
     properties: KeyValuePairType[]
 }
 
@@ -22,16 +23,16 @@ export class ObjectLiteralHandler extends Handler {
             this.propertiesHandler.push(handler);
         }
         this.value = {
-            type: 'ObjectLiteralExpression',
+            type: Keywords.ObjectLiteralExpression,
             properties: this.propertiesHandler.map(handler => handler?.value)
         }
     }
 }
 
-Handler.registerHandler("ObjectLiteral", ObjectLiteralHandler);
+Handler.registerHandler(Keywords.ObjectLiteral, ObjectLiteralHandler);
 
 export type KeyValuePairType = {
-    type: 'KeyValuePairExpression',
+    type: Keywords.KeyValuePairExpression,
     key: IdentifierType | StringType | ExpressionType,
     value: ExpressionType
 }
@@ -55,11 +56,11 @@ export class KeyValuePairHandler extends Handler {
         this.keyHandler = Handler.handle(node.key, this.context);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {
-            type: 'KeyValuePairExpression',
+            type: Keywords.KeyValuePairExpression,
             key: this.keyHandler?.value,
             value: this.valueHandler?.value
         }
     }
 }
 
-Handler.registerHandler("KeyValuePair", KeyValuePairHandler);
+Handler.registerHandler(Keywords.KeyValuePair, KeyValuePairHandler);

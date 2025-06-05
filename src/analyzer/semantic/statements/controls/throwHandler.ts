@@ -1,10 +1,11 @@
 import {ExpressionType} from "../../expressions";
 import {Handler} from "../../common/handler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Keywords} from "../../../../types/keywords";
 
 export type ThrowStatementType = {
-    type: "ThrowStatement",
-    expr: ExpressionType | null
+    type: Keywords.ThrowStatement,
+    expr: TNullable<ExpressionType>
 }
 
 export class ThrowHandler extends Handler {
@@ -26,10 +27,10 @@ export class ThrowHandler extends Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "ThrowStatement",
+            type: Keywords.ThrowStatement,
             expr: this.exprHandler?.value
         }
     }
 }
 
-Handler.registerHandler("ThrowStatement", ThrowHandler);
+Handler.registerHandler(Keywords.ThrowStatement, ThrowHandler);

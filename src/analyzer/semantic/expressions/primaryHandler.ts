@@ -4,10 +4,11 @@ import type {FunctionCallType} from "./functionCallHandler";
 import type {LiteralExpressionType} from "./literalHandler";
 import type {MemberAccessType} from "./memberAccessHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 
 export type PrimaryType = {
-    type: "PrimaryExpression";
+    type: Keywords.PrimaryExpression;
     property: LiteralExpressionType;
     members: (MemberAccessType | FunctionCallType)[];
 }
@@ -36,11 +37,11 @@ export class PrimaryHandler extends Handler {
         }
 
         this.value = {
-            type: "PrimaryExpression",
+            type: Keywords.PrimaryExpression,
             property: this.propertyHandler?.value,
             members: this.memberHandlers.map(handler => handler?.value),
         }
     }
 }
 
-Handler.registerHandler("PrimaryExpression", PrimaryHandler);
+Handler.registerHandler(Keywords.PrimaryExpression, PrimaryHandler);

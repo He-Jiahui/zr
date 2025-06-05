@@ -3,9 +3,10 @@ import {IfExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {BlockType} from "../statements/blockHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type IfExpressionType = {
-    type: "IfExpression",
+    type: Keywords.IfExpression,
     isStatement: boolean,
     condition: ExpressionType,
     then: BlockType,
@@ -37,7 +38,7 @@ export class IfExpressionHandler extends Handler {
         }
 
         this.value = {
-            type: "IfExpression",
+            type: Keywords.IfExpression,
             isStatement: node.isStatement,
             condition: this.conditionHandler?.value as ExpressionType,
             then: this.thenHandler?.value as BlockType,
@@ -46,4 +47,4 @@ export class IfExpressionHandler extends Handler {
     }
 }
 
-Handler.registerHandler("IfExpression", IfExpressionHandler);
+Handler.registerHandler(Keywords.IfExpression, IfExpressionHandler);

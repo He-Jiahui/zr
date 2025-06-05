@@ -11,6 +11,7 @@ import type {ForeachLoopExpressionType, ForLoopExpressionType} from "./forHandle
 import type {WhileLoopExpressionType} from "./whileHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 import {UnpackLiteralType} from "./unpackLiteralHandler";
+import {Keywords} from "../../../types/keywords";
 
 export type LiteralExpressionType = ValueLiteralType |
     IdentifierLiteralType |
@@ -26,7 +27,7 @@ export type LiteralExpressionType = ValueLiteralType |
 
 
 export type ValueLiteralType = {
-    type: "ValueLiteralExpression",
+    type: Keywords.ValueLiteralExpression,
     value: LiteralType
 }
 
@@ -45,16 +46,16 @@ export class ValueLiteralHandler extends Handler {
         super._handle(node);
         this.valueHandler = Handler.handle(node.value, this.context);
         this.value = {
-            type: "ValueLiteralExpression",
+            type: Keywords.ValueLiteralExpression,
             value: this.valueHandler?.value
         }
     }
 }
 
-Handler.registerHandler("ValueLiteral", ValueLiteralHandler);
+Handler.registerHandler(Keywords.ValueLiteral, ValueLiteralHandler);
 
 export type IdentifierLiteralType = {
-    type: "IdentifierLiteralExpression",
+    type: Keywords.IdentifierLiteralExpression,
     value: IdentifierType
 }
 
@@ -66,10 +67,10 @@ export class IdentifierLiteralHandler extends Handler {
         super._handle(node);
         this.identifierHandler = Handler.handle(node.value, this.context);
         this.value = {
-            type: "IdentifierLiteralExpression",
+            type: Keywords.IdentifierLiteralExpression,
             value: this.identifierHandler?.value
         }
     }
 }
 
-Handler.registerHandler("IdentifierLiteral", IdentifierLiteralHandler);
+Handler.registerHandler(Keywords.IdentifierLiteral, IdentifierLiteralHandler);

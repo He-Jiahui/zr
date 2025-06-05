@@ -4,9 +4,10 @@ import type {IdentifierType} from "../declarations/identifierHandler";
 import {GenericType} from "./genericHandler";
 import {TupleType} from "./tupleHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type TypeType = {
-    type: "Type",
+    type: Keywords.Type,
     name: IdentifierType | GenericType | TupleType,
     dimensions: number
 }
@@ -25,11 +26,11 @@ export class TypeHandler extends Handler {
         super._handle(node);
         this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
-            type: "Type",
+            type: Keywords.Type,
             name: this.nameHandler?.value,
             dimensions: node.dimensions
         };
     }
 }
 
-Handler.registerHandler("Type", TypeHandler);
+Handler.registerHandler(Keywords.Type, TypeHandler);

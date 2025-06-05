@@ -38,6 +38,9 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         h._handleInternal(node);
         return h;
     }
+    signByParentHandler(sign) {
+        this._signByParentHandler(sign);
+    }
     createSymbolAndScope(parentScope) {
         return this._createSymbolAndScope(parentScope);
     }
@@ -53,6 +56,17 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     assignType(childrenContexts, currentInferContext) {
         return this._assignType(childrenContexts, currentInferContext);
     }
+    declareSymbol(symbolName, symbolType, parentScope) {
+        const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
+        this._symbol = createdSymbol;
+        const createdScope = scope_1.Scope.createScope(symbolType, parentScope, createdSymbol);
+        if (createdSymbol) {
+            createdSymbol.childScope = createdScope;
+        }
+        return createdSymbol;
+    }
+    _signByParentHandler(sign) {
+    }
     // handles node
     _handle(node) {
     }
@@ -62,15 +76,6 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     // collects
     _collectDeclarations(childrenSymbols, currentScope) {
         return null;
-    }
-    declareSymbol(symbolName, symbolType, parentScope) {
-        const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
-        this._symbol = createdSymbol;
-        const createdScope = scope_1.Scope.createScope(symbolType, parentScope, createdSymbol);
-        if (createdSymbol) {
-            createdSymbol.childScope = createdScope;
-        }
-        return createdSymbol;
     }
     _inferType(upperTypeInferContext) {
         return null;
@@ -119,6 +124,7 @@ __webpack_require__(/*! ./handler */ "./src/analyzer/semantic/common/handler.ts"
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ClassDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ClassDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -174,22 +180,22 @@ class ClassDeclarationHandler extends handler_1.Handler {
                 continue;
             }
             switch (value.type) {
-                case "ClassField":
+                case keywords_1.Keywords.ClassField:
                     {
                         fields.push(value);
                     }
                     break;
-                case "ClassMethod":
+                case keywords_1.Keywords.ClassMethod:
                     {
                         methods.push(value);
                     }
                     break;
-                case "ClassMetaFunction":
+                case keywords_1.Keywords.ClassMetaFunction:
                     {
                         metaFunctions.push(value);
                     }
                     break;
-                case "ClassProperty":
+                case keywords_1.Keywords.ClassProperty:
                     {
                         properties.push(value);
                     }
@@ -197,7 +203,7 @@ class ClassDeclarationHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "Class",
+            type: keywords_1.Keywords.Class,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             inherits: this.inheritsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             decorators: this.decoratorsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
@@ -210,7 +216,7 @@ class ClassDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const className = this.value.name.name;
-        const symbol = this.declareSymbol(className, "Class", parentScope);
+        const symbol = this.declareSymbol(className, keywords_1.Keywords.Class, parentScope);
         // we can not decide super class
         return symbol;
     }
@@ -221,27 +227,27 @@ class ClassDeclarationHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic":
+                case keywords_1.Keywords.Generic:
                     {
                         scope.addGeneric(child);
                     }
                     break;
-                case "field":
+                case keywords_1.Keywords.Field:
                     {
                         scope.addField(child);
                     }
                     break;
-                case "function":
+                case keywords_1.Keywords.Function:
                     {
                         scope.addMethod(child);
                     }
                     break;
-                case "meta":
+                case keywords_1.Keywords.Meta:
                     {
                         scope.addMetaFunction(child);
                     }
                     break;
-                case "property":
+                case keywords_1.Keywords.Property:
                     {
                         scope.addProperty(child);
                     }
@@ -252,7 +258,7 @@ class ClassDeclarationHandler extends handler_1.Handler {
     }
 }
 exports.ClassDeclarationHandler = ClassDeclarationHandler;
-handler_1.Handler.registerHandler("ClassDeclaration", ClassDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ClassDeclaration, ClassDeclarationHandler);
 
 
 /***/ }),
@@ -267,6 +273,7 @@ handler_1.Handler.registerHandler("ClassDeclaration", ClassDeclarationHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FieldHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class FieldHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -309,7 +316,7 @@ class FieldHandler extends handler_1.Handler {
         }
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         this.value = {
-            type: "ClassField",
+            type: keywords_1.Keywords.ClassField,
             access: node.access,
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -320,7 +327,7 @@ class FieldHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const name = this.value.name.name;
-        const symbol = this.declareSymbol(name, "Field", parentScope);
+        const symbol = this.declareSymbol(name, keywords_1.Keywords.Field, parentScope);
         if (!symbol) {
             return null;
         }
@@ -330,7 +337,7 @@ class FieldHandler extends handler_1.Handler {
     }
 }
 exports.FieldHandler = FieldHandler;
-handler_1.Handler.registerHandler("ClassField", FieldHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ClassField, FieldHandler);
 
 
 /***/ }),
@@ -362,6 +369,7 @@ __webpack_require__(/*! ./classHandler */ "./src/analyzer/semantic/declarations/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaFunctionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class MetaFunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -418,7 +426,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "ClassMetaFunction",
+            type: keywords_1.Keywords.ClassMetaFunction,
             access: node.access,
             static: !!node.static,
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -430,8 +438,8 @@ class MetaFunctionHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const metaType = this.value.meta.name.name;
-        const metaName = "@" + metaType;
-        const symbol = this.declareSymbol(metaName, "Meta", parentScope);
+        const metaName = keywords_1.SpecialSigns.MetaSign + metaType;
+        const symbol = this.declareSymbol(metaName, keywords_1.Keywords.Meta, parentScope);
         if (symbol) {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
@@ -446,12 +454,12 @@ class MetaFunctionHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         scope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         scope.setBody(child);
                     }
@@ -462,7 +470,7 @@ class MetaFunctionHandler extends handler_1.Handler {
     }
 }
 exports.MetaFunctionHandler = MetaFunctionHandler;
-handler_1.Handler.registerHandler("ClassMetaFunction", MetaFunctionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ClassMetaFunction, MetaFunctionHandler);
 
 
 /***/ }),
@@ -477,6 +485,7 @@ handler_1.Handler.registerHandler("ClassMetaFunction", MetaFunctionHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MethodHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class MethodHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -542,7 +551,7 @@ class MethodHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "ClassMethod",
+            type: keywords_1.Keywords.ClassMethod,
             access: access,
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -556,7 +565,7 @@ class MethodHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const funcName = this.value.name.name;
-        const symbol = this.declareSymbol(funcName, "Function", parentScope);
+        const symbol = this.declareSymbol(funcName, keywords_1.Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -571,17 +580,17 @@ class MethodHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic":
+                case keywords_1.Keywords.Generic:
                     {
                         scope.addGeneric(child);
                     }
                     break;
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         scope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         scope.setBody(child);
                     }
@@ -592,7 +601,7 @@ class MethodHandler extends handler_1.Handler {
     }
 }
 exports.MethodHandler = MethodHandler;
-handler_1.Handler.registerHandler("ClassMethod", MethodHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ClassMethod, MethodHandler);
 
 
 /***/ }),
@@ -608,6 +617,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PropertyHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class PropertyHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -661,7 +671,7 @@ class PropertyHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "ClassProperty",
+            type: keywords_1.Keywords.ClassProperty,
             access: access,
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -674,7 +684,7 @@ class PropertyHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const propertyName = this.value.name.name;
-        const symbol = this.declareSymbol(propertyName, "Property", parentScope);
+        const symbol = this.declareSymbol(propertyName, keywords_1.Keywords.Property, parentScope);
         if (!symbol) {
             return null;
         }
@@ -686,12 +696,12 @@ class PropertyHandler extends handler_1.Handler {
         let functionSymbol;
         const scope = symbol.childScope;
         if (isGetter) {
-            const getterSymbol = this.declareSymbol(propertyName + "$Get", "Function", symbol.childScope);
+            const getterSymbol = this.declareSymbol(propertyName + keywords_1.SpecialSymbols.Get, keywords_1.Keywords.Function, symbol.childScope);
             scope.setGetter(getterSymbol);
             functionSymbol = getterSymbol;
         }
         else {
-            const setterSymbol = this.declareSymbol(propertyName + "$Set", "Function", symbol.childScope);
+            const setterSymbol = this.declareSymbol(propertyName + keywords_1.SpecialSymbols.Set, keywords_1.Keywords.Function, symbol.childScope);
             scope.setSetter(setterSymbol);
             functionSymbol = setterSymbol;
         }
@@ -700,7 +710,7 @@ class PropertyHandler extends handler_1.Handler {
         }
         if (!isGetter) {
             // add parameter
-            const parameterSymbol = this.declareSymbol(this.value.param.name, "Parameter", functionSymbol.childScope);
+            const parameterSymbol = this.declareSymbol(this.value.param.name, keywords_1.Keywords.Parameter, functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
             const functionScope = functionSymbol.childScope;
             if (functionScope) {
@@ -729,12 +739,12 @@ class PropertyHandler extends handler_1.Handler {
         }
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         functionScope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         functionScope.setBody(child);
                     }
@@ -745,7 +755,7 @@ class PropertyHandler extends handler_1.Handler {
     }
 }
 exports.PropertyHandler = PropertyHandler;
-handler_1.Handler.registerHandler("ClassProperty", PropertyHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ClassProperty, PropertyHandler);
 
 
 /***/ }),
@@ -760,6 +770,7 @@ handler_1.Handler.registerHandler("ClassProperty", PropertyHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EnumDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class EnumDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -793,7 +804,7 @@ class EnumDeclarationHandler extends handler_1.Handler {
             this.membersHandler.push(handler);
         }
         this.value = {
-            type: "Enum",
+            type: keywords_1.Keywords.Enum,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             members: this.membersHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             baseType: (_b = this.baseTypeHandler) === null || _b === void 0 ? void 0 : _b.value
@@ -801,7 +812,7 @@ class EnumDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const enumName = this.value.name.name;
-        return this.declareSymbol(enumName, "Enum", parentScope);
+        return this.declareSymbol(enumName, keywords_1.Keywords.Enum, parentScope);
     }
     _collectDeclarations(childrenSymbols, currentScope) {
         if (!currentScope) {
@@ -815,7 +826,7 @@ class EnumDeclarationHandler extends handler_1.Handler {
     }
 }
 exports.EnumDeclarationHandler = EnumDeclarationHandler;
-handler_1.Handler.registerHandler("EnumDeclaration", EnumDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.EnumDeclaration, EnumDeclarationHandler);
 
 
 /***/ }),
@@ -844,6 +855,7 @@ __webpack_require__(/*! ./enumHandler */ "./src/analyzer/semantic/declarations/e
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EnumMemberHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class EnumMemberHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -868,14 +880,14 @@ class EnumMemberHandler extends handler_1.Handler {
             this.valueHandler = null;
         }
         this.value = {
-            type: "EnumMember",
+            type: keywords_1.Keywords.EnumMember,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value,
         };
     }
     _createSymbolAndScope(parentScope) {
         const name = this.value.name.name;
-        const symbol = this.declareSymbol(name, "Variable", parentScope);
+        const symbol = this.declareSymbol(name, keywords_1.Keywords.Variable, parentScope);
         if (!symbol) {
             return null;
         }
@@ -883,7 +895,7 @@ class EnumMemberHandler extends handler_1.Handler {
     }
 }
 exports.EnumMemberHandler = EnumMemberHandler;
-handler_1.Handler.registerHandler("EnumMember", EnumMemberHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.EnumMember, EnumMemberHandler);
 
 
 /***/ }),
@@ -899,6 +911,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionHandler = void 0;
 const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class FunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -966,7 +979,7 @@ class FunctionHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "Function",
+            type: keywords_1.Keywords.Function,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
@@ -978,7 +991,7 @@ class FunctionHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const funcName = this.value.name.name;
-        const symbol = this.declareSymbol(funcName, "Function", parentScope);
+        const symbol = this.declareSymbol(funcName, keywords_1.Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -993,17 +1006,17 @@ class FunctionHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic":
+                case keywords_1.Keywords.Generic:
                     {
                         scope.addGeneric(child);
                     }
                     break;
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         scope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         scope.setBody(child);
                     }
@@ -1014,7 +1027,7 @@ class FunctionHandler extends handler_1.Handler {
     }
 }
 exports.FunctionHandler = FunctionHandler;
-handler_1.Handler.registerHandler("FunctionDeclaration", FunctionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.FunctionDeclaration, FunctionHandler);
 
 
 /***/ }),
@@ -1042,17 +1055,18 @@ __webpack_require__(/*! ./functionHandler */ "./src/analyzer/semantic/declaratio
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IdentifierHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class IdentifierHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "Identifier",
+            type: keywords_1.Keywords.Identifier,
             name: node.name
         };
     }
 }
 exports.IdentifierHandler = IdentifierHandler;
-handler_1.Handler.registerHandler("Identifier", IdentifierHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Identifier, IdentifierHandler);
 
 
 /***/ }),
@@ -1088,6 +1102,7 @@ __webpack_require__(/*! ./test/index */ "./src/analyzer/semantic/declarations/te
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceFieldDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class InterfaceFieldDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1112,15 +1127,24 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
             this.targetTypeHandler = null;
         }
         this.value = {
-            type: "InterfaceFieldDeclaration",
+            type: keywords_1.Keywords.InterfaceFieldDeclaration,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             access: access,
             targetType: (_b = this.targetTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const name = this.value.name.name;
+        const symbol = this.declareSymbol(name, keywords_1.Keywords.Field, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = this.value.access;
+        return symbol;
+    }
 }
 exports.InterfaceFieldDeclarationHandler = InterfaceFieldDeclarationHandler;
-handler_1.Handler.registerHandler("InterfaceFieldDeclaration", InterfaceFieldDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.InterfaceFieldDeclaration, InterfaceFieldDeclarationHandler);
 
 
 /***/ }),
@@ -1136,6 +1160,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./fieldHandler */ "./src/analyzer/semantic/declarations/interface/fieldHandler.ts");
 __webpack_require__(/*! ./propertyHandler */ "./src/analyzer/semantic/declarations/interface/propertyHandler.ts");
 __webpack_require__(/*! ./methodHandler */ "./src/analyzer/semantic/declarations/interface/methodHandler.ts");
+__webpack_require__(/*! ./metaFunctionHandler */ "./src/analyzer/semantic/declarations/interface/metaFunctionHandler.ts");
 __webpack_require__(/*! ./interfaceHandler */ "./src/analyzer/semantic/declarations/interface/interfaceHandler.ts");
 
 
@@ -1151,11 +1176,13 @@ __webpack_require__(/*! ./interfaceHandler */ "./src/analyzer/semantic/declarati
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class InterfaceDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.membersHandler = [];
         this.inheritsHandler = [];
+        this.metasHandler = [];
         this.genericHandler = null;
         this.nameHandler = null;
     }
@@ -1189,6 +1216,7 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
         const fields = [];
         const methods = [];
         const properties = [];
+        const metas = [];
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
             this.membersHandler.push(handler);
@@ -1197,17 +1225,22 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
                 continue;
             }
             switch (value.type) {
-                case "InterfaceFieldDeclaration":
+                case keywords_1.Keywords.InterfaceFieldDeclaration:
                     {
                         fields.push(value);
                     }
                     break;
-                case "InterfaceMethodSignature":
+                case keywords_1.Keywords.InterfaceMethodSignature:
                     {
                         methods.push(value);
                     }
                     break;
-                case "InterfacePropertySignature":
+                case keywords_1.Keywords.InterfaceMetaSignature:
+                    {
+                        metas.push(value);
+                    }
+                    break;
+                case keywords_1.Keywords.InterfacePropertySignature:
                     {
                         properties.push(value);
                     }
@@ -1215,8 +1248,9 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "Interface",
+            type: keywords_1.Keywords.Interface,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            metas,
             fields,
             methods,
             properties,
@@ -1226,7 +1260,7 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const interfaceName = this.value.name.name;
-        return this.declareSymbol(interfaceName, "Interface", parentScope);
+        return this.declareSymbol(interfaceName, keywords_1.Keywords.Interface, parentScope);
     }
     _collectDeclarations(childrenSymbols, currentScope) {
         if (!currentScope) {
@@ -1235,22 +1269,27 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic":
+                case keywords_1.Keywords.Generic:
                     {
                         scope.addGeneric(child);
                     }
                     break;
-                case "field":
+                case keywords_1.Keywords.Field:
                     {
                         scope.addField(child);
                     }
                     break;
-                case "function":
+                case keywords_1.Keywords.Meta:
+                    {
+                        scope.addMetaFunction(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Function:
                     {
                         scope.addMethod(child);
                     }
                     break;
-                case "property":
+                case keywords_1.Keywords.Property:
                     {
                         scope.addProperty(child);
                     }
@@ -1261,7 +1300,96 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
     }
 }
 exports.InterfaceDeclarationHandler = InterfaceDeclarationHandler;
-handler_1.Handler.registerHandler("InterfaceDeclaration", InterfaceDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.InterfaceDeclaration, InterfaceDeclarationHandler);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/declarations/interface/metaFunctionHandler.ts":
+/*!*****************************************************************************!*\
+  !*** ./src/analyzer/semantic/declarations/interface/metaFunctionHandler.ts ***!
+  \*****************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InterfaceMetaSignatureHandler = void 0;
+const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class InterfaceMetaSignatureHandler extends handler_1.Handler {
+    constructor() {
+        super(...arguments);
+        this.metaHandler = null;
+        this.parameterHandlers = [];
+        this.argsHandler = null;
+    }
+    get _children() {
+        return [
+            this.metaHandler,
+            ...this.parameterHandlers,
+            this.argsHandler,
+        ];
+    }
+    _handle(node) {
+        var _a, _b;
+        super._handle(node);
+        if (node.meta) {
+            const metaHandler = handler_1.Handler.handle(node.meta, this.context);
+            this.metaHandler = metaHandler;
+        }
+        else {
+            this.metaHandler = null;
+        }
+        const parameters = node.params;
+        this.parameterHandlers.length = 0;
+        for (const parameter of parameters) {
+            const handler = handler_1.Handler.handle(parameter, this.context);
+            this.parameterHandlers.push(handler);
+        }
+        if (node.args) {
+            const argsHandler = handler_1.Handler.handle(node.args, this.context);
+            this.argsHandler = argsHandler;
+        }
+        else {
+            this.argsHandler = null;
+        }
+        this.value = {
+            type: keywords_1.Keywords.InterfaceMetaSignature,
+            access: node.access,
+            meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
+            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
+        };
+    }
+    _createSymbolAndScope(parentScope) {
+        const metaType = this.value.meta.name.name;
+        const metaName = keywords_1.SpecialSigns.MetaSign + metaType;
+        const symbol = this.declareSymbol(metaName, keywords_1.Keywords.Meta, parentScope);
+        if (symbol) {
+            symbol.metaType = metaType;
+            symbol.accessibility = this.value.access;
+        }
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Parameter:
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+            }
+        }
+        return currentScope.ownerSymbol;
+    }
+}
+exports.InterfaceMetaSignatureHandler = InterfaceMetaSignatureHandler;
+handler_1.Handler.registerHandler(keywords_1.Keywords.InterfaceMetaSignature, InterfaceMetaSignatureHandler);
 
 
 /***/ }),
@@ -1276,6 +1404,7 @@ handler_1.Handler.registerHandler("InterfaceDeclaration", InterfaceDeclarationHa
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceMethodSignatureHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class InterfaceMethodSignatureHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1325,7 +1454,7 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
             this.argsHandler = null;
         }
         this.value = {
-            type: "InterfaceMethodSignature",
+            type: keywords_1.Keywords.InterfaceMethodSignature,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             access: access,
             returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
@@ -1334,9 +1463,44 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
             generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value,
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const funcName = this.value.name.name;
+        const symbol = this.declareSymbol(funcName, keywords_1.Keywords.Function, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = this.value.access;
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Generic:
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Parameter:
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Block:
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
+    }
 }
 exports.InterfaceMethodSignatureHandler = InterfaceMethodSignatureHandler;
-handler_1.Handler.registerHandler("InterfaceMethodSignature", InterfaceMethodSignatureHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.InterfaceMethodSignature, InterfaceMethodSignatureHandler);
 
 
 /***/ }),
@@ -1350,7 +1514,9 @@ handler_1.Handler.registerHandler("InterfaceMethodSignature", InterfaceMethodSig
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfacePropertySignatureHandler = void 0;
+const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class InterfacePropertySignatureHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1377,16 +1543,86 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
             this.typeInfoHandler = null;
         }
         this.value = {
-            type: "InterfacePropertySignature",
+            type: keywords_1.Keywords.InterfacePropertySignature,
             name: nameHandler === null || nameHandler === void 0 ? void 0 : nameHandler.value,
             access: access,
             typeInfo: (_a = this.typeInfoHandler) === null || _a === void 0 ? void 0 : _a.value,
             propertyType: propertyType,
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const propertyName = this.value.name.name;
+        const symbol = this.declareSymbol(propertyName, keywords_1.Keywords.Property, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = this.value.access;
+        const propertyType = this.value.propertyType;
+        symbol.propertyType = propertyType;
+        const isGetter = propertyType === access_1.PropertyType.GET;
+        let functionSymbol;
+        const scope = symbol.childScope;
+        if (isGetter) {
+            const getterSymbol = this.declareSymbol(propertyName + keywords_1.SpecialSymbols.Get, keywords_1.Keywords.Function, symbol.childScope);
+            scope.setGetter(getterSymbol);
+            functionSymbol = getterSymbol;
+        }
+        else {
+            const setterSymbol = this.declareSymbol(propertyName + keywords_1.SpecialSymbols.Set, keywords_1.Keywords.Function, symbol.childScope);
+            scope.setSetter(setterSymbol);
+            functionSymbol = setterSymbol;
+        }
+        if (!functionSymbol) {
+            return symbol;
+        }
+        if (!isGetter) {
+            // add parameter
+            const parameterSymbol = this.declareSymbol("value", keywords_1.Keywords.Parameter, functionSymbol.childScope);
+            // TODO parameterSymbol type should be determined by the propertyType
+            const functionScope = functionSymbol.childScope;
+            if (functionScope) {
+                functionScope.addParameter(parameterSymbol);
+            }
+        }
+        else {
+            // TODO: add return type for getter
+        }
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const propertyType = this.value.propertyType;
+        const isGetter = propertyType === access_1.PropertyType.GET;
+        const scope = currentScope;
+        const functionSymbol = isGetter ? scope.getterSymbol : scope.setterSymbol;
+        if (!functionSymbol) {
+            return null;
+        }
+        const functionScope = functionSymbol.childScope;
+        if (!functionScope) {
+            return null;
+        }
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Parameter:
+                    {
+                        functionScope.addParameter(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Block:
+                    {
+                        functionScope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
+    }
 }
 exports.InterfacePropertySignatureHandler = InterfacePropertySignatureHandler;
-handler_1.Handler.registerHandler("InterfacePropertySignature", InterfacePropertySignatureHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.InterfacePropertySignature, InterfacePropertySignatureHandler);
 
 
 /***/ }),
@@ -1401,6 +1637,7 @@ handler_1.Handler.registerHandler("InterfacePropertySignature", InterfacePropert
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class MetaHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1415,13 +1652,13 @@ class MetaHandler extends handler_1.Handler {
         var _a;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         this.value = {
-            type: "Meta",
+            type: keywords_1.Keywords.Meta,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.MetaHandler = MetaHandler;
-handler_1.Handler.registerHandler("Meta", MetaHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Meta, MetaHandler);
 
 
 /***/ }),
@@ -1436,6 +1673,7 @@ handler_1.Handler.registerHandler("Meta", MetaHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FieldHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class FieldHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1469,7 +1707,7 @@ class FieldHandler extends handler_1.Handler {
             this.initHandler = null;
         }
         this.value = {
-            type: "StructField",
+            type: keywords_1.Keywords.StructField,
             access: node.access,
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -1477,9 +1715,19 @@ class FieldHandler extends handler_1.Handler {
             init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value,
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const name = this.value.name.name;
+        const symbol = this.declareSymbol(name, keywords_1.Keywords.Field, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.accessibility = this.value.access;
+        symbol.isStatic = this.value.static;
+        return symbol;
+    }
 }
 exports.FieldHandler = FieldHandler;
-handler_1.Handler.registerHandler("StructField", FieldHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.StructField, FieldHandler);
 
 
 /***/ }),
@@ -1510,6 +1758,7 @@ __webpack_require__(/*! ./structHandler */ "./src/analyzer/semantic/declarations
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaFunctionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class MetaFunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1557,7 +1806,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             this.argsHandler = null;
         }
         this.value = {
-            type: "StructMetaFunction",
+            type: keywords_1.Keywords.StructMetaFunction,
             access: node.access,
             static: !!node.static,
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -1566,9 +1815,41 @@ class MetaFunctionHandler extends handler_1.Handler {
             body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const metaType = this.value.meta.name.name;
+        const metaName = keywords_1.SpecialSigns.MetaSign + metaType;
+        const symbol = this.declareSymbol(metaName, keywords_1.Keywords.Meta, parentScope);
+        if (symbol) {
+            symbol.metaType = metaType;
+            symbol.accessibility = this.value.access;
+            symbol.isStatic = this.value.static;
+        }
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Parameter:
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Block:
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return currentScope.ownerSymbol;
+    }
 }
 exports.MetaFunctionHandler = MetaFunctionHandler;
-handler_1.Handler.registerHandler("StructMetaFunction", MetaFunctionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.StructMetaFunction, MetaFunctionHandler);
 
 
 /***/ }),
@@ -1583,6 +1864,7 @@ handler_1.Handler.registerHandler("StructMetaFunction", MetaFunctionHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MethodHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class MethodHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1648,7 +1930,7 @@ class MethodHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "StructMethod",
+            type: keywords_1.Keywords.StructMethod,
             access: access,
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -1660,9 +1942,45 @@ class MethodHandler extends handler_1.Handler {
             body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
         };
     }
+    _createSymbolAndScope(parentScope) {
+        const funcName = this.value.name.name;
+        const symbol = this.declareSymbol(funcName, keywords_1.Keywords.Function, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.isStatic = this.value.static;
+        symbol.accessibility = this.value.access;
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Generic:
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Parameter:
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Block:
+                    {
+                        scope.setBody(child);
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
+    }
 }
 exports.MethodHandler = MethodHandler;
-handler_1.Handler.registerHandler("StructMethod", MethodHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.StructMethod, MethodHandler);
 
 
 /***/ }),
@@ -1677,10 +1995,12 @@ handler_1.Handler.registerHandler("StructMethod", MethodHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StructDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class StructDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.membersHandler = [];
+        this.genericHandler = null;
         this.nameHandler = null;
     }
     get _children() {
@@ -1690,7 +2010,7 @@ class StructDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
+        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         const members = node.members;
@@ -1698,6 +2018,12 @@ class StructDeclarationHandler extends handler_1.Handler {
         const fields = [];
         const methods = [];
         const metaFunctions = [];
+        if (node.generic) {
+            this.genericHandler = handler_1.Handler.handle(node.generic, this.context);
+        }
+        else {
+            this.genericHandler = null;
+        }
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
             this.membersHandler.push(handler);
@@ -1706,17 +2032,17 @@ class StructDeclarationHandler extends handler_1.Handler {
                 continue;
             }
             switch (value.type) {
-                case "StructField":
+                case keywords_1.Keywords.StructField:
                     {
                         fields.push(value);
                     }
                     break;
-                case "StructMethod":
+                case keywords_1.Keywords.StructMethod:
                     {
                         methods.push(value);
                     }
                     break;
-                case "StructMetaFunction":
+                case keywords_1.Keywords.StructMetaFunction:
                     {
                         metaFunctions.push(value);
                     }
@@ -1724,8 +2050,9 @@ class StructDeclarationHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "Struct",
+            type: keywords_1.Keywords.Struct,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value,
             fields,
             methods,
             metaFunctions
@@ -1733,7 +2060,7 @@ class StructDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const structName = this.value.name.name;
-        const symbol = this.declareSymbol(structName, "Struct", parentScope);
+        const symbol = this.declareSymbol(structName, keywords_1.Keywords.Struct, parentScope);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -1743,17 +2070,22 @@ class StructDeclarationHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "field":
+                case keywords_1.Keywords.Generic:
+                    {
+                        scope.addGeneric(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Field:
                     {
                         scope.addField(child);
                     }
                     break;
-                case "function":
+                case keywords_1.Keywords.Function:
                     {
                         scope.addMethod(child);
                     }
                     break;
-                case "meta":
+                case keywords_1.Keywords.Meta:
                     {
                         scope.addMetaFunction(child);
                     }
@@ -1764,7 +2096,7 @@ class StructDeclarationHandler extends handler_1.Handler {
     }
 }
 exports.StructDeclarationHandler = StructDeclarationHandler;
-handler_1.Handler.registerHandler("StructDeclaration", StructDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.StructDeclaration, StructDeclarationHandler);
 
 
 /***/ }),
@@ -1792,6 +2124,7 @@ __webpack_require__(/*! ./testHandler */ "./src/analyzer/semantic/declarations/t
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TestHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class TestHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1834,7 +2167,7 @@ class TestHandler extends handler_1.Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "Test",
+            type: keywords_1.Keywords.Test,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
@@ -1842,8 +2175,8 @@ class TestHandler extends handler_1.Handler {
         };
     }
     _createSymbolAndScope(parentScope) {
-        const testName = "%" + this.value.name.value;
-        const symbol = this.declareSymbol(testName, "Test", parentScope);
+        const testName = keywords_1.SpecialSigns.TestSign + this.value.name.value;
+        const symbol = this.declareSymbol(testName, keywords_1.Keywords.Test, parentScope);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -1853,12 +2186,12 @@ class TestHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         scope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         scope.setBody(child);
                     }
@@ -1869,7 +2202,7 @@ class TestHandler extends handler_1.Handler {
     }
 }
 exports.TestHandler = TestHandler;
-handler_1.Handler.registerHandler("TestDeclaration", TestHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.TestDeclaration, TestHandler);
 
 
 /***/ }),
@@ -1884,6 +2217,7 @@ handler_1.Handler.registerHandler("TestDeclaration", TestHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DestructuringArrayHandler = exports.DestructuringObjectHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class DestructuringObjectHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1902,13 +2236,13 @@ class DestructuringObjectHandler extends handler_1.Handler {
             this.keyHandlers.push(handler);
         }
         this.value = {
-            type: "DestructuringObject",
+            type: keywords_1.Keywords.DestructuringObject,
             keys: this.keyHandlers.map(handler => handler.value)
         };
     }
 }
 exports.DestructuringObjectHandler = DestructuringObjectHandler;
-handler_1.Handler.registerHandler("DestructuringObject", DestructuringObjectHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.DestructuringObject, DestructuringObjectHandler);
 class DestructuringArrayHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1927,13 +2261,13 @@ class DestructuringArrayHandler extends handler_1.Handler {
             this.keyHandlers.push(handler);
         }
         this.value = {
-            type: "DestructuringArray",
+            type: keywords_1.Keywords.DestructuringArray,
             keys: this.keyHandlers.map(handler => handler.value)
         };
     }
 }
 exports.DestructuringArrayHandler = DestructuringArrayHandler;
-handler_1.Handler.registerHandler("DestructuringArray", DestructuringArrayHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.DestructuringArray, DestructuringArrayHandler);
 
 
 /***/ }),
@@ -1962,6 +2296,7 @@ __webpack_require__(/*! ./destructuringHandler */ "./src/analyzer/semantic/decla
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VariableHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class VariableHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1987,7 +2322,7 @@ class VariableHandler extends handler_1.Handler {
             this.typeHandler = null;
         }
         this.value = {
-            type: "VariableDeclaration",
+            type: keywords_1.Keywords.VariableDeclaration,
             pattern: (_a = this.patternHandler) === null || _a === void 0 ? void 0 : _a.value,
             value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value,
             typeInfo: (_c = this.typeHandler) === null || _c === void 0 ? void 0 : _c.value
@@ -1995,28 +2330,29 @@ class VariableHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const getDeclaration = (identifier) => {
-            const symbol = this.declareSymbol(identifier.name, "Variable", parentScope);
+            const symbol = this.declareSymbol(identifier.name, keywords_1.Keywords.Variable, parentScope);
             return symbol;
         };
         const collect = () => {
             switch (this.value.pattern.type) {
-                case "Identifier":
+                case keywords_1.Keywords.Identifier:
                     return getDeclaration(this.value.pattern);
-                case "DestructuringArray": {
+                case keywords_1.Keywords.DestructuringArray: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);
                     });
                 }
-                case "DestructuringObject": {
+                case keywords_1.Keywords.DestructuringObject: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);
                     });
                 }
             }
+            return null;
         };
         const declaration = collect();
         if (declaration instanceof Array) {
-            const symbol = this.declareSymbol("", "Variable", parentScope);
+            const symbol = this.declareSymbol("", keywords_1.Keywords.Variable, parentScope);
             if (!symbol) {
                 return null;
             }
@@ -2038,7 +2374,7 @@ class VariableHandler extends handler_1.Handler {
     }
 }
 exports.VariableHandler = VariableHandler;
-handler_1.Handler.registerHandler("VariableDeclaration", VariableHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.VariableDeclaration, VariableHandler);
 
 
 /***/ }),
@@ -2053,6 +2389,7 @@ handler_1.Handler.registerHandler("VariableDeclaration", VariableHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ArrayLiteralHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ArrayLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2071,13 +2408,13 @@ class ArrayLiteralHandler extends handler_1.Handler {
             this.elementsHandler.push(handler);
         }
         this.value = {
-            type: "ArrayLiteralExpression",
+            type: keywords_1.Keywords.ArrayLiteralExpression,
             elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
 exports.ArrayLiteralHandler = ArrayLiteralHandler;
-handler_1.Handler.registerHandler("ArrayLiteral", ArrayLiteralHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ArrayLiteral, ArrayLiteralHandler);
 
 
 /***/ }),
@@ -2092,6 +2429,7 @@ handler_1.Handler.registerHandler("ArrayLiteral", ArrayLiteralHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AssignmentHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class AssignmentHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2110,7 +2448,7 @@ class AssignmentHandler extends handler_1.Handler {
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
-            type: "AssignmentExpression",
+            type: keywords_1.Keywords.AssignmentExpression,
             left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
             right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
             op: node.op
@@ -2118,7 +2456,7 @@ class AssignmentHandler extends handler_1.Handler {
     }
 }
 exports.AssignmentHandler = AssignmentHandler;
-handler_1.Handler.registerHandler("Assignment", AssignmentHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Assignment, AssignmentHandler);
 
 
 /***/ }),
@@ -2133,6 +2471,7 @@ handler_1.Handler.registerHandler("Assignment", AssignmentHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BinaryHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class BinaryHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2151,7 +2490,7 @@ class BinaryHandler extends handler_1.Handler {
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
-            type: "BinaryExpression",
+            type: keywords_1.Keywords.BinaryExpression,
             left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
             right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
             op: node.op
@@ -2159,7 +2498,7 @@ class BinaryHandler extends handler_1.Handler {
     }
 }
 exports.BinaryHandler = BinaryHandler;
-handler_1.Handler.registerHandler("Binary", BinaryHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Binary, BinaryHandler);
 
 
 /***/ }),
@@ -2174,6 +2513,7 @@ handler_1.Handler.registerHandler("Binary", BinaryHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConditionalHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ConditionalHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2195,7 +2535,7 @@ class ConditionalHandler extends handler_1.Handler {
         this.consequentHandler = handler_1.Handler.handle(node.consequent, this.context);
         this.alternateHandler = handler_1.Handler.handle(node.alternate, this.context);
         this.value = {
-            type: "ConditionalExpression",
+            type: keywords_1.Keywords.ConditionalExpression,
             condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
             consequent: (_b = this.consequentHandler) === null || _b === void 0 ? void 0 : _b.value,
             alternate: (_c = this.alternateHandler) === null || _c === void 0 ? void 0 : _c.value
@@ -2203,7 +2543,7 @@ class ConditionalHandler extends handler_1.Handler {
     }
 }
 exports.ConditionalHandler = ConditionalHandler;
-handler_1.Handler.registerHandler("Conditional", ConditionalHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Conditional, ConditionalHandler);
 
 
 /***/ }),
@@ -2218,6 +2558,7 @@ handler_1.Handler.registerHandler("Conditional", ConditionalHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DecoratorExpressionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class DecoratorExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2233,13 +2574,13 @@ class DecoratorExpressionHandler extends handler_1.Handler {
         super._handle(node);
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
         this.value = {
-            type: 'DecoratorExpression',
+            type: keywords_1.Keywords.DecoratorExpression,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.DecoratorExpressionHandler = DecoratorExpressionHandler;
-handler_1.Handler.registerHandler("DecoratorExpression", DecoratorExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.DecoratorExpression, DecoratorExpressionHandler);
 
 
 /***/ }),
@@ -2254,6 +2595,7 @@ handler_1.Handler.registerHandler("DecoratorExpression", DecoratorExpressionHand
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForeachLoopExpressionHandler = exports.ForLoopExpressionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ForLoopExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2293,7 +2635,7 @@ class ForLoopExpressionHandler extends handler_1.Handler {
         }
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: "ForLoopExpression",
+            type: keywords_1.Keywords.ForLoopExpression,
             isStatement: node.isStatement,
             init: (_a = this.initHandler) === null || _a === void 0 ? void 0 : _a.value,
             condition: (_b = this.conditionHandler) === null || _b === void 0 ? void 0 : _b.value,
@@ -2303,7 +2645,7 @@ class ForLoopExpressionHandler extends handler_1.Handler {
     }
 }
 exports.ForLoopExpressionHandler = ForLoopExpressionHandler;
-handler_1.Handler.registerHandler("ForLoop", ForLoopExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ForLoop, ForLoopExpressionHandler);
 class ForeachLoopExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2330,7 +2672,7 @@ class ForeachLoopExpressionHandler extends handler_1.Handler {
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: "ForeachLoopExpression",
+            type: keywords_1.Keywords.ForeachLoopExpression,
             isStatement: node.isStatement,
             pattern: this.patternHandler.value,
             typeInfo: (_a = this.typeHandler) === null || _a === void 0 ? void 0 : _a.value,
@@ -2340,7 +2682,7 @@ class ForeachLoopExpressionHandler extends handler_1.Handler {
     }
 }
 exports.ForeachLoopExpressionHandler = ForeachLoopExpressionHandler;
-handler_1.Handler.registerHandler("ForeachLoop", ForeachLoopExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ForeachLoop, ForeachLoopExpressionHandler);
 
 
 /***/ }),
@@ -2355,6 +2697,7 @@ handler_1.Handler.registerHandler("ForeachLoop", ForeachLoopExpressionHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionCallHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class FunctionCallHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2375,13 +2718,13 @@ class FunctionCallHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "FunctionCall",
+            type: keywords_1.Keywords.FunctionCall,
             args: this.argsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
 }
 exports.FunctionCallHandler = FunctionCallHandler;
-handler_1.Handler.registerHandler("FunctionCall", FunctionCallHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.FunctionCall, FunctionCallHandler);
 
 
 /***/ }),
@@ -2396,6 +2739,7 @@ handler_1.Handler.registerHandler("FunctionCall", FunctionCallHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IfExpressionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class IfExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2422,7 +2766,7 @@ class IfExpressionHandler extends handler_1.Handler {
             this.elseHandler = null;
         }
         this.value = {
-            type: "IfExpression",
+            type: keywords_1.Keywords.IfExpression,
             isStatement: node.isStatement,
             condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
             then: (_b = this.thenHandler) === null || _b === void 0 ? void 0 : _b.value,
@@ -2431,7 +2775,7 @@ class IfExpressionHandler extends handler_1.Handler {
     }
 }
 exports.IfExpressionHandler = IfExpressionHandler;
-handler_1.Handler.registerHandler("IfExpression", IfExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.IfExpression, IfExpressionHandler);
 
 
 /***/ }),
@@ -2477,6 +2821,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LambdaHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const access_1 = __webpack_require__(/*! ../../../types/access */ "./src/types/access.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class LambdaHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2507,14 +2852,14 @@ class LambdaHandler extends handler_1.Handler {
         }
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: 'LambdaExpression',
+            type: keywords_1.Keywords.LambdaExpression,
             params: this.paramsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_a = this.argsHandler) === null || _a === void 0 ? void 0 : _a.value,
             blocks: (_b = this.blockHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
     _createSymbolAndScope(parentScope) {
-        const symbol = this.declareSymbol("$Lambda", "Function", parentScope);
+        const symbol = this.declareSymbol(keywords_1.SpecialSymbols.Lambda, keywords_1.Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -2529,12 +2874,12 @@ class LambdaHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter":
+                case keywords_1.Keywords.Parameter:
                     {
                         scope.addParameter(child);
                     }
                     break;
-                case "block":
+                case keywords_1.Keywords.Block:
                     {
                         scope.setBody(child);
                     }
@@ -2545,7 +2890,7 @@ class LambdaHandler extends handler_1.Handler {
     }
 }
 exports.LambdaHandler = LambdaHandler;
-handler_1.Handler.registerHandler("LambdaExpression", LambdaHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.LambdaExpression, LambdaHandler);
 
 
 /***/ }),
@@ -2560,6 +2905,7 @@ handler_1.Handler.registerHandler("LambdaExpression", LambdaHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IdentifierLiteralHandler = exports.ValueLiteralHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ValueLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2575,13 +2921,13 @@ class ValueLiteralHandler extends handler_1.Handler {
         super._handle(node);
         this.valueHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
-            type: "ValueLiteralExpression",
+            type: keywords_1.Keywords.ValueLiteralExpression,
             value: (_a = this.valueHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.ValueLiteralHandler = ValueLiteralHandler;
-handler_1.Handler.registerHandler("ValueLiteral", ValueLiteralHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ValueLiteral, ValueLiteralHandler);
 class IdentifierLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2592,13 +2938,13 @@ class IdentifierLiteralHandler extends handler_1.Handler {
         super._handle(node);
         this.identifierHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
-            type: "IdentifierLiteralExpression",
+            type: keywords_1.Keywords.IdentifierLiteralExpression,
             value: (_a = this.identifierHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.IdentifierLiteralHandler = IdentifierLiteralHandler;
-handler_1.Handler.registerHandler("IdentifierLiteral", IdentifierLiteralHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.IdentifierLiteral, IdentifierLiteralHandler);
 
 
 /***/ }),
@@ -2613,6 +2959,7 @@ handler_1.Handler.registerHandler("IdentifierLiteral", IdentifierLiteralHandler)
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogicalHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class LogicalHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2631,7 +2978,7 @@ class LogicalHandler extends handler_1.Handler {
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
-            type: "LogicalExpression",
+            type: keywords_1.Keywords.LogicalExpression,
             left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
             right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
             op: node.op
@@ -2639,7 +2986,7 @@ class LogicalHandler extends handler_1.Handler {
     }
 }
 exports.LogicalHandler = LogicalHandler;
-handler_1.Handler.registerHandler("Logical", LogicalHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Logical, LogicalHandler);
 
 
 /***/ }),
@@ -2654,6 +3001,7 @@ handler_1.Handler.registerHandler("Logical", LogicalHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MemberAccessHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class MemberAccessHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2675,14 +3023,14 @@ class MemberAccessHandler extends handler_1.Handler {
             this.propertyHandler = null;
         }
         this.value = {
-            type: "MemberExpression",
+            type: keywords_1.Keywords.MemberExpression,
             property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
             computed,
         };
     }
 }
 exports.MemberAccessHandler = MemberAccessHandler;
-handler_1.Handler.registerHandler("MemberExpression", MemberAccessHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.MemberExpression, MemberAccessHandler);
 
 
 /***/ }),
@@ -2697,6 +3045,7 @@ handler_1.Handler.registerHandler("MemberExpression", MemberAccessHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KeyValuePairHandler = exports.ObjectLiteralHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ObjectLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2710,13 +3059,13 @@ class ObjectLiteralHandler extends handler_1.Handler {
             this.propertiesHandler.push(handler);
         }
         this.value = {
-            type: 'ObjectLiteralExpression',
+            type: keywords_1.Keywords.ObjectLiteralExpression,
             properties: this.propertiesHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
 exports.ObjectLiteralHandler = ObjectLiteralHandler;
-handler_1.Handler.registerHandler("ObjectLiteral", ObjectLiteralHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ObjectLiteral, ObjectLiteralHandler);
 class KeyValuePairHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2735,14 +3084,14 @@ class KeyValuePairHandler extends handler_1.Handler {
         this.keyHandler = handler_1.Handler.handle(node.key, this.context);
         this.valueHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
-            type: 'KeyValuePairExpression',
+            type: keywords_1.Keywords.KeyValuePairExpression,
             key: (_a = this.keyHandler) === null || _a === void 0 ? void 0 : _a.value,
             value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
 }
 exports.KeyValuePairHandler = KeyValuePairHandler;
-handler_1.Handler.registerHandler("KeyValuePair", KeyValuePairHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.KeyValuePair, KeyValuePairHandler);
 
 
 /***/ }),
@@ -2757,6 +3106,7 @@ handler_1.Handler.registerHandler("KeyValuePair", KeyValuePairHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PrimaryHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class PrimaryHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2781,14 +3131,14 @@ class PrimaryHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "PrimaryExpression",
+            type: keywords_1.Keywords.PrimaryExpression,
             property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
             members: this.memberHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
 }
 exports.PrimaryHandler = PrimaryHandler;
-handler_1.Handler.registerHandler("PrimaryExpression", PrimaryHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.PrimaryExpression, PrimaryHandler);
 
 
 /***/ }),
@@ -2803,6 +3153,7 @@ handler_1.Handler.registerHandler("PrimaryExpression", PrimaryHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SwitchDefaultHandler = exports.SwitchCaseHandler = exports.SwitchExpressionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class SwitchExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2833,7 +3184,7 @@ class SwitchExpressionHandler extends handler_1.Handler {
             this.defaultHandler = null;
         }
         this.value = {
-            type: "SwitchExpression",
+            type: keywords_1.Keywords.SwitchExpression,
             isStatement: node.isStatement,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value,
             cases: this.caseHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
@@ -2842,7 +3193,7 @@ class SwitchExpressionHandler extends handler_1.Handler {
     }
 }
 exports.SwitchExpressionHandler = SwitchExpressionHandler;
-handler_1.Handler.registerHandler("SwitchExpression", SwitchExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.SwitchExpression, SwitchExpressionHandler);
 class SwitchCaseHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2854,14 +3205,14 @@ class SwitchCaseHandler extends handler_1.Handler {
         this.testHandler = handler_1.Handler.handle(node.value, this.context);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: "SwitchCase",
+            type: keywords_1.Keywords.SwitchCase,
             test: this.testHandler.value,
             block: this.blockHandler.value
         };
     }
 }
 exports.SwitchCaseHandler = SwitchCaseHandler;
-handler_1.Handler.registerHandler("SwitchCase", SwitchCaseHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.SwitchCase, SwitchCaseHandler);
 class SwitchDefaultHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2872,13 +3223,13 @@ class SwitchDefaultHandler extends handler_1.Handler {
         super._handle(node);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: "SwitchDefault",
+            type: keywords_1.Keywords.SwitchDefault,
             block: (_a = this.blockHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.SwitchDefaultHandler = SwitchDefaultHandler;
-handler_1.Handler.registerHandler("SwitchDefault", SwitchDefaultHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.SwitchDefault, SwitchDefaultHandler);
 
 
 /***/ }),
@@ -2893,17 +3244,18 @@ handler_1.Handler.registerHandler("SwitchDefault", SwitchDefaultHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnaryHandler = exports.UnaryOperatorHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class UnaryOperatorHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "UnaryOperator",
+            type: keywords_1.Keywords.UnaryOperator,
             operator: node.operator
         };
     }
 }
 exports.UnaryOperatorHandler = UnaryOperatorHandler;
-handler_1.Handler.registerHandler("UnaryOperator", UnaryOperatorHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.UnaryOperator, UnaryOperatorHandler);
 class UnaryHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2922,14 +3274,14 @@ class UnaryHandler extends handler_1.Handler {
         this.operatorHandler = handler_1.Handler.handle(node.op, this.context);
         this.argumentHandler = handler_1.Handler.handle(node.argument, this.context);
         this.value = {
-            type: "UnaryExpression",
+            type: keywords_1.Keywords.UnaryExpression,
             operator: (_a = this.operatorHandler) === null || _a === void 0 ? void 0 : _a.value,
             arguments: (_b = this.argumentHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
 }
 exports.UnaryHandler = UnaryHandler;
-handler_1.Handler.registerHandler("Unary", UnaryHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Unary, UnaryHandler);
 
 
 /***/ }),
@@ -2944,6 +3296,7 @@ handler_1.Handler.registerHandler("Unary", UnaryHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnpackLiteralHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class UnpackLiteralHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2959,13 +3312,13 @@ class UnpackLiteralHandler extends handler_1.Handler {
         super._handle(node);
         this.elementHandler = handler_1.Handler.handle(node.element, this.context);
         this.value = {
-            type: "UnpackLiteralExpression",
+            type: keywords_1.Keywords.UnpackLiteralExpression,
             element: (_a = this.elementHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.UnpackLiteralHandler = UnpackLiteralHandler;
-handler_1.Handler.registerHandler("UnpackLiteral", UnpackLiteralHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.UnpackLiteral, UnpackLiteralHandler);
 
 
 /***/ }),
@@ -2980,6 +3333,7 @@ handler_1.Handler.registerHandler("UnpackLiteral", UnpackLiteralHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WhileLoopExpressionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class WhileLoopExpressionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2998,7 +3352,7 @@ class WhileLoopExpressionHandler extends handler_1.Handler {
         this.conditionHandler = handler_1.Handler.handle(node.cond, this.context);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
-            type: "WhileLoopExpression",
+            type: keywords_1.Keywords.WhileLoopExpression,
             isStatement: node.isStatement,
             condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
             block: (_b = this.blockHandler) === null || _b === void 0 ? void 0 : _b.value
@@ -3006,7 +3360,7 @@ class WhileLoopExpressionHandler extends handler_1.Handler {
     }
 }
 exports.WhileLoopExpressionHandler = WhileLoopExpressionHandler;
-handler_1.Handler.registerHandler("WhileLoop", WhileLoopExpressionHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.WhileLoop, WhileLoopExpressionHandler);
 
 
 /***/ }),
@@ -3041,17 +3395,18 @@ __webpack_require__(/*! ./moduleDeclarationHandler */ "./src/analyzer/semantic/m
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BooleanHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class BooleanHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "BooleanLiteral",
+            type: keywords_1.Keywords.BooleanLiteral,
             value: node.value
         };
     }
 }
 exports.BooleanHandler = BooleanHandler;
-handler_1.Handler.registerHandler("Boolean", BooleanHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Boolean, BooleanHandler);
 
 
 /***/ }),
@@ -3066,17 +3421,18 @@ handler_1.Handler.registerHandler("Boolean", BooleanHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CharHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class CharHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "CharLiteral",
+            type: keywords_1.Keywords.CharLiteral,
             value: node.value
         };
     }
 }
 exports.CharHandler = CharHandler;
-handler_1.Handler.registerHandler("Char", CharHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Char, CharHandler);
 
 
 /***/ }),
@@ -3091,17 +3447,18 @@ handler_1.Handler.registerHandler("Char", CharHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FloatHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class FloatHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "FloatLiteral",
+            type: keywords_1.Keywords.FloatLiteral,
             value: node.value
         };
     }
 }
 exports.FloatHandler = FloatHandler;
-handler_1.Handler.registerHandler("Float", FloatHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Float, FloatHandler);
 
 
 /***/ }),
@@ -3134,17 +3491,18 @@ __webpack_require__(/*! ./nullHandler */ "./src/analyzer/semantic/literals/nullH
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IntegerHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class IntegerHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "IntegerLiteral",
+            type: keywords_1.Keywords.IntegerLiteral,
             value: node.value
         };
     }
 }
 exports.IntegerHandler = IntegerHandler;
-handler_1.Handler.registerHandler("Integer", IntegerHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Integer, IntegerHandler);
 
 
 /***/ }),
@@ -3159,18 +3517,19 @@ handler_1.Handler.registerHandler("Integer", IntegerHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NullHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class NullHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         // this.value = node.value;
         this.value = {
-            type: "NullLiteral",
+            type: keywords_1.Keywords.NullLiteral,
             value: null,
         };
     }
 }
 exports.NullHandler = NullHandler;
-handler_1.Handler.registerHandler("Null", NullHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Null, NullHandler);
 
 
 /***/ }),
@@ -3185,17 +3544,18 @@ handler_1.Handler.registerHandler("Null", NullHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StringHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class StringHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
         this.value = {
-            type: "StringLiteral",
+            type: keywords_1.Keywords.StringLiteral,
             value: node.value
         };
     }
 }
 exports.StringHandler = StringHandler;
-handler_1.Handler.registerHandler("String", StringHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.String, StringHandler);
 
 
 /***/ }),
@@ -3210,6 +3570,7 @@ handler_1.Handler.registerHandler("String", StringHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ModuleDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ./common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../types/keywords */ "./src/types/keywords.ts");
 class ModuleDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3226,13 +3587,13 @@ class ModuleDeclarationHandler extends handler_1.Handler {
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
         this.value = {
-            type: "ModuleDeclaration",
+            type: keywords_1.Keywords.ModuleDeclaration,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
         };
     }
 }
 exports.ModuleDeclarationHandler = ModuleDeclarationHandler;
-handler_1.Handler.registerHandler("ModuleDeclaration", ModuleDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ModuleDeclaration, ModuleDeclarationHandler);
 
 
 /***/ }),
@@ -3247,6 +3608,7 @@ handler_1.Handler.registerHandler("ModuleDeclaration", ModuleDeclarationHandler)
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScriptHandler = void 0;
 const handler_1 = __webpack_require__(/*! ./common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../types/keywords */ "./src/types/keywords.ts");
 class ScriptHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3276,7 +3638,7 @@ class ScriptHandler extends handler_1.Handler {
             this.statementHandlers.push(handler);
         }
         this.value = {
-            type: "Script",
+            type: keywords_1.Keywords.Script,
             module: (_a = this.moduleHandler) === null || _a === void 0 ? void 0 : _a.value,
             statements: this.statementHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
@@ -3285,16 +3647,16 @@ class ScriptHandler extends handler_1.Handler {
         var _a;
         let moduleName = "module";
         const moduleNameContainer = (_a = this.value.module) === null || _a === void 0 ? void 0 : _a.name;
-        if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === "Identifier") {
+        if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === keywords_1.Keywords.Identifier) {
             moduleName = moduleNameContainer.name;
         }
-        else if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === "StringLiteral") {
+        else if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === keywords_1.Keywords.StringLiteral) {
             moduleName = moduleNameContainer.value;
         }
         else {
             moduleName = this.context.fileName;
         }
-        const symbol = this.declareSymbol(moduleName, "Module", parentScope);
+        const symbol = this.declareSymbol(moduleName, keywords_1.Keywords.Module, parentScope);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -3305,37 +3667,37 @@ class ScriptHandler extends handler_1.Handler {
         // collect module statement declarations
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "class":
+                case keywords_1.Keywords.Class:
                     {
                         scope.addClass(child);
                     }
                     break;
-                case "struct":
+                case keywords_1.Keywords.Struct:
                     {
                         scope.addStruct(child);
                     }
                     break;
-                case "interface":
+                case keywords_1.Keywords.Interface:
                     {
                         scope.addInterface(child);
                     }
                     break;
-                case "enum":
+                case keywords_1.Keywords.Enum:
                     {
                         scope.addEnum(child);
                     }
                     break;
-                case "test":
+                case keywords_1.Keywords.Test:
                     {
                         scope.addTest(child);
                     }
                     break;
-                case "function":
+                case keywords_1.Keywords.Function:
                     {
                         scope.addFunction(child);
                     }
                     break;
-                case "variable":
+                case keywords_1.Keywords.Variable:
                     {
                         scope.addVariable(child);
                     }
@@ -3350,7 +3712,7 @@ class ScriptHandler extends handler_1.Handler {
     }
 }
 exports.ScriptHandler = ScriptHandler;
-handler_1.Handler.registerHandler("Script", ScriptHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Script, ScriptHandler);
 
 
 /***/ }),
@@ -3365,10 +3727,12 @@ handler_1.Handler.registerHandler("Script", ScriptHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlockHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class BlockHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.bodyHandler = [];
+        this.nameSign = keywords_1.SpecialSymbols.Block;
     }
     get _children() {
         return [
@@ -3377,19 +3741,23 @@ class BlockHandler extends handler_1.Handler {
     }
     _handle(node) {
         super._handle(node);
+        this.nameSign = keywords_1.SpecialSymbols.Block;
         this.bodyHandler.length = 0;
         for (const statement of node.body) {
             const handler = handler_1.Handler.handle(statement, this.context);
             this.bodyHandler.push(handler);
         }
         this.value = {
-            type: "Block",
+            type: keywords_1.Keywords.Block,
             isStatement: node.isStatement,
             body: this.bodyHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
+    _signByParentHandler(sign) {
+        this.nameSign = sign;
+    }
     _createSymbolAndScope(parentScope) {
-        return this.declareSymbol("$Block", "Block", parentScope);
+        return this.declareSymbol(this.nameSign, keywords_1.Keywords.Block, parentScope);
     }
     _collectDeclarations(childrenSymbols, currentScope) {
         if (!currentScope) {
@@ -3398,7 +3766,7 @@ class BlockHandler extends handler_1.Handler {
         const scope = currentScope;
         for (const child of childrenSymbols) {
             // collect variables
-            if (child.type === "variable") {
+            if (child.type === keywords_1.Keywords.Variable) {
                 scope.addVariable(child);
             }
             else {
@@ -3409,7 +3777,7 @@ class BlockHandler extends handler_1.Handler {
     }
 }
 exports.BlockHandler = BlockHandler;
-handler_1.Handler.registerHandler("Block", BlockHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Block, BlockHandler);
 
 
 /***/ }),
@@ -3424,6 +3792,7 @@ handler_1.Handler.registerHandler("Block", BlockHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BreakContinueHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class BreakContinueHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3444,14 +3813,14 @@ class BreakContinueHandler extends handler_1.Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "BreakContinueStatement",
+            type: keywords_1.Keywords.BreakContinueStatement,
             isContinue: !node.isBreak,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.BreakContinueHandler = BreakContinueHandler;
-handler_1.Handler.registerHandler("BreakContinueStatement", BreakContinueHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.BreakContinueStatement, BreakContinueHandler);
 
 
 /***/ }),
@@ -3468,6 +3837,7 @@ __webpack_require__(/*! ./returnHandler */ "./src/analyzer/semantic/statements/c
 __webpack_require__(/*! ./breakContinueHandler */ "./src/analyzer/semantic/statements/controls/breakContinueHandler.ts");
 __webpack_require__(/*! ./outHandler */ "./src/analyzer/semantic/statements/controls/outHandler.ts");
 __webpack_require__(/*! ./throwHandler */ "./src/analyzer/semantic/statements/controls/throwHandler.ts");
+__webpack_require__(/*! ./tryCatchFinallyHandler */ "./src/analyzer/semantic/statements/controls/tryCatchFinallyHandler.ts");
 
 
 /***/ }),
@@ -3482,6 +3852,7 @@ __webpack_require__(/*! ./throwHandler */ "./src/analyzer/semantic/statements/co
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OutHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class OutHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3502,13 +3873,13 @@ class OutHandler extends handler_1.Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "OutStatement",
+            type: keywords_1.Keywords.OutStatement,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.OutHandler = OutHandler;
-handler_1.Handler.registerHandler("OutStatement", OutHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.OutStatement, OutHandler);
 
 
 /***/ }),
@@ -3523,6 +3894,7 @@ handler_1.Handler.registerHandler("OutStatement", OutHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReturnStatementHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ReturnStatementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3543,13 +3915,13 @@ class ReturnStatementHandler extends handler_1.Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "ReturnStatement",
+            type: keywords_1.Keywords.ReturnStatement,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.ReturnStatementHandler = ReturnStatementHandler;
-handler_1.Handler.registerHandler("ReturnStatement", ReturnStatementHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ReturnStatement, ReturnStatementHandler);
 
 
 /***/ }),
@@ -3564,6 +3936,7 @@ handler_1.Handler.registerHandler("ReturnStatement", ReturnStatementHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ThrowHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ThrowHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3584,13 +3957,122 @@ class ThrowHandler extends handler_1.Handler {
             this.exprHandler = null;
         }
         this.value = {
-            type: "ThrowStatement",
+            type: keywords_1.Keywords.ThrowStatement,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.ThrowHandler = ThrowHandler;
-handler_1.Handler.registerHandler("ThrowStatement", ThrowHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ThrowStatement, ThrowHandler);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/statements/controls/tryCatchFinallyHandler.ts":
+/*!*****************************************************************************!*\
+  !*** ./src/analyzer/semantic/statements/controls/tryCatchFinallyHandler.ts ***!
+  \*****************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TryCatchFinallyStatementHandler = void 0;
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+class TryCatchFinallyStatementHandler extends handler_1.Handler {
+    constructor() {
+        super(...arguments);
+        this.blockHandler = null;
+        this.catchPatternHandlers = [];
+        this.catchBlockHandler = null;
+        this.finallyBlockHandler = null;
+    }
+    get _children() {
+        return [
+            this.blockHandler,
+            ...this.catchPatternHandlers,
+            this.catchBlockHandler,
+            this.finallyBlockHandler
+        ];
+    }
+    _handle(node) {
+        var _a, _b;
+        super._handle(node);
+        this.blockHandler = handler_1.Handler.handle(node.block, this.context);
+        this.blockHandler.signByParentHandler(keywords_1.SpecialSymbols.Try);
+        this.catchPatternHandlers.length = 0;
+        if (node.catchPattern) {
+            for (const pattern of node.catchPattern) {
+                this.catchPatternHandlers.push(handler_1.Handler.handle(pattern, this.context));
+            }
+        }
+        if (node.catchBlock) {
+            this.catchBlockHandler = handler_1.Handler.handle(node.catchBlock, this.context);
+            this.catchBlockHandler.signByParentHandler(keywords_1.SpecialSymbols.Catch);
+        }
+        else {
+            this.catchBlockHandler = null;
+        }
+        if (node.finallyBlock) {
+            this.finallyBlockHandler = handler_1.Handler.handle(node.finallyBlock, this.context);
+            this.finallyBlockHandler.signByParentHandler(keywords_1.SpecialSymbols.Finally);
+        }
+        else {
+            this.finallyBlockHandler = null;
+        }
+        this.value = {
+            type: keywords_1.Keywords.TryCatchFinallyStatement,
+            block: this.blockHandler.value,
+            catchPattern: this.catchPatternHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            catchBlock: (_a = this.catchBlockHandler) === null || _a === void 0 ? void 0 : _a.value,
+            finallyBlock: (_b = this.finallyBlockHandler) === null || _b === void 0 ? void 0 : _b.value,
+        };
+    }
+    _createSymbolAndScope(parentScope) {
+        const tryName = keywords_1.SpecialSymbols.TryCatchFinallyBlock;
+        const symbol = this.declareSymbol(tryName, keywords_1.Keywords.Try, parentScope);
+        return symbol;
+    }
+    _collectDeclarations(childrenSymbols, currentScope) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope;
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case keywords_1.Keywords.Parameter:
+                    {
+                        scope.addParameter(child);
+                    }
+                    break;
+                case keywords_1.Keywords.Block:
+                    {
+                        switch (child.name) {
+                            case keywords_1.SpecialSymbols.Try:
+                                {
+                                    scope.setBody(child);
+                                }
+                                break;
+                            case keywords_1.SpecialSymbols.Catch:
+                                {
+                                    scope.setCatchBody(child);
+                                }
+                                break;
+                            case keywords_1.SpecialSymbols.Finally:
+                                {
+                                    scope.setFinallyBody(child);
+                                }
+                                break;
+                        }
+                    }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
+    }
+}
+exports.TryCatchFinallyStatementHandler = TryCatchFinallyStatementHandler;
+handler_1.Handler.registerHandler(keywords_1.Keywords.TryCatchFinallyStatement, TryCatchFinallyStatementHandler);
 
 
 /***/ }),
@@ -3605,6 +4087,7 @@ handler_1.Handler.registerHandler("ThrowStatement", ThrowHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpressionStatementHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ExpressionStatementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3620,13 +4103,13 @@ class ExpressionStatementHandler extends handler_1.Handler {
         super._handle(node);
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
         this.value = {
-            type: 'ExpressionStatement',
+            type: keywords_1.Keywords.ExpressionStatement,
             expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
 exports.ExpressionStatementHandler = ExpressionStatementHandler;
-handler_1.Handler.registerHandler("ExpressionStatement", ExpressionStatementHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.ExpressionStatement, ExpressionStatementHandler);
 
 
 /***/ }),
@@ -3656,6 +4139,7 @@ __webpack_require__(/*! ./controls/index */ "./src/analyzer/semantic/statements/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GenericDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class GenericDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3675,13 +4159,13 @@ class GenericDeclarationHandler extends handler_1.Handler {
             this.typeArgumentsHandler.push(handler);
         }
         this.value = {
-            type: "Generic",
+            type: keywords_1.Keywords.GenericDeclaration,
             typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
 }
 exports.GenericDeclarationHandler = GenericDeclarationHandler;
-handler_1.Handler.registerHandler("GenericDeclaration", GenericDeclarationHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.GenericDeclaration, GenericDeclarationHandler);
 
 
 /***/ }),
@@ -3696,6 +4180,7 @@ handler_1.Handler.registerHandler("GenericDeclaration", GenericDeclarationHandle
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GenericImplementHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class GenericImplementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3715,13 +4200,13 @@ class GenericImplementHandler extends handler_1.Handler {
             this.typeArgumentsHandler.push(handler);
         }
         this.value = {
-            type: "Generic",
+            type: keywords_1.Keywords.Generic,
             typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
 }
 exports.GenericImplementHandler = GenericImplementHandler;
-handler_1.Handler.registerHandler("GenericType", GenericImplementHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.GenericType, GenericImplementHandler);
 
 
 /***/ }),
@@ -3754,6 +4239,7 @@ __webpack_require__(/*! ./genericDeclarationHandler */ "./src/analyzer/semantic/
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ParameterHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ParameterHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3787,7 +4273,7 @@ class ParameterHandler extends handler_1.Handler {
             this.defaultValueHandler = null;
         }
         this.value = {
-            type: "Parameter",
+            type: keywords_1.Keywords.Parameter,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
             defaultValue: (_c = this.defaultValueHandler) === null || _c === void 0 ? void 0 : _c.value,
@@ -3795,11 +4281,11 @@ class ParameterHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const name = this.value.name.name;
-        return this.declareSymbol(name, "Parameter", parentScope);
+        return this.declareSymbol(name, keywords_1.Keywords.Parameter, parentScope);
     }
 }
 exports.ParameterHandler = ParameterHandler;
-handler_1.Handler.registerHandler("Parameter", ParameterHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Parameter, ParameterHandler);
 
 
 /***/ }),
@@ -3814,6 +4300,7 @@ handler_1.Handler.registerHandler("Parameter", ParameterHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TupleImplementHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class TupleImplementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3834,13 +4321,13 @@ class TupleImplementHandler extends handler_1.Handler {
             }
         }
         this.value = {
-            type: "Tuple",
+            type: keywords_1.Keywords.Tuple,
             elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
 }
 exports.TupleImplementHandler = TupleImplementHandler;
-handler_1.Handler.registerHandler("TupleType", TupleImplementHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.TupleType, TupleImplementHandler);
 
 
 /***/ }),
@@ -3855,6 +4342,7 @@ handler_1.Handler.registerHandler("TupleType", TupleImplementHandler);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class TypeHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -3870,14 +4358,14 @@ class TypeHandler extends handler_1.Handler {
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         this.value = {
-            type: "Type",
+            type: keywords_1.Keywords.Type,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             dimensions: node.dimensions
         };
     }
 }
 exports.TypeHandler = TypeHandler;
-handler_1.Handler.registerHandler("Type", TypeHandler);
+handler_1.Handler.registerHandler(keywords_1.Keywords.Type, TypeHandler);
 
 
 /***/ }),
@@ -3934,10 +4422,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlockScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class BlockScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "BlockScope";
+        this.type = keywords_1.ScopeKeywords.BlockScope;
         this.variables = new symbol_1.SymbolTable();
         this.subScopeSymbols = new symbol_1.SymbolTable();
         this.symbolTableList = [this.variables, this.subScopeSymbols];
@@ -3955,7 +4444,7 @@ class BlockScope extends scope_1.Scope {
     }
 }
 exports.BlockScope = BlockScope;
-scope_1.Scope.registerScope("Block", BlockScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Block, BlockScope);
 
 
 /***/ }),
@@ -3972,10 +4461,11 @@ exports.ClassScope = void 0;
 const access_1 = __webpack_require__(/*! ../../../types/access */ "./src/types/access.ts");
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ClassScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "ClassScope";
+        this.type = keywords_1.ScopeKeywords.ClassScope;
         this.generics = new symbol_1.SymbolTable();
         this.fields = new symbol_1.SymbolTable();
         this.properties = new symbol_1.SymbolTable();
@@ -4055,7 +4545,7 @@ class ClassScope extends scope_1.Scope {
     }
 }
 exports.ClassScope = ClassScope;
-scope_1.Scope.registerScope("Class", ClassScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Class, ClassScope);
 
 
 /***/ }),
@@ -4071,10 +4561,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EnumScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class EnumScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "EnumScope";
+        this.type = keywords_1.ScopeKeywords.EnumScope;
         // 枚举类型
         this.enumMembers = new symbol_1.SymbolTable();
         this.symbolTableList = [this.enumMembers];
@@ -4087,7 +4578,7 @@ class EnumScope extends scope_1.Scope {
     }
 }
 exports.EnumScope = EnumScope;
-scope_1.Scope.registerScope("Enum", EnumScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Enum, EnumScope);
 
 
 /***/ }),
@@ -4103,11 +4594,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 // 导出一个名为 FunctionScope 的类，该类继承自 Scope 类
 class FunctionScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "FunctionScope";
+        this.type = keywords_1.ScopeKeywords.FunctionScope;
         this.body = null;
         this.generics = new symbol_1.SymbolTable();
         this.parameters = new symbol_1.SymbolTable();
@@ -4134,7 +4626,7 @@ class FunctionScope extends scope_1.Scope {
     }
 }
 exports.FunctionScope = FunctionScope;
-scope_1.Scope.registerScope("Function", FunctionScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Function, FunctionScope);
 
 
 /***/ }),
@@ -4151,6 +4643,7 @@ __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 __webpack_require__(/*! ./blockScope */ "./src/analyzer/static/scope/blockScope.ts");
 __webpack_require__(/*! ./functionScope */ "./src/analyzer/static/scope/functionScope.ts");
 __webpack_require__(/*! ./testScope */ "./src/analyzer/static/scope/testScope.ts");
+__webpack_require__(/*! ./tryScope */ "./src/analyzer/static/scope/tryScope.ts");
 __webpack_require__(/*! ./propertyScope */ "./src/analyzer/static/scope/propertyScope.ts");
 __webpack_require__(/*! ./enumScope */ "./src/analyzer/static/scope/enumScope.ts");
 __webpack_require__(/*! ./classScope */ "./src/analyzer/static/scope/classScope.ts");
@@ -4172,15 +4665,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const access_1 = __webpack_require__(/*! ../../../types/access */ "./src/types/access.ts");
 class InterfaceScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "InterfaceScope";
+        this.type = keywords_1.ScopeKeywords.InterfaceScope;
         this.generics = new symbol_1.SymbolTable();
         this.fields = new symbol_1.SymbolTable();
         this.properties = new symbol_1.SymbolTable();
         this.methods = new symbol_1.SymbolTable();
-        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods];
+        this.metaFunctions = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.generics, this.fields, this.properties, this.methods, this.metaFunctions];
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -4191,12 +4687,62 @@ class InterfaceScope extends scope_1.Scope {
         return success;
     }
     addProperty(property) {
-        const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
-        return success;
+        return (0, symbol_1.checkSymbolOrSymbolArray)(property, (property) => {
+            var _a, _b;
+            const definedProperty = this.properties.getSymbol(property.name);
+            if (definedProperty) {
+                // check type of defined property
+                if (definedProperty.propertyType === property.propertyType || definedProperty.propertyType === access_1.PropertyType.GET_SET) {
+                    // TODO: throw error if they are the same type or if they are GET_SET
+                    return false;
+                }
+                if (definedProperty.isStatic !== property.isStatic) {
+                    // TODO: throw error if they are not the same type
+                    return false;
+                }
+                // warning if they have different accessibility
+                if (definedProperty.accessibility !== property.accessibility) {
+                    // TODO: throw warning if they have different accessibility
+                }
+                // merge getter and setter body if they are not defined yet
+                definedProperty.propertyType = access_1.PropertyType.GET_SET;
+                const definedPropertyScope = definedProperty.childScope;
+                const propertyScope = property.childScope;
+                definedPropertyScope.getterSymbol = (_a = propertyScope.getterSymbol) !== null && _a !== void 0 ? _a : definedPropertyScope.getterSymbol;
+                definedPropertyScope.setterSymbol = (_b = propertyScope.setterSymbol) !== null && _b !== void 0 ? _b : definedPropertyScope.setterSymbol;
+                return true;
+            }
+            const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
+            return success;
+        });
     }
     addMethod(method) {
-        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
-        return success;
+        return (0, symbol_1.checkSymbolOrSymbolArray)(method, (method) => {
+            if (method) {
+                const definedMethod = this.methods.getSymbol(method.name);
+                if (definedMethod) {
+                    // now we are not able to check overloads signatures, just add into overload list
+                    // it will be checked later when type is resolved
+                    definedMethod.overloads.push(method);
+                    return true;
+                }
+            }
+            const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+            return success;
+        });
+    }
+    addMetaFunction(metaFunction) {
+        return (0, symbol_1.checkSymbolOrSymbolArray)(metaFunction, (metaFunction) => {
+            if (metaFunction) {
+                const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
+                if (definedMetaFunction) {
+                    definedMetaFunction.overloads.push(metaFunction);
+                    return true;
+                }
+            }
+            const success = this.metaFunctions.addSymbol(metaFunction);
+            return success;
+        });
     }
     _getSymbol(name) {
         const symbol = this.fields.getSymbol(name) || this.properties.getSymbol(name) || this.methods.getSymbol(name) || this.generics.getSymbol(name);
@@ -4204,7 +4750,7 @@ class InterfaceScope extends scope_1.Scope {
     }
 }
 exports.InterfaceScope = InterfaceScope;
-scope_1.Scope.registerScope("Interface", InterfaceScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Interface, InterfaceScope);
 
 
 /***/ }),
@@ -4220,10 +4766,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ModuleScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ModuleScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "ModuleScope";
+        this.type = keywords_1.ScopeKeywords.ModuleScope;
         this.functions = new symbol_1.SymbolTable();
         this.variables = new symbol_1.SymbolTable();
         this.classes = new symbol_1.SymbolTable();
@@ -4267,7 +4814,7 @@ class ModuleScope extends scope_1.Scope {
     }
 }
 exports.ModuleScope = ModuleScope;
-scope_1.Scope.registerScope("Module", ModuleScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Module, ModuleScope);
 
 
 /***/ }),
@@ -4282,10 +4829,11 @@ scope_1.Scope.registerScope("Module", ModuleScope);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PropertyScope = void 0;
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class PropertyScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "PropertyScope";
+        this.type = keywords_1.ScopeKeywords.PropertyScope;
         this.symbolTableList = [() => this.getterSymbol, () => this.setterSymbol];
     }
     setGetter(getter) {
@@ -4310,7 +4858,7 @@ class PropertyScope extends scope_1.Scope {
     }
 }
 exports.PropertyScope = PropertyScope;
-scope_1.Scope.registerScope("Property", PropertyScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Property, PropertyScope);
 
 
 /***/ }),
@@ -4435,10 +4983,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StructScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class StructScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "StructScope";
+        this.type = keywords_1.ScopeKeywords.StructScope;
         this.generics = new symbol_1.SymbolTable();
         this.fields = new symbol_1.SymbolTable();
         this.methods = new symbol_1.SymbolTable();
@@ -4454,12 +5003,32 @@ class StructScope extends scope_1.Scope {
         return success;
     }
     addMethod(method) {
-        const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
-        return success;
+        return (0, symbol_1.checkSymbolOrSymbolArray)(method, (method) => {
+            if (method) {
+                const definedMethod = this.methods.getSymbol(method.name);
+                if (definedMethod) {
+                    // now we are not able to check overloads signatures, just add into overload list
+                    // it will be checked later when type is resolved
+                    definedMethod.overloads.push(method);
+                    return true;
+                }
+            }
+            const success = this.checkSymbolUnique(method) && this.methods.addSymbol(method);
+            return success;
+        });
     }
     addMetaFunction(metaFunction) {
-        const success = this.metaFunctions.addSymbol(metaFunction);
-        return success;
+        return (0, symbol_1.checkSymbolOrSymbolArray)(metaFunction, (metaFunction) => {
+            if (metaFunction) {
+                const definedMetaFunction = this.metaFunctions.getSymbol(metaFunction.name);
+                if (definedMetaFunction) {
+                    definedMetaFunction.overloads.push(metaFunction);
+                    return true;
+                }
+            }
+            const success = this.metaFunctions.addSymbol(metaFunction);
+            return success;
+        });
     }
     _getSymbol(name) {
         const symbol = this.fields.getSymbol(name) || this.methods.getSymbol(name) || this.generics.getSymbol(name);
@@ -4467,7 +5036,7 @@ class StructScope extends scope_1.Scope {
     }
 }
 exports.StructScope = StructScope;
-scope_1.Scope.registerScope("Struct", StructScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Struct, StructScope);
 
 
 /***/ }),
@@ -4483,10 +5052,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TestScope = void 0;
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class TestScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
-        this.type = "TestScope";
+        this.type = keywords_1.ScopeKeywords.TestScope;
         this.body = null;
         this.parameters = new symbol_1.SymbolTable();
         this.symbolTableList = [this.parameters, () => this.body];
@@ -4508,7 +5078,67 @@ class TestScope extends scope_1.Scope {
     }
 }
 exports.TestScope = TestScope;
-scope_1.Scope.registerScope("Test", TestScope);
+scope_1.Scope.registerScope(keywords_1.Keywords.Test, TestScope);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/scope/tryScope.ts":
+/*!***********************************************!*\
+  !*** ./src/analyzer/static/scope/tryScope.ts ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TryScope = void 0;
+const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
+const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+class TryScope extends scope_1.Scope {
+    constructor() {
+        super(...arguments);
+        this.type = keywords_1.ScopeKeywords.TryScope;
+        this.body = null;
+        this.catchBody = null;
+        this.finallyBody = null;
+        this.parameters = new symbol_1.SymbolTable();
+        this.symbolTableList = [this.parameters, () => this.body, () => this.catchBody, () => this.finallyBody];
+    }
+    addParameter(parameter) {
+        const success = this.checkSymbolUnique(parameter) && this.parameters.addSymbol(parameter);
+        return success;
+    }
+    setBody(body) {
+        if (body instanceof Array) {
+            this.body = body[0];
+        }
+        else {
+            this.body = body !== null && body !== void 0 ? body : null;
+        }
+    }
+    setCatchBody(body) {
+        if (body instanceof Array) {
+            this.catchBody = body[0];
+        }
+        else {
+            this.catchBody = body !== null && body !== void 0 ? body : null;
+        }
+    }
+    setFinallyBody(body) {
+        if (body instanceof Array) {
+            this.finallyBody = body[0];
+        }
+        else {
+            this.finallyBody = body !== null && body !== void 0 ? body : null;
+        }
+    }
+    _getSymbol(_symbol) {
+        return this.parameters.getSymbol(_symbol);
+    }
+}
+exports.TryScope = TryScope;
+scope_1.Scope.registerScope(keywords_1.Keywords.Try, TryScope);
 
 
 /***/ }),
@@ -4523,14 +5153,15 @@ scope_1.Scope.registerScope("Test", TestScope);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlockSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class BlockSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "block";
+        this.type = keywords_1.Keywords.Block;
     }
 }
 exports.BlockSymbol = BlockSymbol;
-symbol_1.Symbol.registerSymbol("Block", BlockSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Block, BlockSymbol);
 
 
 /***/ }),
@@ -4545,18 +5176,17 @@ symbol_1.Symbol.registerSymbol("Block", BlockSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ClassSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ClassSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "class";
+        this.type = keywords_1.Keywords.Class;
         this.interfaces = [];
         this.decorators = [];
     }
-    _onTypeCreated() {
-    }
 }
 exports.ClassSymbol = ClassSymbol;
-symbol_1.Symbol.registerSymbol("Class", ClassSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Class, ClassSymbol);
 
 
 /***/ }),
@@ -4571,14 +5201,15 @@ symbol_1.Symbol.registerSymbol("Class", ClassSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EnumSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class EnumSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "enum";
+        this.type = keywords_1.Keywords.Enum;
     }
 }
 exports.EnumSymbol = EnumSymbol;
-symbol_1.Symbol.registerSymbol("Enum", EnumSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Enum, EnumSymbol);
 
 
 /***/ }),
@@ -4594,16 +5225,17 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FieldSymbol = void 0;
 const variableSymbol_1 = __webpack_require__(/*! ./variableSymbol */ "./src/analyzer/static/symbol/variableSymbol.ts");
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class FieldSymbol extends variableSymbol_1.VariableSymbol {
     constructor() {
         super(...arguments);
-        this.type = "field";
+        this.type = keywords_1.Keywords.Field;
         // 函数装饰器
         this.decorators = [];
     }
 }
 exports.FieldSymbol = FieldSymbol;
-symbol_1.Symbol.registerSymbol("Field", FieldSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Field, FieldSymbol);
 
 
 /***/ }),
@@ -4618,10 +5250,11 @@ symbol_1.Symbol.registerSymbol("Field", FieldSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class FunctionSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "function";
+        this.type = keywords_1.Keywords.Function;
         // 
         this.overloads = [];
         // 
@@ -4631,7 +5264,7 @@ class FunctionSymbol extends symbol_1.Symbol {
     }
 }
 exports.FunctionSymbol = FunctionSymbol;
-symbol_1.Symbol.registerSymbol("Function", FunctionSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Function, FunctionSymbol);
 
 
 /***/ }),
@@ -4647,14 +5280,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GenericSymbol = void 0;
 const fieldSymbol_1 = __webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class GenericSymbol extends fieldSymbol_1.FieldSymbol {
     constructor() {
         super(...arguments);
-        this.type = 'generic';
+        this.type = keywords_1.Keywords.Generic;
     }
 }
 exports.GenericSymbol = GenericSymbol;
-symbol_1.Symbol.registerSymbol("Generic", GenericSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Generic, GenericSymbol);
 
 
 /***/ }),
@@ -4673,6 +5307,7 @@ __webpack_require__(/*! ./propertySymbol */ "./src/analyzer/static/symbol/proper
 __webpack_require__(/*! ./blockSymbol */ "./src/analyzer/static/symbol/blockSymbol.ts");
 __webpack_require__(/*! ./functionSymbol */ "./src/analyzer/static/symbol/functionSymbol.ts");
 __webpack_require__(/*! ./testSymbol */ "./src/analyzer/static/symbol/testSymbol.ts");
+__webpack_require__(/*! ./trySymbol */ "./src/analyzer/static/symbol/trySymbol.ts");
 __webpack_require__(/*! ./parameterSymbol */ "./src/analyzer/static/symbol/parameterSymbol.ts");
 __webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
 __webpack_require__(/*! ./genericSymbol */ "./src/analyzer/static/symbol/genericSymbol.ts");
@@ -4696,16 +5331,17 @@ __webpack_require__(/*! ./moduleSymbol */ "./src/analyzer/static/symbol/moduleSy
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class InterfaceSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "interface";
+        this.type = keywords_1.Keywords.Interface;
         this.interfaces = [];
         this.decorators = [];
     }
 }
 exports.InterfaceSymbol = InterfaceSymbol;
-symbol_1.Symbol.registerSymbol("Interface", InterfaceSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Interface, InterfaceSymbol);
 
 
 /***/ }),
@@ -4721,15 +5357,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaSymbol = void 0;
 const functionSymbol_1 = __webpack_require__(/*! ./functionSymbol */ "./src/analyzer/static/symbol/functionSymbol.ts");
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class MetaSymbol extends functionSymbol_1.FunctionSymbol {
     constructor() {
         super(...arguments);
-        this.type = "meta";
+        this.type = keywords_1.Keywords.Meta;
         this.overloads = [];
     }
 }
 exports.MetaSymbol = MetaSymbol;
-symbol_1.Symbol.registerSymbol("Meta", MetaSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Meta, MetaSymbol);
 
 
 /***/ }),
@@ -4744,14 +5381,15 @@ symbol_1.Symbol.registerSymbol("Meta", MetaSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ModuleSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ModuleSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "module";
+        this.type = keywords_1.Keywords.Module;
     }
 }
 exports.ModuleSymbol = ModuleSymbol;
-symbol_1.Symbol.registerSymbol("Module", ModuleSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Module, ModuleSymbol);
 
 
 /***/ }),
@@ -4767,14 +5405,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ParameterSymbol = void 0;
 const variableSymbol_1 = __webpack_require__(/*! ./variableSymbol */ "./src/analyzer/static/symbol/variableSymbol.ts");
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class ParameterSymbol extends variableSymbol_1.VariableSymbol {
     constructor() {
         super(...arguments);
-        this.type = "parameter";
+        this.type = keywords_1.Keywords.Parameter;
     }
 }
 exports.ParameterSymbol = ParameterSymbol;
-symbol_1.Symbol.registerSymbol("Parameter", ParameterSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Parameter, ParameterSymbol);
 
 
 /***/ }),
@@ -4790,14 +5429,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PropertySymbol = void 0;
 const fieldSymbol_1 = __webpack_require__(/*! ./fieldSymbol */ "./src/analyzer/static/symbol/fieldSymbol.ts");
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class PropertySymbol extends fieldSymbol_1.FieldSymbol {
     constructor() {
         super(...arguments);
-        this.type = 'property';
+        this.type = keywords_1.Keywords.Property;
     }
 }
 exports.PropertySymbol = PropertySymbol;
-symbol_1.Symbol.registerSymbol("Property", PropertySymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Property, PropertySymbol);
 
 
 /***/ }),
@@ -4812,14 +5452,15 @@ symbol_1.Symbol.registerSymbol("Property", PropertySymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StructSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class StructSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "struct";
+        this.type = keywords_1.Keywords.Struct;
     }
 }
 exports.StructSymbol = StructSymbol;
-symbol_1.Symbol.registerSymbol("Struct", StructSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Struct, StructSymbol);
 
 
 /***/ }),
@@ -4839,6 +5480,7 @@ const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */
 const duplicatedIdentifierError_1 = __webpack_require__(/*! ../../../errors/duplicatedIdentifierError */ "./src/errors/duplicatedIdentifierError.ts");
 const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 const metaType_1 = __webpack_require__(/*! ../type/meta/metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(name, context) {
         super(context);
@@ -4892,9 +5534,10 @@ class SymbolTable {
     }
     addSymbol(symbol) {
         return checkSymbolOrSymbolArray(symbol, (symbol) => {
-            if (symbol.type === "Function") {
+            if (symbol.type === keywords_1.Keywords.Function) {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
+                this.symbolTable.push(symbol);
                 return true;
             }
             // variable destruction pattern can have multiple symbols with names, we should check all of them
@@ -4907,12 +5550,17 @@ class SymbolTable {
                 return finalResult;
             }
             // if the symbol is block symbol, we should add it to the symbol table without checking
-            if (symbol.name === "$Block") {
+            if (symbol.name === keywords_1.SpecialSymbols.Block) {
+                this.symbolTable.push(symbol);
+                return true;
+            }
+            // if the symbol is try cache finally symbol, we should add it to the symbol table without checking
+            if (symbol.name === keywords_1.SpecialSymbols.TryCatchFinallyBlock) {
                 this.symbolTable.push(symbol);
                 return true;
             }
             // if the symbol is lambda symbol, we should add it to the symbol table without checking
-            if (symbol.name === "$Lambda") {
+            if (symbol.name === keywords_1.SpecialSymbols.Lambda) {
                 this.symbolTable.push(symbol);
                 return true;
             }
@@ -4963,14 +5611,38 @@ function reportDuplicatedSymbol(triggerSymbol, conflictSymbol) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TestSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class TestSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "test";
+        this.type = keywords_1.Keywords.Test;
     }
 }
 exports.TestSymbol = TestSymbol;
-symbol_1.Symbol.registerSymbol("Test", TestSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Test, TestSymbol);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/symbol/trySymbol.ts":
+/*!*************************************************!*\
+  !*** ./src/analyzer/static/symbol/trySymbol.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TrySymbol = void 0;
+const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+class TrySymbol extends symbol_1.Symbol {
+    constructor() {
+        super(...arguments);
+        this.type = keywords_1.Keywords.Try;
+    }
+}
+exports.TrySymbol = TrySymbol;
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Try, TrySymbol);
 
 
 /***/ }),
@@ -4985,14 +5657,15 @@ symbol_1.Symbol.registerSymbol("Test", TestSymbol);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VariableSymbol = void 0;
 const symbol_1 = __webpack_require__(/*! ./symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 class VariableSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
-        this.type = "variable";
+        this.type = keywords_1.Keywords.Variable;
     }
 }
 exports.VariableSymbol = VariableSymbol;
-symbol_1.Symbol.registerSymbol("Variable", VariableSymbol);
+symbol_1.Symbol.registerSymbol(keywords_1.Keywords.Variable, VariableSymbol);
 
 
 /***/ }),
@@ -5025,12 +5698,13 @@ __webpack_require__(/*! ./meta/index */ "./src/analyzer/static/type/meta/index.t
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ClassMetaType = void 0;
 const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ClassMetaType extends metaType_1.MetaType {
     _onTypeCreated(symbol) {
     }
 }
 exports.ClassMetaType = ClassMetaType;
-metaType_1.MetaType.registerType("class", ClassMetaType);
+metaType_1.MetaType.registerType(keywords_1.Keywords.Class, ClassMetaType);
 
 
 /***/ }),
@@ -5092,17 +5766,18 @@ MetaType.metaTypeMap = new Map();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ArrayType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ArrayType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
-        this.name = "array";
+        this.name = keywords_1.TypeKeywords.Array;
     }
     get _typeName() {
-        return "array";
+        return keywords_1.TypeKeywords.Array;
     }
 }
 exports.ArrayType = ArrayType;
-predefinedType_1.PredefinedType.registerType("array", new ArrayType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Array, new ArrayType());
 
 
 /***/ }),
@@ -5117,18 +5792,19 @@ predefinedType_1.PredefinedType.registerType("array", new ArrayType());
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BoolType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class BoolType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
-        this.name = "bool";
+        this.name = keywords_1.TypeKeywords.Boolean;
         this.size = 1;
     }
     get _typeName() {
-        return "bool";
+        return keywords_1.TypeKeywords.Boolean;
     }
 }
 exports.BoolType = BoolType;
-predefinedType_1.PredefinedType.registerType("bool", new BoolType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Boolean, new BoolType());
 
 
 /***/ }),
@@ -5143,17 +5819,18 @@ predefinedType_1.PredefinedType.registerType("bool", new BoolType());
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BufferType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class BufferType extends predefinedType_1.PredefinedType {
     constructor() {
         super(...arguments);
-        this.name = "buffer";
+        this.name = keywords_1.TypeKeywords.Buffer;
     }
     get _typeName() {
-        return "buffer";
+        return keywords_1.TypeKeywords.Buffer;
     }
 }
 exports.BufferType = BufferType;
-predefinedType_1.PredefinedType.registerType("buffer", new BufferType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Buffer, new BufferType());
 
 
 /***/ }),
@@ -5168,14 +5845,15 @@ predefinedType_1.PredefinedType.registerType("buffer", new BufferType());
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FloatType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class FloatType extends predefinedType_1.PredefinedType {
     constructor(size) {
         super();
-        this.name = "float";
+        this.name = keywords_1.TypeKeywords.Float;
         this.size = size;
     }
     get _typeName() {
-        return `float${this.size}`;
+        return `${keywords_1.TypeKeywords.Float}${this.size}`;
     }
 }
 exports.FloatType = FloatType;
@@ -5183,10 +5861,10 @@ const floatTypes = {
     float32: new FloatType(32),
     float64: new FloatType(64)
 };
-predefinedType_1.PredefinedType.registerType("float", floatTypes.float32);
-predefinedType_1.PredefinedType.registerType("float32", floatTypes.float32);
-predefinedType_1.PredefinedType.registerType("double", floatTypes.float64);
-predefinedType_1.PredefinedType.registerType("float64", floatTypes.float64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Float, floatTypes.float32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Float32, floatTypes.float32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Double, floatTypes.float64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Float64, floatTypes.float64);
 
 
 /***/ }),
@@ -5201,17 +5879,18 @@ predefinedType_1.PredefinedType.registerType("float64", floatTypes.float64);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FunctionType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class FunctionType extends predefinedType_1.PredefinedType {
     constructor() {
         super(...arguments);
-        this.name = "function";
+        this.name = keywords_1.TypeKeywords.Function;
     }
     get _typeName() {
-        return "function";
+        return keywords_1.TypeKeywords.Function;
     }
 }
 exports.FunctionType = FunctionType;
-predefinedType_1.PredefinedType.registerType("function", new FunctionType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Function, new FunctionType());
 
 
 /***/ }),
@@ -5248,15 +5927,16 @@ __webpack_require__(/*! ./functionType */ "./src/analyzer/static/type/predefined
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IntType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class IntType extends predefinedType_1.PredefinedType {
     constructor(unsigned, size) {
         super();
-        this.name = "int";
+        this.name = keywords_1.TypeKeywords.Integer;
         this.unsigned = unsigned;
         this.size = size;
     }
     get _typeName() {
-        return `${this.unsigned ? "u" : ""}int${this.size}`;
+        return `${this.unsigned ? "u" : ""}${keywords_1.TypeKeywords.Integer}${this.size}`;
     }
 }
 exports.IntType = IntType;
@@ -5270,22 +5950,22 @@ const intTypes = {
     uint32: new IntType(true, 32),
     uint64: new IntType(true, 64)
 };
-predefinedType_1.PredefinedType.registerType("char", intTypes.int8);
-predefinedType_1.PredefinedType.registerType("int8", intTypes.int8);
-predefinedType_1.PredefinedType.registerType("byte", intTypes.uint8);
-predefinedType_1.PredefinedType.registerType("uint8", intTypes.uint8);
-predefinedType_1.PredefinedType.registerType("short", intTypes.int16);
-predefinedType_1.PredefinedType.registerType("int16", intTypes.int16);
-predefinedType_1.PredefinedType.registerType("ushort", intTypes.uint16);
-predefinedType_1.PredefinedType.registerType("uint16", intTypes.uint16);
-predefinedType_1.PredefinedType.registerType("int", intTypes.int32);
-predefinedType_1.PredefinedType.registerType("int32", intTypes.int32);
-predefinedType_1.PredefinedType.registerType("uint", intTypes.uint32);
-predefinedType_1.PredefinedType.registerType("uint32", intTypes.uint32);
-predefinedType_1.PredefinedType.registerType("long", intTypes.int64);
-predefinedType_1.PredefinedType.registerType("int64", intTypes.int64);
-predefinedType_1.PredefinedType.registerType("ulong", intTypes.uint64);
-predefinedType_1.PredefinedType.registerType("uint64", intTypes.uint64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Char, intTypes.int8);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Int8, intTypes.int8);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Byte, intTypes.uint8);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UInt8, intTypes.uint8);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Short, intTypes.int16);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Int16, intTypes.int16);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UShort, intTypes.uint16);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UInt16, intTypes.uint16);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Integer, intTypes.int32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Int32, intTypes.int32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UInt, intTypes.uint32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UInt32, intTypes.uint32);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Long, intTypes.int64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Int64, intTypes.int64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.ULong, intTypes.uint64);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.UInt64, intTypes.uint64);
 
 
 /***/ }),
@@ -5300,19 +5980,20 @@ predefinedType_1.PredefinedType.registerType("uint64", intTypes.uint64);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NullType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class NullType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
-        this.name = "null";
+        this.name = keywords_1.TypeKeywords.Null;
     }
     get _typeName() {
-        return "null";
+        return keywords_1.TypeKeywords.Null;
     }
 }
 exports.NullType = NullType;
 const nullType = new NullType();
-predefinedType_1.PredefinedType.registerType("null", nullType);
-predefinedType_1.PredefinedType.registerType("void", nullType);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Null, nullType);
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Void, nullType);
 
 
 /***/ }),
@@ -5327,16 +6008,18 @@ predefinedType_1.PredefinedType.registerType("void", nullType);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ObjectType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ObjectType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
-        this.name = "object";
+        this.name = keywords_1.TypeKeywords.Object;
     }
     get _typeName() {
-        return "object";
+        return keywords_1.TypeKeywords.Object;
     }
 }
 exports.ObjectType = ObjectType;
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Object, new ObjectType());
 
 
 /***/ }),
@@ -5379,17 +6062,18 @@ PredefinedType.typeDefinitionMap = new Map();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StringType = void 0;
 const predefinedType_1 = __webpack_require__(/*! ./predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class StringType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
-        this.name = "string";
+        this.name = keywords_1.TypeKeywords.String;
     }
     get _typeName() {
-        return "string";
+        return keywords_1.TypeKeywords.String;
     }
 }
 exports.StringType = StringType;
-predefinedType_1.PredefinedType.registerType("string", new StringType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.String, new StringType());
 
 
 /***/ }),
@@ -6288,53 +6972,56 @@ const peggyParser = // Generated by Peggy 3.0.2.
         var peg$c23 = "in";
         var peg$c24 = "out";
         var peg$c25 = "throw";
-        var peg$c26 = "...";
-        var peg$c27 = "?";
-        var peg$c28 = ":";
-        var peg$c29 = ";";
-        var peg$c30 = ",";
-        var peg$c31 = ".";
-        var peg$c32 = "~";
-        var peg$c33 = "@";
-        var peg$c34 = "#";
-        var peg$c35 = "$";
-        var peg$c36 = "(";
-        var peg$c37 = ")";
-        var peg$c38 = "{";
-        var peg$c39 = "}";
-        var peg$c40 = "[";
-        var peg$c41 = "]";
-        var peg$c42 = "=";
-        var peg$c43 = "+=";
-        var peg$c44 = "-=";
-        var peg$c45 = "*=";
-        var peg$c46 = "/=";
-        var peg$c47 = "%=";
-        var peg$c48 = "==";
-        var peg$c49 = "!=";
-        var peg$c50 = "!";
-        var peg$c51 = "<";
-        var peg$c52 = "<=";
-        var peg$c53 = ">";
-        var peg$c54 = ">=";
-        var peg$c55 = "+";
-        var peg$c56 = "-";
-        var peg$c57 = "*";
-        var peg$c58 = "/";
-        var peg$c59 = "%";
-        var peg$c60 = "&&";
-        var peg$c61 = "||";
-        var peg$c62 = "=>";
-        var peg$c63 = "true";
-        var peg$c64 = "false";
-        var peg$c65 = "0x";
-        var peg$c66 = "0";
-        var peg$c67 = "'";
-        var peg$c68 = "\"";
-        var peg$c69 = "null";
-        var peg$c70 = "//";
-        var peg$c71 = "/*";
-        var peg$c72 = "*/";
+        var peg$c26 = "try";
+        var peg$c27 = "catch";
+        var peg$c28 = "finally";
+        var peg$c29 = "...";
+        var peg$c30 = "?";
+        var peg$c31 = ":";
+        var peg$c32 = ";";
+        var peg$c33 = ",";
+        var peg$c34 = ".";
+        var peg$c35 = "~";
+        var peg$c36 = "@";
+        var peg$c37 = "#";
+        var peg$c38 = "$";
+        var peg$c39 = "(";
+        var peg$c40 = ")";
+        var peg$c41 = "{";
+        var peg$c42 = "}";
+        var peg$c43 = "[";
+        var peg$c44 = "]";
+        var peg$c45 = "=";
+        var peg$c46 = "+=";
+        var peg$c47 = "-=";
+        var peg$c48 = "*=";
+        var peg$c49 = "/=";
+        var peg$c50 = "%=";
+        var peg$c51 = "==";
+        var peg$c52 = "!=";
+        var peg$c53 = "!";
+        var peg$c54 = "<";
+        var peg$c55 = "<=";
+        var peg$c56 = ">";
+        var peg$c57 = ">=";
+        var peg$c58 = "+";
+        var peg$c59 = "-";
+        var peg$c60 = "*";
+        var peg$c61 = "/";
+        var peg$c62 = "%";
+        var peg$c63 = "&&";
+        var peg$c64 = "||";
+        var peg$c65 = "=>";
+        var peg$c66 = "true";
+        var peg$c67 = "false";
+        var peg$c68 = "0x";
+        var peg$c69 = "0";
+        var peg$c70 = "'";
+        var peg$c71 = "\"";
+        var peg$c72 = "null";
+        var peg$c73 = "//";
+        var peg$c74 = "/*";
+        var peg$c75 = "*/";
         var peg$r0 = /^[A-Za-z_]/;
         var peg$r1 = /^[A-Za-z0-9_]/;
         var peg$r2 = /^[1-9]/;
@@ -6374,63 +7061,66 @@ const peggyParser = // Generated by Peggy 3.0.2.
         var peg$e25 = peg$literalExpectation("in", false);
         var peg$e26 = peg$literalExpectation("out", false);
         var peg$e27 = peg$literalExpectation("throw", false);
-        var peg$e28 = peg$literalExpectation("...", false);
-        var peg$e29 = peg$literalExpectation("?", false);
-        var peg$e30 = peg$literalExpectation(":", false);
-        var peg$e31 = peg$literalExpectation(";", false);
-        var peg$e32 = peg$literalExpectation(",", false);
-        var peg$e33 = peg$literalExpectation(".", false);
-        var peg$e34 = peg$literalExpectation("~", false);
-        var peg$e35 = peg$literalExpectation("@", false);
-        var peg$e36 = peg$literalExpectation("#", false);
-        var peg$e37 = peg$literalExpectation("$", false);
-        var peg$e38 = peg$literalExpectation("(", false);
-        var peg$e39 = peg$literalExpectation(")", false);
-        var peg$e40 = peg$literalExpectation("{", false);
-        var peg$e41 = peg$literalExpectation("}", false);
-        var peg$e42 = peg$literalExpectation("[", false);
-        var peg$e43 = peg$literalExpectation("]", false);
-        var peg$e44 = peg$literalExpectation("=", false);
-        var peg$e45 = peg$literalExpectation("+=", false);
-        var peg$e46 = peg$literalExpectation("-=", false);
-        var peg$e47 = peg$literalExpectation("*=", false);
-        var peg$e48 = peg$literalExpectation("/=", false);
-        var peg$e49 = peg$literalExpectation("%=", false);
-        var peg$e50 = peg$literalExpectation("==", false);
-        var peg$e51 = peg$literalExpectation("!=", false);
-        var peg$e52 = peg$literalExpectation("!", false);
-        var peg$e53 = peg$literalExpectation("<", false);
-        var peg$e54 = peg$literalExpectation("<=", false);
-        var peg$e55 = peg$literalExpectation(">", false);
-        var peg$e56 = peg$literalExpectation(">=", false);
-        var peg$e57 = peg$literalExpectation("+", false);
-        var peg$e58 = peg$literalExpectation("-", false);
-        var peg$e59 = peg$literalExpectation("*", false);
-        var peg$e60 = peg$literalExpectation("/", false);
-        var peg$e61 = peg$literalExpectation("%", false);
-        var peg$e62 = peg$literalExpectation("&&", false);
-        var peg$e63 = peg$literalExpectation("||", false);
-        var peg$e64 = peg$literalExpectation("=>", false);
-        var peg$e65 = peg$literalExpectation("true", false);
-        var peg$e66 = peg$literalExpectation("false", false);
-        var peg$e67 = peg$classExpectation([["1", "9"]], false, false);
-        var peg$e68 = peg$classExpectation([["0", "9"]], false, false);
-        var peg$e69 = peg$literalExpectation("0x", false);
-        var peg$e70 = peg$classExpectation([["0", "9"], ["a", "f"], ["A", "F"]], false, false);
-        var peg$e71 = peg$literalExpectation("0", false);
-        var peg$e72 = peg$classExpectation([["0", "7"]], false, false);
-        var peg$e73 = peg$literalExpectation("'", false);
-        var peg$e74 = peg$classExpectation(["\"", "\n", "\r", "\""], false, false);
-        var peg$e75 = peg$anyExpectation();
-        var peg$e76 = peg$literalExpectation("\"", false);
-        var peg$e77 = peg$literalExpectation("null", false);
-        var peg$e78 = peg$classExpectation(["e", "E"], false, false);
-        var peg$e79 = peg$classExpectation(["+", "-"], false, false);
-        var peg$e80 = peg$literalExpectation("//", false);
-        var peg$e81 = peg$classExpectation(["\n", "\r"], false, false);
-        var peg$e82 = peg$literalExpectation("/*", false);
-        var peg$e83 = peg$literalExpectation("*/", false);
-        var peg$e84 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false);
+        var peg$e28 = peg$literalExpectation("try", false);
+        var peg$e29 = peg$literalExpectation("catch", false);
+        var peg$e30 = peg$literalExpectation("finally", false);
+        var peg$e31 = peg$literalExpectation("...", false);
+        var peg$e32 = peg$literalExpectation("?", false);
+        var peg$e33 = peg$literalExpectation(":", false);
+        var peg$e34 = peg$literalExpectation(";", false);
+        var peg$e35 = peg$literalExpectation(",", false);
+        var peg$e36 = peg$literalExpectation(".", false);
+        var peg$e37 = peg$literalExpectation("~", false);
+        var peg$e38 = peg$literalExpectation("@", false);
+        var peg$e39 = peg$literalExpectation("#", false);
+        var peg$e40 = peg$literalExpectation("$", false);
+        var peg$e41 = peg$literalExpectation("(", false);
+        var peg$e42 = peg$literalExpectation(")", false);
+        var peg$e43 = peg$literalExpectation("{", false);
+        var peg$e44 = peg$literalExpectation("}", false);
+        var peg$e45 = peg$literalExpectation("[", false);
+        var peg$e46 = peg$literalExpectation("]", false);
+        var peg$e47 = peg$literalExpectation("=", false);
+        var peg$e48 = peg$literalExpectation("+=", false);
+        var peg$e49 = peg$literalExpectation("-=", false);
+        var peg$e50 = peg$literalExpectation("*=", false);
+        var peg$e51 = peg$literalExpectation("/=", false);
+        var peg$e52 = peg$literalExpectation("%=", false);
+        var peg$e53 = peg$literalExpectation("==", false);
+        var peg$e54 = peg$literalExpectation("!=", false);
+        var peg$e55 = peg$literalExpectation("!", false);
+        var peg$e56 = peg$literalExpectation("<", false);
+        var peg$e57 = peg$literalExpectation("<=", false);
+        var peg$e58 = peg$literalExpectation(">", false);
+        var peg$e59 = peg$literalExpectation(">=", false);
+        var peg$e60 = peg$literalExpectation("+", false);
+        var peg$e61 = peg$literalExpectation("-", false);
+        var peg$e62 = peg$literalExpectation("*", false);
+        var peg$e63 = peg$literalExpectation("/", false);
+        var peg$e64 = peg$literalExpectation("%", false);
+        var peg$e65 = peg$literalExpectation("&&", false);
+        var peg$e66 = peg$literalExpectation("||", false);
+        var peg$e67 = peg$literalExpectation("=>", false);
+        var peg$e68 = peg$literalExpectation("true", false);
+        var peg$e69 = peg$literalExpectation("false", false);
+        var peg$e70 = peg$classExpectation([["1", "9"]], false, false);
+        var peg$e71 = peg$classExpectation([["0", "9"]], false, false);
+        var peg$e72 = peg$literalExpectation("0x", false);
+        var peg$e73 = peg$classExpectation([["0", "9"], ["a", "f"], ["A", "F"]], false, false);
+        var peg$e74 = peg$literalExpectation("0", false);
+        var peg$e75 = peg$classExpectation([["0", "7"]], false, false);
+        var peg$e76 = peg$literalExpectation("'", false);
+        var peg$e77 = peg$classExpectation(["\"", "\n", "\r", "\""], false, false);
+        var peg$e78 = peg$anyExpectation();
+        var peg$e79 = peg$literalExpectation("\"", false);
+        var peg$e80 = peg$literalExpectation("null", false);
+        var peg$e81 = peg$classExpectation(["e", "E"], false, false);
+        var peg$e82 = peg$classExpectation(["+", "-"], false, false);
+        var peg$e83 = peg$literalExpectation("//", false);
+        var peg$e84 = peg$classExpectation(["\n", "\r"], false, false);
+        var peg$e85 = peg$literalExpectation("/*", false);
+        var peg$e86 = peg$literalExpectation("*/", false);
+        var peg$e87 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false);
         // @ts-ignore
         var peg$f0 = function (moduleName, statements) {
             // @ts-ignore
@@ -6852,7 +7542,41 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f23 = function (access, propertyType, name, typePart) {
+        var peg$f23 = function (access, meta, params, args) {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "InterfaceMetaSignature",
+                // @ts-ignore
+                meta,
+                // @ts-ignore
+                params: params || [],
+                // @ts-ignore
+                args: args ? args[4] : null,
+                // @ts-ignore
+                access,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f24 = function (access, meta, args) {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "InterfaceMetaSignature",
+                // @ts-ignore
+                meta,
+                // @ts-ignore
+                params: [],
+                // @ts-ignore
+                args,
+                // @ts-ignore
+                access,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f25 = function (access, propertyType, name, typePart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6869,19 +7593,19 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f24 = function () {
-            return "get_set";
-        }; // @ts-ignore
-        var peg$f25 = function () {
-            return "get_set";
-        }; // @ts-ignore
         var peg$f26 = function () {
-            return "get";
+            return "get_set";
         }; // @ts-ignore
         var peg$f27 = function () {
+            return "get_set";
+        }; // @ts-ignore
+        var peg$f28 = function () {
+            return "get";
+        }; // @ts-ignore
+        var peg$f29 = function () {
             return "set";
         }; // @ts-ignore
-        var peg$f28 = function (access, name, typePart) {
+        var peg$f30 = function (access, name, typePart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6896,7 +7620,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f29 = function (name, baseTypePart, members) {
+        var peg$f31 = function (name, baseTypePart, members) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6911,7 +7635,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f30 = function (key, valuePart) {
+        var peg$f32 = function (key, valuePart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6924,7 +7648,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f31 = function (params) {
+        var peg$f33 = function (params) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6935,12 +7659,12 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f32 = function (dec) {
+        var peg$f34 = function (dec) {
             // Block 本身也是语句（如 if 的 then 块） 
             // @ts-ignore
             return dec;
         }; // @ts-ignore
-        var peg$f33 = function (expr) {
+        var peg$f35 = function (expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6951,7 +7675,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f34 = function (pattern, typePart, value) {
+        var peg$f36 = function (pattern, typePart, value) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6966,7 +7690,24 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f35 = function (expr) {
+        var peg$f37 = function (block, catchPart, finallyPart) {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "TryCatchFinallyStatement",
+                // @ts-ignore
+                block,
+                // @ts-ignore
+                catchPattern: catchPart ? catchPart[4] : [],
+                // @ts-ignore
+                catchBlock: catchPart ? catchPart[8] : null,
+                // @ts-ignore
+                finallyBlock: finallyPart ? finallyPart[2] : null,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f38 = function (expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6977,7 +7718,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f36 = function (ctrl, expr) {
+        var peg$f39 = function (ctrl, expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -6990,7 +7731,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f37 = function (expr) {
+        var peg$f40 = function (expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7001,7 +7742,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f38 = function (expr) {
+        var peg$f41 = function (expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7012,19 +7753,19 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f39 = function (expr) {
+        var peg$f42 = function (expr) {
             // @ts-ignore
             expr.isStatement = true;
             // @ts-ignore
             return expr;
         }; // @ts-ignore
-        var peg$f40 = function (expr) {
+        var peg$f43 = function (expr) {
             // @ts-ignore
             expr.isStatement = true;
             // @ts-ignore
             return expr;
         }; // @ts-ignore
-        var peg$f41 = function (value, block) {
+        var peg$f44 = function (value, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7037,7 +7778,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f42 = function (block) {
+        var peg$f45 = function (block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7048,13 +7789,13 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f43 = function (expr) {
+        var peg$f46 = function (expr) {
             // @ts-ignore
             expr.isStatement = true;
             // @ts-ignore
             return expr;
         }; // @ts-ignore
-        var peg$f44 = function (cond, block) {
+        var peg$f47 = function (cond, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7069,7 +7810,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f45 = function (init, cond, step, block) {
+        var peg$f48 = function (init, cond, step, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7088,7 +7829,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f46 = function (pattern, typePart, expr, block) {
+        var peg$f49 = function (pattern, typePart, expr, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7107,7 +7848,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f47 = function (statements) {
+        var peg$f50 = function (statements) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7120,11 +7861,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f48 = function (exp) {
+        var peg$f51 = function (exp) {
             // @ts-ignore
             return exp;
         }; // @ts-ignore
-        var peg$f49 = function (left, op, right) {
+        var peg$f52 = function (left, op, right) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7139,7 +7880,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location(),
             };
         }; // @ts-ignore
-        var peg$f50 = function (test, consequent, alternate) {
+        var peg$f53 = function (test, consequent, alternate) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7154,7 +7895,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f51 = function (left, parts) {
+        var peg$f54 = function (left, parts) {
             // @ts-ignore
             return parts.reduce((acc, [, , , right]) => ({
                 // @ts-ignore
@@ -7170,61 +7911,13 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
             }), left);
         }; // @ts-ignore
-        var peg$f52 = function (left, parts) {
+        var peg$f55 = function (left, parts) {
             // @ts-ignore
             return parts.reduce((acc, [, , , right]) => ({
                 // @ts-ignore
                 type: "Logical",
                 // @ts-ignore
                 op: "&&",
-                // @ts-ignore
-                left: acc,
-                // @ts-ignore
-                right,
-                // @ts-ignore
-                location: location()
-                // @ts-ignore
-            }), left);
-        }; // @ts-ignore
-        var peg$f53 = function (left, parts) {
-            // @ts-ignore
-            return parts.reduce((acc, [, op, , right]) => ({
-                // @ts-ignore
-                type: "Binary",
-                // @ts-ignore
-                op,
-                // @ts-ignore
-                left: acc,
-                // @ts-ignore
-                right,
-                // @ts-ignore
-                location: location()
-                // @ts-ignore
-            }), left);
-        }; // @ts-ignore
-        var peg$f54 = function (left, parts) {
-            // @ts-ignore
-            return parts.reduce((acc, [, op, , right]) => ({
-                // @ts-ignore
-                type: "Binary",
-                // @ts-ignore
-                op,
-                // @ts-ignore
-                left: acc,
-                // @ts-ignore
-                right,
-                // @ts-ignore
-                location: location()
-                // @ts-ignore
-            }), left);
-        }; // @ts-ignore
-        var peg$f55 = function (left, parts) {
-            // @ts-ignore
-            return parts.reduce((acc, [, op, , right]) => ({
-                // @ts-ignore
-                type: "Binary",
-                // @ts-ignore
-                op,
                 // @ts-ignore
                 left: acc,
                 // @ts-ignore
@@ -7250,7 +7943,55 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
             }), left);
         }; // @ts-ignore
-        var peg$f57 = function (op, argument) {
+        var peg$f57 = function (left, parts) {
+            // @ts-ignore
+            return parts.reduce((acc, [, op, , right]) => ({
+                // @ts-ignore
+                type: "Binary",
+                // @ts-ignore
+                op,
+                // @ts-ignore
+                left: acc,
+                // @ts-ignore
+                right,
+                // @ts-ignore
+                location: location()
+                // @ts-ignore
+            }), left);
+        }; // @ts-ignore
+        var peg$f58 = function (left, parts) {
+            // @ts-ignore
+            return parts.reduce((acc, [, op, , right]) => ({
+                // @ts-ignore
+                type: "Binary",
+                // @ts-ignore
+                op,
+                // @ts-ignore
+                left: acc,
+                // @ts-ignore
+                right,
+                // @ts-ignore
+                location: location()
+                // @ts-ignore
+            }), left);
+        }; // @ts-ignore
+        var peg$f59 = function (left, parts) {
+            // @ts-ignore
+            return parts.reduce((acc, [, op, , right]) => ({
+                // @ts-ignore
+                type: "Binary",
+                // @ts-ignore
+                op,
+                // @ts-ignore
+                left: acc,
+                // @ts-ignore
+                right,
+                // @ts-ignore
+                location: location()
+                // @ts-ignore
+            }), left);
+        }; // @ts-ignore
+        var peg$f60 = function (op, argument) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7263,7 +8004,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f58 = function (property, members) {
+        var peg$f61 = function (property, members) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7276,7 +8017,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f59 = function (property) {
+        var peg$f62 = function (property) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7289,7 +8030,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f60 = function (property) {
+        var peg$f63 = function (property) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7302,7 +8043,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location(),
             };
         }; // @ts-ignore
-        var peg$f61 = function (args) {
+        var peg$f64 = function (args) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7313,22 +8054,22 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f62 = function (value) {
+        var peg$f65 = function (value) {
             return { type: "ValueLiteral", value, location: location() };
         }; // @ts-ignore
-        var peg$f63 = function (value) {
+        var peg$f66 = function (value) {
             return { type: "IdentifierLiteral", value, location: location() };
         }; // @ts-ignore
-        var peg$f64 = function (expr) {
+        var peg$f67 = function (expr) {
             return expr;
         }; // @ts-ignore
-        var peg$f65 = function (block) {
+        var peg$f68 = function (block) {
             // @ts-ignore
             block.isStatement = false;
             // @ts-ignore
             return block;
         }; // @ts-ignore
-        var peg$f66 = function (elements) {
+        var peg$f69 = function (elements) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7339,7 +8080,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f67 = function (element) {
+        var peg$f70 = function (element) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7350,7 +8091,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f68 = function (pairs) {
+        var peg$f71 = function (pairs) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7361,7 +8102,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f69 = function (key, value) {
+        var peg$f72 = function (key, value) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7374,10 +8115,10 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f70 = function (expr) {
+        var peg$f73 = function (expr) {
             return expr;
         }; // @ts-ignore
-        var peg$f71 = function (params, args, block) {
+        var peg$f74 = function (params, args, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7392,7 +8133,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f72 = function (args, block) {
+        var peg$f75 = function (args, block) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7407,7 +8148,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f73 = function (condition, thenExpr, elseExpr) {
+        var peg$f76 = function (condition, thenExpr, elseExpr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7424,7 +8165,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f74 = function (expr, cases, defaultCase) {
+        var peg$f77 = function (expr, cases, defaultCase) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7441,7 +8182,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f75 = function () {
+        var peg$f78 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7452,7 +8193,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f76 = function (decorator, name, generic, params, args, returnPart, body) {
+        var peg$f79 = function (decorator, name, generic, params, args, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7475,7 +8216,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location
             };
         }; // @ts-ignore
-        var peg$f77 = function (decorator, name, generic, args, returnPart, body) {
+        var peg$f80 = function (decorator, name, generic, args, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7498,7 +8239,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location
             };
         }; // @ts-ignore
-        var peg$f78 = function (name, params, args, body) {
+        var peg$f81 = function (name, params, args, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7515,7 +8256,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f79 = function (name, dimensions) {
+        var peg$f82 = function (name, dimensions) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7528,7 +8269,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f80 = function (name, params) {
+        var peg$f83 = function (name, params) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7541,7 +8282,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f81 = function (types) {
+        var peg$f84 = function (types) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7552,7 +8293,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f82 = function (name, typePart, defaultValuePart) {
+        var peg$f85 = function (name, typePart, defaultValuePart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7567,19 +8308,19 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location(),
             };
         }; // @ts-ignore
-        var peg$f83 = function (head, tail) {
+        var peg$f86 = function (head, tail) {
             // @ts-ignore
             return [head].concat(tail.map(t => t[2]));
         }; // @ts-ignore
-        var peg$f84 = function (head, tail) {
+        var peg$f87 = function (head, tail) {
             // @ts-ignore
             return [head].concat(tail.map(t => t[2]));
         }; // @ts-ignore
-        var peg$f85 = function (head, tail) {
+        var peg$f88 = function (head, tail) {
             // @ts-ignore
             return [head].concat(tail.map(t => t[2]));
         }; // @ts-ignore
-        var peg$f86 = function (name) {
+        var peg$f89 = function (name) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7590,7 +8331,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f87 = function (expr) {
+        var peg$f90 = function (expr) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7601,7 +8342,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f88 = function (keys) {
+        var peg$f91 = function (keys) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7612,7 +8353,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f89 = function (keys) {
+        var peg$f92 = function (keys) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7623,11 +8364,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f90 = function (head, tail) {
+        var peg$f93 = function (head, tail) {
             // @ts-ignore
             return [head].concat(tail.map(t => t[2]));
         }; // @ts-ignore
-        var peg$f91 = function () {
+        var peg$f94 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7638,7 +8379,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f92 = function () {
+        var peg$f95 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7649,7 +8390,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f93 = function () {
+        var peg$f96 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7660,7 +8401,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f94 = function () {
+        var peg$f97 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7671,7 +8412,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f95 = function () {
+        var peg$f98 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7682,7 +8423,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f96 = function (ch) {
+        var peg$f99 = function (ch) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7693,7 +8434,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f97 = function (str) {
+        var peg$f100 = function (str) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7704,7 +8445,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f98 = function () {
+        var peg$f101 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7713,7 +8454,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f99 = function () {
+        var peg$f102 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7724,7 +8465,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f100 = function () {
+        var peg$f103 = function () {
             // @ts-ignore
             return undefined;
         };
@@ -10580,11 +11321,16 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (s2 === peg$FAILED) {
                 // @ts-ignore
-                s2 = peg$parseInterfacePropertySignature();
+                s2 = peg$parseInterfaceMetaSignature();
                 // @ts-ignore
                 if (s2 === peg$FAILED) {
                     // @ts-ignore
-                    s2 = peg$parseInterfaceFieldDeclaration();
+                    s2 = peg$parseInterfacePropertySignature();
+                    // @ts-ignore
+                    if (s2 === peg$FAILED) {
+                        // @ts-ignore
+                        s2 = peg$parseInterfaceFieldDeclaration();
+                    }
                 }
             }
             // @ts-ignore
@@ -10943,6 +11689,246 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
+        function peg$parseInterfaceMetaSignature() {
+            // @ts-ignore
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15;
+            // @ts-ignore
+            s0 = peg$currPos;
+            // @ts-ignore
+            s1 = peg$parseAccessModifier();
+            // @ts-ignore
+            if (s1 === peg$FAILED) {
+                // @ts-ignore
+                s1 = null;
+            }
+            // @ts-ignore
+            s2 = peg$parse_();
+            // @ts-ignore
+            s3 = peg$parseMetaIdentifier();
+            // @ts-ignore
+            if (s3 !== peg$FAILED) {
+                // @ts-ignore
+                s4 = peg$parse_();
+                // @ts-ignore
+                s5 = peg$parseLPAREN();
+                // @ts-ignore
+                if (s5 !== peg$FAILED) {
+                    // @ts-ignore
+                    s6 = peg$parse_();
+                    // @ts-ignore
+                    s7 = peg$parseParameterList();
+                    // @ts-ignore
+                    if (s7 === peg$FAILED) {
+                        // @ts-ignore
+                        s7 = null;
+                    }
+                    // @ts-ignore
+                    s8 = peg$parse_();
+                    // @ts-ignore
+                    s9 = peg$currPos;
+                    // @ts-ignore
+                    s10 = peg$parseCOMMA();
+                    // @ts-ignore
+                    if (s10 !== peg$FAILED) {
+                        // @ts-ignore
+                        s11 = peg$parse_();
+                        // @ts-ignore
+                        s12 = peg$parsePARAMS();
+                        // @ts-ignore
+                        if (s12 !== peg$FAILED) {
+                            // @ts-ignore
+                            s13 = peg$parse_();
+                            // @ts-ignore
+                            s14 = peg$parseParameter();
+                            // @ts-ignore
+                            if (s14 !== peg$FAILED) {
+                                // @ts-ignore
+                                s15 = peg$parse_();
+                                // @ts-ignore
+                                s10 = [s10, s11, s12, s13, s14, s15];
+                                // @ts-ignore
+                                s9 = s10;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s9;
+                                // @ts-ignore
+                                s9 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s9;
+                            // @ts-ignore
+                            s9 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s9;
+                        // @ts-ignore
+                        s9 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                    if (s9 === peg$FAILED) {
+                        // @ts-ignore
+                        s9 = null;
+                    }
+                    // @ts-ignore
+                    s10 = peg$parse_();
+                    // @ts-ignore
+                    s11 = peg$parseRPAREN();
+                    // @ts-ignore
+                    if (s11 !== peg$FAILED) {
+                        // @ts-ignore
+                        s12 = peg$parse_();
+                        // @ts-ignore
+                        s13 = peg$parseSEMICOLON();
+                        // @ts-ignore
+                        if (s13 !== peg$FAILED) {
+                            // @ts-ignore
+                            peg$savedPos = s0;
+                            // @ts-ignore
+                            s0 = peg$f23(s1, s3, s7, s9);
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s0;
+                            // @ts-ignore
+                            s0 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s0;
+                        // @ts-ignore
+                        s0 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                }
+                else {
+                    // @ts-ignore
+                    peg$currPos = s0;
+                    // @ts-ignore
+                    s0 = peg$FAILED;
+                }
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                peg$currPos = s0;
+                // @ts-ignore
+                s0 = peg$FAILED;
+            }
+            // @ts-ignore
+            if (s0 === peg$FAILED) {
+                // @ts-ignore
+                s0 = peg$currPos;
+                // @ts-ignore
+                s1 = peg$parseAccessModifier();
+                // @ts-ignore
+                if (s1 === peg$FAILED) {
+                    // @ts-ignore
+                    s1 = null;
+                }
+                // @ts-ignore
+                s2 = peg$parse_();
+                // @ts-ignore
+                s3 = peg$parseMetaIdentifier();
+                // @ts-ignore
+                if (s3 !== peg$FAILED) {
+                    // @ts-ignore
+                    s4 = peg$parse_();
+                    // @ts-ignore
+                    s5 = peg$parseLPAREN();
+                    // @ts-ignore
+                    if (s5 !== peg$FAILED) {
+                        // @ts-ignore
+                        s6 = peg$parse_();
+                        // @ts-ignore
+                        s7 = peg$parsePARAMS();
+                        // @ts-ignore
+                        if (s7 !== peg$FAILED) {
+                            // @ts-ignore
+                            s8 = peg$parse_();
+                            // @ts-ignore
+                            s9 = peg$parseParameter();
+                            // @ts-ignore
+                            if (s9 !== peg$FAILED) {
+                                // @ts-ignore
+                                s10 = peg$parse_();
+                                // @ts-ignore
+                                s11 = peg$parseRPAREN();
+                                // @ts-ignore
+                                if (s11 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    s12 = peg$parse_();
+                                    // @ts-ignore
+                                    s13 = peg$parseSEMICOLON();
+                                    // @ts-ignore
+                                    if (s13 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        peg$savedPos = s0;
+                                        // @ts-ignore
+                                        s0 = peg$f24(s1, s3, s9);
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        peg$currPos = s0;
+                                        // @ts-ignore
+                                        s0 = peg$FAILED;
+                                    }
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    peg$currPos = s0;
+                                    // @ts-ignore
+                                    s0 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s0;
+                                // @ts-ignore
+                                s0 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s0;
+                            // @ts-ignore
+                            s0 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s0;
+                        // @ts-ignore
+                        s0 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                }
+                else {
+                    // @ts-ignore
+                    peg$currPos = s0;
+                    // @ts-ignore
+                    s0 = peg$FAILED;
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
         function peg$parseInterfacePropertySignature() {
             // @ts-ignore
             var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
@@ -11018,7 +12004,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f23(s1, s3, s5, s7);
+                    s0 = peg$f25(s1, s3, s5, s7);
                     // @ts-ignore
                 }
                 else {
@@ -11057,7 +12043,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f24();
+                    s0 = peg$f26();
                     // @ts-ignore
                 }
                 else {
@@ -11091,7 +12077,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f25();
+                        s0 = peg$f27();
                         // @ts-ignore
                     }
                     else {
@@ -11119,7 +12105,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s1 = peg$f26();
+                        s1 = peg$f28();
                     }
                     // @ts-ignore
                     s0 = s1;
@@ -11134,7 +12120,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s1 = peg$f27();
+                            s1 = peg$f29();
                         }
                         // @ts-ignore
                         s0 = s1;
@@ -11217,7 +12203,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f28(s1, s5, s6);
+                        s0 = peg$f30(s1, s5, s6);
                         // @ts-ignore
                     }
                     else {
@@ -11338,7 +12324,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f29(s3, s5, s9);
+                                s0 = peg$f31(s3, s5, s9);
                                 // @ts-ignore
                             }
                             else {
@@ -11452,7 +12438,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f30(s2, s4);
+                s0 = peg$f32(s2, s4);
                 // @ts-ignore
             }
             else {
@@ -11508,7 +12494,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f31(s3);
+                        s0 = peg$f33(s3);
                         // @ts-ignore
                     }
                     else {
@@ -11588,7 +12574,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f32(s2);
+                s0 = peg$f34(s2);
                 // @ts-ignore
             }
             else {
@@ -11619,7 +12605,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f33(s1);
+                    s0 = peg$f35(s1);
                     // @ts-ignore
                 }
                 else {
@@ -11723,7 +12709,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f34(s3, s4, s8);
+                                s0 = peg$f36(s3, s4, s8);
                                 // @ts-ignore
                             }
                             else {
@@ -11784,14 +12770,173 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     if (s0 === peg$FAILED) {
                         // @ts-ignore
-                        s0 = peg$parseReturnStatement();
+                        s0 = peg$parseTryCatchFinallyStatement();
                         // @ts-ignore
                         if (s0 === peg$FAILED) {
                             // @ts-ignore
-                            s0 = peg$parseBreakContinueStatement();
+                            s0 = peg$parseReturnStatement();
+                            // @ts-ignore
+                            if (s0 === peg$FAILED) {
+                                // @ts-ignore
+                                s0 = peg$parseBreakContinueStatement();
+                            }
                         }
                     }
                 }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseTryCatchFinallyStatement() {
+            // @ts-ignore
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14;
+            // @ts-ignore
+            s0 = peg$currPos;
+            // @ts-ignore
+            s1 = peg$parseTRY();
+            // @ts-ignore
+            if (s1 !== peg$FAILED) {
+                // @ts-ignore
+                s2 = peg$parse_();
+                // @ts-ignore
+                s3 = peg$parseBlock();
+                // @ts-ignore
+                if (s3 !== peg$FAILED) {
+                    // @ts-ignore
+                    s4 = peg$parse_();
+                    // @ts-ignore
+                    s5 = peg$currPos;
+                    // @ts-ignore
+                    s6 = peg$parseCATCH();
+                    // @ts-ignore
+                    if (s6 !== peg$FAILED) {
+                        // @ts-ignore
+                        s7 = peg$parse_();
+                        // @ts-ignore
+                        s8 = peg$parseLPAREN();
+                        // @ts-ignore
+                        if (s8 !== peg$FAILED) {
+                            // @ts-ignore
+                            s9 = peg$parse_();
+                            // @ts-ignore
+                            s10 = peg$parseParameterList();
+                            // @ts-ignore
+                            if (s10 === peg$FAILED) {
+                                // @ts-ignore
+                                s10 = null;
+                            }
+                            // @ts-ignore
+                            s11 = peg$parse_();
+                            // @ts-ignore
+                            s12 = peg$parseRPAREN();
+                            // @ts-ignore
+                            if (s12 !== peg$FAILED) {
+                                // @ts-ignore
+                                s13 = peg$parse_();
+                                // @ts-ignore
+                                s14 = peg$parseBlock();
+                                // @ts-ignore
+                                if (s14 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    s6 = [s6, s7, s8, s9, s10, s11, s12, s13, s14];
+                                    // @ts-ignore
+                                    s5 = s6;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    peg$currPos = s5;
+                                    // @ts-ignore
+                                    s5 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s5;
+                                // @ts-ignore
+                                s5 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s5;
+                            // @ts-ignore
+                            s5 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s5;
+                        // @ts-ignore
+                        s5 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                    if (s5 === peg$FAILED) {
+                        // @ts-ignore
+                        s5 = null;
+                    }
+                    // @ts-ignore
+                    s6 = peg$parse_();
+                    // @ts-ignore
+                    s7 = peg$currPos;
+                    // @ts-ignore
+                    s8 = peg$parseFINALLY();
+                    // @ts-ignore
+                    if (s8 !== peg$FAILED) {
+                        // @ts-ignore
+                        s9 = peg$parse_();
+                        // @ts-ignore
+                        s10 = peg$parseBlock();
+                        // @ts-ignore
+                        if (s10 !== peg$FAILED) {
+                            // @ts-ignore
+                            s8 = [s8, s9, s10];
+                            // @ts-ignore
+                            s7 = s8;
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s7;
+                            // @ts-ignore
+                            s7 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s7;
+                        // @ts-ignore
+                        s7 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                    if (s7 === peg$FAILED) {
+                        // @ts-ignore
+                        s7 = null;
+                    }
+                    // @ts-ignore
+                    peg$savedPos = s0;
+                    // @ts-ignore
+                    s0 = peg$f37(s3, s5, s7);
+                    // @ts-ignore
+                }
+                else {
+                    // @ts-ignore
+                    peg$currPos = s0;
+                    // @ts-ignore
+                    s0 = peg$FAILED;
+                }
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                peg$currPos = s0;
+                // @ts-ignore
+                s0 = peg$FAILED;
             }
             // @ts-ignore
             return s0;
@@ -11824,7 +12969,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f35(s3);
+                    s0 = peg$f38(s3);
                     // @ts-ignore
                 }
                 else {
@@ -11877,7 +13022,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f36(s1, s3);
+                    s0 = peg$f39(s1, s3);
                     // @ts-ignore
                 }
                 else {
@@ -11922,7 +13067,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f37(s3);
+                        s0 = peg$f40(s3);
                         // @ts-ignore
                     }
                     else {
@@ -11975,7 +13120,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f38(s3);
+                        s0 = peg$f41(s3);
                         // @ts-ignore
                     }
                     else {
@@ -12016,7 +13161,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f39(s1);
+                s1 = peg$f42(s1);
             }
             // @ts-ignore
             s0 = s1;
@@ -12036,7 +13181,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f40(s1);
+                s1 = peg$f43(s1);
             }
             // @ts-ignore
             s0 = s1;
@@ -12078,7 +13223,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f41(s4, s8);
+                            s0 = peg$f44(s4, s8);
                             // @ts-ignore
                         }
                         else {
@@ -12143,7 +13288,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f42(s6);
+                        s0 = peg$f45(s6);
                         // @ts-ignore
                     }
                     else {
@@ -12184,7 +13329,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f43(s1);
+                s1 = peg$f46(s1);
             }
             // @ts-ignore
             s0 = s1;
@@ -12247,7 +13392,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f44(s5, s9);
+                                s0 = peg$f47(s5, s9);
                                 // @ts-ignore
                             }
                             else {
@@ -12353,7 +13498,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                     // @ts-ignore
                                     peg$savedPos = s0;
                                     // @ts-ignore
-                                    s0 = peg$f45(s5, s7, s9, s13);
+                                    s0 = peg$f48(s5, s7, s9, s13);
                                     // @ts-ignore
                                 }
                                 else {
@@ -12505,7 +13650,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                             // @ts-ignore
                                             peg$savedPos = s0;
                                             // @ts-ignore
-                                            s0 = peg$f46(s7, s8, s12, s15);
+                                            s0 = peg$f49(s7, s8, s12, s15);
                                             // @ts-ignore
                                         }
                                         else {
@@ -12605,7 +13750,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f47(s3);
+                    s0 = peg$f50(s3);
                     // @ts-ignore
                 }
                 else {
@@ -12642,7 +13787,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f48(s2);
+                s0 = peg$f51(s2);
                 // @ts-ignore
             }
             else {
@@ -12679,7 +13824,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f49(s1, s3, s5);
+                        s0 = peg$f52(s1, s3, s5);
                         // @ts-ignore
                     }
                     else {
@@ -12749,7 +13894,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f50(s1, s5, s9);
+                                s0 = peg$f53(s1, s5, s9);
                                 // @ts-ignore
                             }
                             else {
@@ -12886,7 +14031,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f51(s1, s2);
+                s0 = peg$f54(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -12986,7 +14131,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f52(s1, s2);
+                s0 = peg$f55(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -13086,7 +14231,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f53(s1, s2);
+                s0 = peg$f56(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -13186,7 +14331,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f54(s1, s2);
+                s0 = peg$f57(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -13286,7 +14431,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f55(s1, s2);
+                s0 = peg$f58(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -13386,7 +14531,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f56(s1, s2);
+                s0 = peg$f59(s1, s2);
                 // @ts-ignore
             }
             else {
@@ -13417,7 +14562,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f57(s1, s3);
+                    s0 = peg$f60(s1, s3);
                     // @ts-ignore
                 }
                 else {
@@ -13458,7 +14603,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f58(s1, s3);
+                    s0 = peg$f61(s1, s3);
                     // @ts-ignore
                 }
                 else {
@@ -13492,7 +14637,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f59(s3);
+                    s0 = peg$f62(s3);
                     // @ts-ignore
                 }
                 else {
@@ -13534,7 +14679,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f60(s3);
+                            s0 = peg$f63(s3);
                             // @ts-ignore
                         }
                         else {
@@ -13587,7 +14732,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f61(s3);
+                            s0 = peg$f64(s3);
                             // @ts-ignore
                         }
                         else {
@@ -13622,7 +14767,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f62(s1);
+                s1 = peg$f65(s1);
             }
             // @ts-ignore
             s0 = s1;
@@ -13665,7 +14810,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                                 // @ts-ignore
                                                 peg$savedPos = s0;
                                                 // @ts-ignore
-                                                s1 = peg$f63(s1);
+                                                s1 = peg$f66(s1);
                                             }
                                             // @ts-ignore
                                             s0 = s1;
@@ -13692,7 +14837,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                                             // @ts-ignore
                                                             peg$savedPos = s0;
                                                             // @ts-ignore
-                                                            s0 = peg$f64(s3);
+                                                            s0 = peg$f67(s3);
                                                             // @ts-ignore
                                                         }
                                                         else {
@@ -13740,7 +14885,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                                                 // @ts-ignore
                                                                 peg$savedPos = s0;
                                                                 // @ts-ignore
-                                                                s0 = peg$f65(s3);
+                                                                s0 = peg$f68(s3);
                                                                 // @ts-ignore
                                                             }
                                                             else {
@@ -13921,7 +15066,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f66(s3);
+                    s0 = peg$f69(s3);
                     // @ts-ignore
                 }
                 else {
@@ -13962,7 +15107,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f67(s3);
+                    s0 = peg$f70(s3);
                     // @ts-ignore
                 }
                 else {
@@ -14115,7 +15260,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f68(s3);
+                    s0 = peg$f71(s3);
                     // @ts-ignore
                 }
                 else {
@@ -14170,7 +15315,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f69(s1, s5);
+                        s0 = peg$f72(s1, s5);
                         // @ts-ignore
                     }
                     else {
@@ -14223,7 +15368,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f70(s3);
+                        s0 = peg$f73(s3);
                         // @ts-ignore
                     }
                     else {
@@ -14348,7 +15493,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f71(s3, s5, s11);
+                            s0 = peg$f74(s3, s5, s11);
                             // @ts-ignore
                         }
                         else {
@@ -14424,7 +15569,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                         // @ts-ignore
                                         peg$savedPos = s0;
                                         // @ts-ignore
-                                        s0 = peg$f72(s5, s11);
+                                        s0 = peg$f75(s5, s11);
                                         // @ts-ignore
                                     }
                                     else {
@@ -14558,7 +15703,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f73(s5, s9, s10);
+                                s0 = peg$f76(s5, s9, s10);
                                 // @ts-ignore
                             }
                             else {
@@ -14665,7 +15810,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                     // @ts-ignore
                                     peg$savedPos = s0;
                                     // @ts-ignore
-                                    s0 = peg$f74(s5, s11, s12);
+                                    s0 = peg$f77(s5, s11, s12);
                                     // @ts-ignore
                                 }
                                 else {
@@ -14860,7 +16005,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f75();
+                s1 = peg$f78();
             }
             // @ts-ignore
             s0 = s1;
@@ -15025,7 +16170,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f76(s2, s4, s6, s10, s12, s16, s18);
+                            s0 = peg$f79(s2, s4, s6, s10, s12, s16, s18);
                             // @ts-ignore
                         }
                         else {
@@ -15162,7 +16307,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                         // @ts-ignore
                                         peg$savedPos = s0;
                                         // @ts-ignore
-                                        s0 = peg$f77(s2, s4, s6, s12, s16, s18);
+                                        s0 = peg$f80(s2, s4, s6, s12, s16, s18);
                                         // @ts-ignore
                                     }
                                     else {
@@ -15316,7 +16461,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 // @ts-ignore
                                 peg$savedPos = s0;
                                 // @ts-ignore
-                                s0 = peg$f78(s3, s7, s9, s13);
+                                s0 = peg$f81(s3, s7, s9, s13);
                                 // @ts-ignore
                             }
                             else {
@@ -15471,7 +16616,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f79(s1, s3);
+                s0 = peg$f82(s1, s3);
                 // @ts-ignore
             }
             else {
@@ -15516,7 +16661,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f80(s1, s5);
+                            s0 = peg$f83(s1, s5);
                             // @ts-ignore
                         }
                         else {
@@ -15579,7 +16724,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f81(s3);
+                        s0 = peg$f84(s3);
                         // @ts-ignore
                     }
                     else {
@@ -15698,7 +16843,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f82(s1, s3, s5);
+                s0 = peg$f85(s1, s3, s5);
                 // @ts-ignore
             }
             else {
@@ -15800,7 +16945,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f83(s1, s3);
+                s0 = peg$f86(s1, s3);
                 // @ts-ignore
             }
             else {
@@ -15902,7 +17047,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f84(s1, s3);
+                s0 = peg$f87(s1, s3);
                 // @ts-ignore
             }
             else {
@@ -16004,7 +17149,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f85(s1, s3);
+                s0 = peg$f88(s1, s3);
                 // @ts-ignore
             }
             else {
@@ -16037,7 +17182,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f86(s3);
+                    s0 = peg$f89(s3);
                     // @ts-ignore
                 }
                 else {
@@ -16084,7 +17229,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f87(s3);
+                        s0 = peg$f90(s3);
                         // @ts-ignore
                     }
                     else {
@@ -16139,7 +17284,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f88(s3);
+                        s0 = peg$f91(s3);
                         // @ts-ignore
                     }
                     else {
@@ -16194,7 +17339,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f89(s3);
+                        s0 = peg$f92(s3);
                         // @ts-ignore
                     }
                     else {
@@ -16312,7 +17457,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f90(s1, s3);
+                s0 = peg$f93(s1, s3);
                 // @ts-ignore
             }
             else {
@@ -16390,7 +17535,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f91();
+                s0 = peg$f94();
                 // @ts-ignore
             }
             else {
@@ -17001,7 +18146,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePARAMS() {
+        function peg$parseTRY() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17024,15 +18169,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseQUESTIONMARK() {
+        function peg$parseCATCH() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 63) {
+            if (input.substr(peg$currPos, 5) === peg$c27) {
                 // @ts-ignore
                 s0 = peg$c27;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 5;
                 // @ts-ignore
             }
             else {
@@ -17047,15 +18192,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseCOLON() {
+        function peg$parseFINALLY() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 58) {
+            if (input.substr(peg$currPos, 7) === peg$c28) {
                 // @ts-ignore
                 s0 = peg$c28;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 7;
                 // @ts-ignore
             }
             else {
@@ -17070,15 +18215,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSEMICOLON() {
+        function peg$parsePARAMS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 59) {
+            if (input.substr(peg$currPos, 3) === peg$c29) {
                 // @ts-ignore
                 s0 = peg$c29;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 3;
                 // @ts-ignore
             }
             else {
@@ -17093,11 +18238,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseCOMMA() {
+        function peg$parseQUESTIONMARK() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 44) {
+            if (input.charCodeAt(peg$currPos) === 63) {
                 // @ts-ignore
                 s0 = peg$c30;
                 // @ts-ignore
@@ -17116,11 +18261,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOT() {
+        function peg$parseCOLON() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 46) {
+            if (input.charCodeAt(peg$currPos) === 58) {
                 // @ts-ignore
                 s0 = peg$c31;
                 // @ts-ignore
@@ -17139,11 +18284,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseTILDE() {
+        function peg$parseSEMICOLON() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 126) {
+            if (input.charCodeAt(peg$currPos) === 59) {
                 // @ts-ignore
                 s0 = peg$c32;
                 // @ts-ignore
@@ -17162,11 +18307,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseAT() {
+        function peg$parseCOMMA() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 64) {
+            if (input.charCodeAt(peg$currPos) === 44) {
                 // @ts-ignore
                 s0 = peg$c33;
                 // @ts-ignore
@@ -17185,11 +18330,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSHARP() {
+        function peg$parseDOT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 35) {
+            if (input.charCodeAt(peg$currPos) === 46) {
                 // @ts-ignore
                 s0 = peg$c34;
                 // @ts-ignore
@@ -17208,11 +18353,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOLLAR() {
+        function peg$parseTILDE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 36) {
+            if (input.charCodeAt(peg$currPos) === 126) {
                 // @ts-ignore
                 s0 = peg$c35;
                 // @ts-ignore
@@ -17231,11 +18376,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLPAREN() {
+        function peg$parseAT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 40) {
+            if (input.charCodeAt(peg$currPos) === 64) {
                 // @ts-ignore
                 s0 = peg$c36;
                 // @ts-ignore
@@ -17254,11 +18399,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRPAREN() {
+        function peg$parseSHARP() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 41) {
+            if (input.charCodeAt(peg$currPos) === 35) {
                 // @ts-ignore
                 s0 = peg$c37;
                 // @ts-ignore
@@ -17277,11 +18422,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLBRACE() {
+        function peg$parseDOLLAR() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 123) {
+            if (input.charCodeAt(peg$currPos) === 36) {
                 // @ts-ignore
                 s0 = peg$c38;
                 // @ts-ignore
@@ -17300,11 +18445,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRBRACE() {
+        function peg$parseLPAREN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 125) {
+            if (input.charCodeAt(peg$currPos) === 40) {
                 // @ts-ignore
                 s0 = peg$c39;
                 // @ts-ignore
@@ -17323,11 +18468,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLBRACKET() {
+        function peg$parseRPAREN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 91) {
+            if (input.charCodeAt(peg$currPos) === 41) {
                 // @ts-ignore
                 s0 = peg$c40;
                 // @ts-ignore
@@ -17346,11 +18491,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRBRACKET() {
+        function peg$parseLBRACE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 93) {
+            if (input.charCodeAt(peg$currPos) === 123) {
                 // @ts-ignore
                 s0 = peg$c41;
                 // @ts-ignore
@@ -17369,11 +18514,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseEQUALS() {
+        function peg$parseRBRACE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 61) {
+            if (input.charCodeAt(peg$currPos) === 125) {
                 // @ts-ignore
                 s0 = peg$c42;
                 // @ts-ignore
@@ -17392,15 +18537,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePLUS_EQUALS() {
+        function peg$parseLBRACKET() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c43) {
+            if (input.charCodeAt(peg$currPos) === 91) {
                 // @ts-ignore
                 s0 = peg$c43;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17415,15 +18560,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseMINUS_EQUALS() {
+        function peg$parseRBRACKET() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c44) {
+            if (input.charCodeAt(peg$currPos) === 93) {
                 // @ts-ignore
                 s0 = peg$c44;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17438,15 +18583,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSTAR_EQUALS() {
+        function peg$parseEQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c45) {
+            if (input.charCodeAt(peg$currPos) === 61) {
                 // @ts-ignore
                 s0 = peg$c45;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17461,7 +18606,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSLASH_EQUALS() {
+        function peg$parsePLUS_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17484,7 +18629,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePERCENT_EQUALS() {
+        function peg$parseMINUS_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17507,7 +18652,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOUBLE_EQUALS() {
+        function peg$parseSTAR_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17530,7 +18675,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseBANG_EQUALS() {
+        function peg$parseSLASH_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17553,15 +18698,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseBANG() {
+        function peg$parsePERCENT_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 33) {
+            if (input.substr(peg$currPos, 2) === peg$c50) {
                 // @ts-ignore
                 s0 = peg$c50;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -17576,15 +18721,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLESS_THAN() {
+        function peg$parseDOUBLE_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 60) {
+            if (input.substr(peg$currPos, 2) === peg$c51) {
                 // @ts-ignore
                 s0 = peg$c51;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -17599,7 +18744,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLESS_THAN_EQUALS() {
+        function peg$parseBANG_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -17622,11 +18767,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseGREATER_THAN() {
+        function peg$parseBANG() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 62) {
+            if (input.charCodeAt(peg$currPos) === 33) {
                 // @ts-ignore
                 s0 = peg$c53;
                 // @ts-ignore
@@ -17645,15 +18790,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseGREATER_THAN_EQUALS() {
+        function peg$parseLESS_THAN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c54) {
+            if (input.charCodeAt(peg$currPos) === 60) {
                 // @ts-ignore
                 s0 = peg$c54;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17668,15 +18813,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePLUS() {
+        function peg$parseLESS_THAN_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 43) {
+            if (input.substr(peg$currPos, 2) === peg$c55) {
                 // @ts-ignore
                 s0 = peg$c55;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -17691,11 +18836,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseMINUS() {
+        function peg$parseGREATER_THAN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 45) {
+            if (input.charCodeAt(peg$currPos) === 62) {
                 // @ts-ignore
                 s0 = peg$c56;
                 // @ts-ignore
@@ -17714,15 +18859,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSTAR() {
+        function peg$parseGREATER_THAN_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 42) {
+            if (input.substr(peg$currPos, 2) === peg$c57) {
                 // @ts-ignore
                 s0 = peg$c57;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -17737,11 +18882,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSLASH() {
+        function peg$parsePLUS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 47) {
+            if (input.charCodeAt(peg$currPos) === 43) {
                 // @ts-ignore
                 s0 = peg$c58;
                 // @ts-ignore
@@ -17760,11 +18905,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePERCENT() {
+        function peg$parseMINUS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 37) {
+            if (input.charCodeAt(peg$currPos) === 45) {
                 // @ts-ignore
                 s0 = peg$c59;
                 // @ts-ignore
@@ -17783,15 +18928,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseAMPERSAND_AMPERSAND() {
+        function peg$parseSTAR() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c60) {
+            if (input.charCodeAt(peg$currPos) === 42) {
                 // @ts-ignore
                 s0 = peg$c60;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17806,15 +18951,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePIPE_PIPE() {
+        function peg$parseSLASH() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c61) {
+            if (input.charCodeAt(peg$currPos) === 47) {
                 // @ts-ignore
                 s0 = peg$c61;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -17829,13 +18974,36 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRIGHT_ARROW() {
+        function peg$parsePERCENT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c62) {
+            if (input.charCodeAt(peg$currPos) === 37) {
                 // @ts-ignore
                 s0 = peg$c62;
+                // @ts-ignore
+                peg$currPos++;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e64);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseAMPERSAND_AMPERSAND() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c63) {
+                // @ts-ignore
+                s0 = peg$c63;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -17845,7 +19013,53 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s0 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e64);
+                    peg$fail(peg$e65);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parsePIPE_PIPE() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c64) {
+                // @ts-ignore
+                s0 = peg$c64;
+                // @ts-ignore
+                peg$currPos += 2;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e66);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseRIGHT_ARROW() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c65) {
+                // @ts-ignore
+                s0 = peg$c65;
+                // @ts-ignore
+                peg$currPos += 2;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e67);
                 }
             }
             // @ts-ignore
@@ -17902,9 +19116,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 4) === peg$c63) {
+            if (input.substr(peg$currPos, 4) === peg$c66) {
                 // @ts-ignore
-                s1 = peg$c63;
+                s1 = peg$c66;
                 // @ts-ignore
                 peg$currPos += 4;
                 // @ts-ignore
@@ -17914,15 +19128,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e65);
+                    peg$fail(peg$e68);
                 }
             }
             // @ts-ignore
             if (s1 === peg$FAILED) {
                 // @ts-ignore
-                if (input.substr(peg$currPos, 5) === peg$c64) {
+                if (input.substr(peg$currPos, 5) === peg$c67) {
                     // @ts-ignore
-                    s1 = peg$c64;
+                    s1 = peg$c67;
                     // @ts-ignore
                     peg$currPos += 5;
                     // @ts-ignore
@@ -17932,7 +19146,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s1 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e66);
+                        peg$fail(peg$e69);
                     }
                 }
             }
@@ -17941,7 +19155,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f92();
+                s1 = peg$f95();
             }
             // @ts-ignore
             s0 = s1;
@@ -17967,7 +19181,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e67);
+                    peg$fail(peg$e70);
                 }
             }
             // @ts-ignore
@@ -17987,7 +19201,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e68);
+                        peg$fail(peg$e71);
                     }
                 }
                 // @ts-ignore
@@ -18007,14 +19221,14 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e68);
+                            peg$fail(peg$e71);
                         }
                     }
                 }
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f93();
+                s0 = peg$f96();
                 // @ts-ignore
             }
             else {
@@ -18033,9 +19247,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c65) {
+            if (input.substr(peg$currPos, 2) === peg$c68) {
                 // @ts-ignore
-                s1 = peg$c65;
+                s1 = peg$c68;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -18045,7 +19259,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e69);
+                    peg$fail(peg$e72);
                 }
             }
             // @ts-ignore
@@ -18065,7 +19279,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e70);
+                        peg$fail(peg$e73);
                     }
                 }
                 // @ts-ignore
@@ -18087,7 +19301,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s3 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e70);
+                                peg$fail(peg$e73);
                             }
                         }
                     }
@@ -18102,7 +19316,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f94();
+                    s0 = peg$f97();
                     // @ts-ignore
                 }
                 else {
@@ -18131,7 +19345,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (input.charCodeAt(peg$currPos) === 48) {
                 // @ts-ignore
-                s1 = peg$c66;
+                s1 = peg$c69;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -18141,7 +19355,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e71);
+                    peg$fail(peg$e74);
                 }
             }
             // @ts-ignore
@@ -18161,7 +19375,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e72);
+                        peg$fail(peg$e75);
                     }
                 }
                 // @ts-ignore
@@ -18181,14 +19395,14 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e72);
+                            peg$fail(peg$e75);
                         }
                     }
                 }
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f95();
+                s0 = peg$f98();
                 // @ts-ignore
             }
             else {
@@ -18209,7 +19423,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (input.charCodeAt(peg$currPos) === 39) {
                 // @ts-ignore
-                s1 = peg$c67;
+                s1 = peg$c70;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -18219,7 +19433,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e73);
+                    peg$fail(peg$e76);
                 }
             }
             // @ts-ignore
@@ -18243,7 +19457,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s4 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e74);
+                        peg$fail(peg$e77);
                     }
                 }
                 // @ts-ignore
@@ -18275,7 +19489,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s4 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e75);
+                            peg$fail(peg$e78);
                         }
                     }
                     // @ts-ignore
@@ -18305,7 +19519,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     if (input.charCodeAt(peg$currPos) === 39) {
                         // @ts-ignore
-                        s3 = peg$c67;
+                        s3 = peg$c70;
                         // @ts-ignore
                         peg$currPos++;
                         // @ts-ignore
@@ -18315,7 +19529,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e73);
+                            peg$fail(peg$e76);
                         }
                     }
                     // @ts-ignore
@@ -18323,7 +19537,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f96(s2);
+                        s0 = peg$f99(s2);
                         // @ts-ignore
                     }
                     else {
@@ -18360,7 +19574,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (input.charCodeAt(peg$currPos) === 34) {
                 // @ts-ignore
-                s1 = peg$c68;
+                s1 = peg$c71;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -18370,7 +19584,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e76);
+                    peg$fail(peg$e79);
                 }
             }
             // @ts-ignore
@@ -18396,7 +19610,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s5 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e74);
+                        peg$fail(peg$e77);
                     }
                 }
                 // @ts-ignore
@@ -18428,7 +19642,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e75);
+                            peg$fail(peg$e78);
                         }
                     }
                     // @ts-ignore
@@ -18476,7 +19690,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e74);
+                            peg$fail(peg$e77);
                         }
                     }
                     // @ts-ignore
@@ -18508,7 +19722,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e75);
+                                peg$fail(peg$e78);
                             }
                         }
                         // @ts-ignore
@@ -18537,7 +19751,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 if (input.charCodeAt(peg$currPos) === 34) {
                     // @ts-ignore
-                    s3 = peg$c68;
+                    s3 = peg$c71;
                     // @ts-ignore
                     peg$currPos++;
                     // @ts-ignore
@@ -18547,7 +19761,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e76);
+                        peg$fail(peg$e79);
                     }
                 }
                 // @ts-ignore
@@ -18555,7 +19769,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f97(s2);
+                    s0 = peg$f100(s2);
                     // @ts-ignore
                 }
                 else {
@@ -18582,9 +19796,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 4) === peg$c69) {
+            if (input.substr(peg$currPos, 4) === peg$c72) {
                 // @ts-ignore
-                s1 = peg$c69;
+                s1 = peg$c72;
                 // @ts-ignore
                 peg$currPos += 4;
                 // @ts-ignore
@@ -18594,7 +19808,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e77);
+                    peg$fail(peg$e80);
                 }
             }
             // @ts-ignore
@@ -18602,7 +19816,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f98();
+                s1 = peg$f101();
             }
             // @ts-ignore
             s0 = s1;
@@ -18632,7 +19846,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s3 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e68);
+                    peg$fail(peg$e71);
                 }
             }
             // @ts-ignore
@@ -18654,7 +19868,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e68);
+                            peg$fail(peg$e71);
                         }
                     }
                 }
@@ -18669,7 +19883,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 if (input.charCodeAt(peg$currPos) === 46) {
                     // @ts-ignore
-                    s3 = peg$c31;
+                    s3 = peg$c34;
                     // @ts-ignore
                     peg$currPos++;
                     // @ts-ignore
@@ -18679,7 +19893,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e33);
+                        peg$fail(peg$e36);
                     }
                 }
                 // @ts-ignore
@@ -18699,7 +19913,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e68);
+                            peg$fail(peg$e71);
                         }
                     }
                     // @ts-ignore
@@ -18719,7 +19933,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e68);
+                                peg$fail(peg$e71);
                             }
                         }
                     }
@@ -18750,7 +19964,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 if (input.charCodeAt(peg$currPos) === 46) {
                     // @ts-ignore
-                    s2 = peg$c31;
+                    s2 = peg$c34;
                     // @ts-ignore
                     peg$currPos++;
                     // @ts-ignore
@@ -18760,7 +19974,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s2 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e33);
+                        peg$fail(peg$e36);
                     }
                 }
                 // @ts-ignore
@@ -18780,7 +19994,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s4 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e68);
+                            peg$fail(peg$e71);
                         }
                     }
                     // @ts-ignore
@@ -18802,7 +20016,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 s4 = peg$FAILED;
                                 // @ts-ignore
                                 if (peg$silentFails === 0) {
-                                    peg$fail(peg$e68);
+                                    peg$fail(peg$e71);
                                 }
                             }
                         }
@@ -18852,7 +20066,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e78);
+                        peg$fail(peg$e81);
                     }
                 }
                 // @ts-ignore
@@ -18870,7 +20084,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s4 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e79);
+                            peg$fail(peg$e82);
                         }
                     }
                     // @ts-ignore
@@ -18893,7 +20107,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s6 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e68);
+                            peg$fail(peg$e71);
                         }
                     }
                     // @ts-ignore
@@ -18915,7 +20129,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                 s6 = peg$FAILED;
                                 // @ts-ignore
                                 if (peg$silentFails === 0) {
-                                    peg$fail(peg$e68);
+                                    peg$fail(peg$e71);
                                 }
                             }
                         }
@@ -18955,7 +20169,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f99();
+                s0 = peg$f102();
                 // @ts-ignore
             }
             else {
@@ -18988,9 +20202,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c70) {
+            if (input.substr(peg$currPos, 2) === peg$c73) {
                 // @ts-ignore
-                s1 = peg$c70;
+                s1 = peg$c73;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -19000,7 +20214,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e80);
+                    peg$fail(peg$e83);
                 }
             }
             // @ts-ignore
@@ -19026,7 +20240,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s5 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e81);
+                        peg$fail(peg$e84);
                     }
                 }
                 // @ts-ignore
@@ -19058,7 +20272,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e75);
+                            peg$fail(peg$e78);
                         }
                     }
                     // @ts-ignore
@@ -19106,7 +20320,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e81);
+                            peg$fail(peg$e84);
                         }
                     }
                     // @ts-ignore
@@ -19138,7 +20352,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e75);
+                                peg$fail(peg$e78);
                             }
                         }
                         // @ts-ignore
@@ -19186,9 +20400,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c71) {
+            if (input.substr(peg$currPos, 2) === peg$c74) {
                 // @ts-ignore
-                s1 = peg$c71;
+                s1 = peg$c74;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -19198,7 +20412,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e82);
+                    peg$fail(peg$e85);
                 }
             }
             // @ts-ignore
@@ -19212,9 +20426,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$silentFails++;
                 // @ts-ignore
-                if (input.substr(peg$currPos, 2) === peg$c72) {
+                if (input.substr(peg$currPos, 2) === peg$c75) {
                     // @ts-ignore
-                    s5 = peg$c72;
+                    s5 = peg$c75;
                     // @ts-ignore
                     peg$currPos += 2;
                     // @ts-ignore
@@ -19224,7 +20438,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s5 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e83);
+                        peg$fail(peg$e86);
                     }
                 }
                 // @ts-ignore
@@ -19256,7 +20470,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e75);
+                            peg$fail(peg$e78);
                         }
                     }
                     // @ts-ignore
@@ -19292,9 +20506,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$silentFails++;
                     // @ts-ignore
-                    if (input.substr(peg$currPos, 2) === peg$c72) {
+                    if (input.substr(peg$currPos, 2) === peg$c75) {
                         // @ts-ignore
-                        s5 = peg$c72;
+                        s5 = peg$c75;
                         // @ts-ignore
                         peg$currPos += 2;
                         // @ts-ignore
@@ -19304,7 +20518,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e83);
+                            peg$fail(peg$e86);
                         }
                     }
                     // @ts-ignore
@@ -19336,7 +20550,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e75);
+                                peg$fail(peg$e78);
                             }
                         }
                         // @ts-ignore
@@ -19363,9 +20577,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     }
                 }
                 // @ts-ignore
-                if (input.substr(peg$currPos, 2) === peg$c72) {
+                if (input.substr(peg$currPos, 2) === peg$c75) {
                     // @ts-ignore
-                    s3 = peg$c72;
+                    s3 = peg$c75;
                     // @ts-ignore
                     peg$currPos += 2;
                     // @ts-ignore
@@ -19375,7 +20589,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e83);
+                        peg$fail(peg$e86);
                     }
                 }
                 // @ts-ignore
@@ -19422,7 +20636,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e84);
+                    peg$fail(peg$e87);
                 }
             }
             // @ts-ignore
@@ -19444,7 +20658,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s1 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e84);
+                            peg$fail(peg$e87);
                         }
                     }
                 }
@@ -19487,7 +20701,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             peg$savedPos = s0;
             // @ts-ignore
-            s1 = peg$f100();
+            s1 = peg$f103();
             // @ts-ignore
             s0 = s1;
             // @ts-ignore
@@ -19613,6 +20827,185 @@ var MetaFunctionType;
     MetaFunctionType[MetaFunctionType["TO_BOOL"] = 9] = "TO_BOOL";
     MetaFunctionType[MetaFunctionType["TO_STRING"] = 10] = "TO_STRING";
 })(MetaFunctionType || (exports.MetaFunctionType = MetaFunctionType = {}));
+
+
+/***/ }),
+
+/***/ "./src/types/keywords.ts":
+/*!*******************************!*\
+  !*** ./src/types/keywords.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SpecialSigns = exports.SpecialSymbols = exports.TypeKeywords = exports.ScopeKeywords = exports.Keywords = void 0;
+var Keywords;
+(function (Keywords) {
+    Keywords["Script"] = "Script";
+    Keywords["Module"] = "Module";
+    Keywords["Class"] = "Class";
+    Keywords["Interface"] = "Interface";
+    Keywords["Struct"] = "Struct";
+    Keywords["Test"] = "Test";
+    Keywords["Generic"] = "Generic";
+    Keywords["Field"] = "Field";
+    Keywords["Function"] = "Function";
+    Keywords["Meta"] = "Meta";
+    Keywords["Property"] = "Property";
+    Keywords["Parameter"] = "Parameter";
+    Keywords["Block"] = "Block";
+    Keywords["Enum"] = "Enum";
+    Keywords["Variable"] = "Variable";
+    Keywords["Identifier"] = "Identifier";
+    Keywords["Try"] = "Try";
+    Keywords["Array"] = "Array";
+    Keywords["Object"] = "Object";
+    Keywords["Buffer"] = "Buffer";
+    Keywords["Boolean"] = "Boolean";
+    Keywords["Char"] = "Char";
+    Keywords["Float"] = "Float";
+    Keywords["Integer"] = "Integer";
+    Keywords["Null"] = "Null";
+    Keywords["String"] = "String";
+    Keywords["Type"] = "Type";
+    Keywords["GenericType"] = "GenericType";
+    Keywords["TupleType"] = "TupleType";
+    Keywords["ArrayLiteral"] = "ArrayLiteral";
+    Keywords["ObjectLiteral"] = "ObjectLiteral";
+    Keywords["IdentifierLiteral"] = "IdentifierLiteral";
+    Keywords["ValueLiteral"] = "ValueLiteral";
+    Keywords["UnpackLiteral"] = "UnpackLiteral";
+    Keywords["BooleanLiteral"] = "BooleanLiteral";
+    Keywords["CharLiteral"] = "CharLiteral";
+    Keywords["FloatLiteral"] = "FloatLiteral";
+    Keywords["IntegerLiteral"] = "IntegerLiteral";
+    Keywords["NullLiteral"] = "NullLiteral";
+    Keywords["StringLiteral"] = "StringLiteral";
+    Keywords["Assignment"] = "Assignment";
+    Keywords["Binary"] = "Binary";
+    Keywords["Conditional"] = "Conditional";
+    Keywords["ForLoop"] = "ForLoop";
+    Keywords["ForeachLoop"] = "ForeachLoop";
+    Keywords["WhileLoop"] = "WhileLoop";
+    Keywords["FunctionCall"] = "FunctionCall";
+    Keywords["Tuple"] = "Tuple";
+    Keywords["Logical"] = "Logical";
+    Keywords["KeyValuePair"] = "KeyValuePair";
+    Keywords["SwitchCase"] = "SwitchCase";
+    Keywords["SwitchDefault"] = "SwitchDefault";
+    Keywords["Unary"] = "Unary";
+    Keywords["UnaryOperator"] = "UnaryOperator";
+    Keywords["ModuleDeclaration"] = "ModuleDeclaration";
+    Keywords["ClassDeclaration"] = "ClassDeclaration";
+    Keywords["ClassField"] = "ClassField";
+    Keywords["ClassMethod"] = "ClassMethod";
+    Keywords["ClassProperty"] = "ClassProperty";
+    Keywords["ClassMetaFunction"] = "ClassMetaFunction";
+    Keywords["EnumDeclaration"] = "EnumDeclaration";
+    Keywords["EnumMember"] = "EnumMember";
+    Keywords["FunctionDeclaration"] = "FunctionDeclaration";
+    Keywords["InterfaceDeclaration"] = "InterfaceDeclaration";
+    Keywords["InterfaceFieldDeclaration"] = "InterfaceFieldDeclaration";
+    Keywords["InterfaceMethodSignature"] = "InterfaceMethodSignature";
+    Keywords["InterfaceMetaSignature"] = "InterfaceMetaSignature";
+    Keywords["InterfacePropertySignature"] = "InterfacePropertySignature";
+    Keywords["StructDeclaration"] = "StructDeclaration";
+    Keywords["StructField"] = "StructField";
+    Keywords["StructMethod"] = "StructMethod";
+    Keywords["StructMetaFunction"] = "StructMetaFunction";
+    Keywords["TestDeclaration"] = "TestDeclaration";
+    Keywords["VariableDeclaration"] = "VariableDeclaration";
+    Keywords["DestructuringObject"] = "DestructuringObject";
+    Keywords["DestructuringArray"] = "DestructuringArray";
+    Keywords["GenericDeclaration"] = "GenericDeclaration";
+    Keywords["ArrayLiteralExpression"] = "ArrayLiteralExpression";
+    Keywords["AssignmentExpression"] = "AssignmentExpression";
+    Keywords["BinaryExpression"] = "BinaryExpression";
+    Keywords["ConditionalExpression"] = "ConditionalExpression";
+    Keywords["DecoratorExpression"] = "DecoratorExpression";
+    Keywords["ForLoopExpression"] = "ForLoopExpression";
+    Keywords["ForeachLoopExpression"] = "ForeachLoopExpression";
+    Keywords["WhileLoopExpression"] = "WhileLoopExpression";
+    Keywords["IfExpression"] = "IfExpression";
+    Keywords["LambdaExpression"] = "LambdaExpression";
+    Keywords["ValueLiteralExpression"] = "ValueLiteralExpression";
+    Keywords["IdentifierLiteralExpression"] = "IdentifierLiteralExpression";
+    Keywords["LogicalExpression"] = "LogicalExpression";
+    Keywords["MemberExpression"] = "MemberExpression";
+    Keywords["ObjectLiteralExpression"] = "ObjectLiteralExpression";
+    Keywords["KeyValuePairExpression"] = "KeyValuePairExpression";
+    Keywords["PrimaryExpression"] = "PrimaryExpression";
+    Keywords["SwitchExpression"] = "SwitchExpression";
+    Keywords["UnaryExpression"] = "UnaryExpression";
+    Keywords["UnpackLiteralExpression"] = "UnpackLiteralExpression";
+    Keywords["TryCatchFinallyStatement"] = "TryCatchFinallyStatement";
+    Keywords["BreakContinueStatement"] = "BreakContinueStatement";
+    Keywords["OutStatement"] = "OutStatement";
+    Keywords["ReturnStatement"] = "ReturnStatement";
+    Keywords["ThrowStatement"] = "ThrowStatement";
+    Keywords["ExpressionStatement"] = "ExpressionStatement";
+})(Keywords || (exports.Keywords = Keywords = {}));
+var ScopeKeywords;
+(function (ScopeKeywords) {
+    ScopeKeywords["ModuleScope"] = "ModuleScope";
+    ScopeKeywords["BlockScope"] = "BlockScope";
+    ScopeKeywords["ClassScope"] = "ClassScope";
+    ScopeKeywords["EnumScope"] = "EnumScope";
+    ScopeKeywords["FunctionScope"] = "FunctionScope";
+    ScopeKeywords["StructScope"] = "StructScope";
+    ScopeKeywords["InterfaceScope"] = "InterfaceScope";
+    ScopeKeywords["PropertyScope"] = "PropertyScope";
+    ScopeKeywords["TestScope"] = "TestScope";
+    ScopeKeywords["TryScope"] = "TryScope";
+})(ScopeKeywords || (exports.ScopeKeywords = ScopeKeywords = {}));
+var TypeKeywords;
+(function (TypeKeywords) {
+    TypeKeywords["Array"] = "array";
+    TypeKeywords["Object"] = "object";
+    TypeKeywords["Buffer"] = "buffer";
+    TypeKeywords["Function"] = "function";
+    TypeKeywords["Boolean"] = "bool";
+    TypeKeywords["Float"] = "float";
+    TypeKeywords["Integer"] = "int";
+    TypeKeywords["String"] = "string";
+    TypeKeywords["Null"] = "null";
+    TypeKeywords["Double"] = "double";
+    TypeKeywords["Float32"] = "float32";
+    TypeKeywords["Float64"] = "float64";
+    TypeKeywords["Char"] = "char";
+    TypeKeywords["Byte"] = "byte";
+    TypeKeywords["Short"] = "short";
+    TypeKeywords["Long"] = "long";
+    TypeKeywords["UShort"] = "ushort";
+    TypeKeywords["UInt"] = "uint";
+    TypeKeywords["ULong"] = "ulong";
+    TypeKeywords["Int8"] = "int8";
+    TypeKeywords["Int16"] = "int16";
+    TypeKeywords["Int32"] = "int32";
+    TypeKeywords["Int64"] = "int64";
+    TypeKeywords["UInt8"] = "uint8";
+    TypeKeywords["UInt16"] = "uint16";
+    TypeKeywords["UInt32"] = "uint32";
+    TypeKeywords["UInt64"] = "uint64";
+    TypeKeywords["Void"] = "void";
+})(TypeKeywords || (exports.TypeKeywords = TypeKeywords = {}));
+var SpecialSymbols;
+(function (SpecialSymbols) {
+    SpecialSymbols["Lambda"] = "$Lambda";
+    SpecialSymbols["Block"] = "$Block";
+    SpecialSymbols["TryCatchFinallyBlock"] = "$TryCatchFinallyBlock";
+    SpecialSymbols["Try"] = "$Try";
+    SpecialSymbols["Catch"] = "$Catch";
+    SpecialSymbols["Finally"] = "$Finally";
+    SpecialSymbols["Get"] = "$Get";
+    SpecialSymbols["Set"] = "$Set";
+})(SpecialSymbols || (exports.SpecialSymbols = SpecialSymbols = {}));
+var SpecialSigns;
+(function (SpecialSigns) {
+    SpecialSigns["MetaSign"] = "@";
+    SpecialSigns["TestSign"] = "%";
+})(SpecialSigns || (exports.SpecialSigns = SpecialSigns = {}));
 
 
 /***/ }),

@@ -10,9 +10,10 @@ import {Access} from "../../../types/access";
 import {FunctionScope} from "../../static/scope/functionScope";
 import {ParameterSymbol} from "../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../static/symbol/blockSymbol";
+import {Keywords, SpecialSymbols} from "../../../types/keywords";
 
 export type LambdaType = {
-    type: 'LambdaExpression',
+    type: Keywords.LambdaExpression,
     params: ParameterType[],
     args: ParameterType,
     blocks: BlockType,
@@ -48,7 +49,7 @@ export class LambdaHandler extends Handler {
         this.blockHandler = Handler.handle(node.block, this.context);
 
         this.value = {
-            type: 'LambdaExpression',
+            type: Keywords.LambdaExpression,
             params: this.paramsHandler.map(handler => handler?.value as ParameterType),
             args: this.argsHandler?.value as ParameterType,
             blocks: this.blockHandler?.value
@@ -56,7 +57,7 @@ export class LambdaHandler extends Handler {
     }
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
-        const symbol = this.declareSymbol<FunctionSymbol>("$Lambda", "Function", parentScope);
+        const symbol = this.declareSymbol<FunctionSymbol>(SpecialSymbols.Lambda, Keywords.Function, parentScope);
         if (!symbol) {
             return null;
         }
@@ -74,11 +75,11 @@ export class LambdaHandler extends Handler {
 
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter": {
+                case Keywords.Parameter: {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     scope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -88,4 +89,4 @@ export class LambdaHandler extends Handler {
     }
 }
 
-Handler.registerHandler("LambdaExpression", LambdaHandler);
+Handler.registerHandler(Keywords.LambdaExpression, LambdaHandler);

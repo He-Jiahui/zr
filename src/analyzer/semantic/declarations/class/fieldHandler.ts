@@ -9,9 +9,10 @@ import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
+import {Keywords} from "../../../../types/keywords";
 
 export type ClassFieldType = {
-    type: "ClassField";
+    type: Keywords.ClassField;
     access: Access,
     static: boolean,
     name: IdentifierType,
@@ -59,7 +60,7 @@ export class FieldHandler extends Handler {
         }
         this.nameHandler = Handler.handle(node.name, this.context);
         this.value = {
-            type: "ClassField",
+            type: Keywords.ClassField,
             access: node.access as Access,
             static: !!node.static,
             name: this.nameHandler?.value,
@@ -71,7 +72,7 @@ export class FieldHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const name = this.value.name.name;
-        const symbol = this.declareSymbol<FieldSymbol>(name, "Field", parentScope);
+        const symbol = this.declareSymbol<FieldSymbol>(name, Keywords.Field, parentScope);
         if (!symbol) {
             return null;
         }
@@ -81,4 +82,4 @@ export class FieldHandler extends Handler {
     }
 }
 
-Handler.registerHandler("ClassField", FieldHandler);
+Handler.registerHandler(Keywords.ClassField, FieldHandler);

@@ -7,9 +7,10 @@ import {Symbol as SymbolDeclaration} from "../../static/symbol/symbol";
 import type {VariableSymbol} from "../../static/symbol/variableSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Scope} from "../../static/scope/scope";
+import {Keywords, SpecialSymbols} from "../../../types/keywords";
 
 export type BlockType = {
-    type: "Block",
+    type: Keywords.Block,
     isStatement: boolean,
     body: StatementType[]
 }
@@ -17,6 +18,7 @@ export type BlockType = {
 export class BlockHandler extends Handler {
     public value: BlockType;
     private readonly bodyHandler: Handler[] = [];
+    private nameSign: string = SpecialSymbols.Block;
 
     protected get _children() {
         return [
@@ -26,20 +28,25 @@ export class BlockHandler extends Handler {
 
     public _handle(node: Block): void {
         super._handle(node);
+        this.nameSign = SpecialSymbols.Block;
         this.bodyHandler.length = 0;
         for (const statement of node.body) {
             const handler = Handler.handle(statement, this.context);
             this.bodyHandler.push(handler);
         }
         this.value = {
-            type: "Block",
+            type: Keywords.Block,
             isStatement: node.isStatement,
             body: this.bodyHandler.map(handler => handler?.value as StatementType)
         }
     }
 
+    protected _signByParentHandler(sign: string) {
+        this.nameSign = sign;
+    }
+
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
-        return this.declareSymbol<BlockSymbol>("$Block", "Block", parentScope);
+        return this.declareSymbol<BlockSymbol>(this.nameSign, Keywords.Block, parentScope);
     }
 
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
@@ -49,7 +56,7 @@ export class BlockHandler extends Handler {
         const scope = currentScope as BlockScope;
         for (const child of childrenSymbols) {
             // collect variables
-            if (child.type === "variable") {
+            if (child.type === Keywords.Variable) {
                 scope.addVariable(child as VariableSymbol);
             } else {
                 scope.addSubScope(child);
@@ -60,4 +67,4 @@ export class BlockHandler extends Handler {
     }
 }
 
-Handler.registerHandler("Block", BlockHandler);
+Handler.registerHandler(Keywords.Block, BlockHandler);

@@ -3,9 +3,10 @@ import {Handler} from "../common/handler";
 import {ExpressionType} from "./index";
 import {BlockType} from "../statements/blockHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type WhileLoopExpressionType = {
-    type: "WhileLoopExpression",
+    type: Keywords.WhileLoopExpression,
     isStatement: boolean,
     condition: ExpressionType,
     block: BlockType
@@ -28,7 +29,7 @@ export class WhileLoopExpressionHandler extends Handler {
         this.conditionHandler = Handler.handle(node.cond, this.context);
         this.blockHandler = Handler.handle(node.block, this.context);
         this.value = {
-            type: "WhileLoopExpression",
+            type: Keywords.WhileLoopExpression,
             isStatement: node.isStatement,
             condition: this.conditionHandler?.value,
             block: this.blockHandler?.value
@@ -37,4 +38,4 @@ export class WhileLoopExpressionHandler extends Handler {
 
 }
 
-Handler.registerHandler("WhileLoop", WhileLoopExpressionHandler);
+Handler.registerHandler(Keywords.WhileLoop, WhileLoopExpressionHandler);

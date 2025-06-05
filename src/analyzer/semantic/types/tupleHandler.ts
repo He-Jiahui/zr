@@ -1,9 +1,10 @@
 import {TupleType as TupleImplementType} from "../../../parser/generated/parser"
 import {Handler} from "../common/handler"
 import type {TypeType} from "./typeHandler";
+import {Keywords} from "../../../types/keywords";
 
 export type TupleType = {
-    type: "Tuple",
+    type: Keywords.Tuple,
     elements: TypeType[]
 }
 
@@ -26,10 +27,10 @@ export class TupleImplementHandler extends Handler {
             }
         }
         this.value = {
-            type: "Tuple",
+            type: Keywords.Tuple,
             elements: this.elementsHandler.map(handler => handler?.value),
         };
     }
 }
 
-Handler.registerHandler("TupleType", TupleImplementHandler);
+Handler.registerHandler(Keywords.TupleType, TupleImplementHandler);

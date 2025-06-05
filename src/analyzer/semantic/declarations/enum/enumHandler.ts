@@ -9,9 +9,10 @@ import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Symbol, Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
 import {Scope} from "../../../static/scope/scope";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
+import {Keywords} from "../../../../types/keywords";
 
 export type EnumType = {
-    type: "Enum",
+    type: Keywords.Enum,
     name: IdentifierType,
     members: EnumMemberType[],
     baseType: AllType
@@ -48,7 +49,7 @@ export class EnumDeclarationHandler extends Handler {
             this.membersHandler.push(handler);
         }
         this.value = {
-            type: "Enum",
+            type: Keywords.Enum,
             name: this.nameHandler?.value,
             members: this.membersHandler.map(handler => handler?.value),
             baseType: this.baseTypeHandler?.value
@@ -57,7 +58,7 @@ export class EnumDeclarationHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const enumName = this.value.name.name;
-        return this.declareSymbol<EnumSymbol>(enumName, "Enum", parentScope);
+        return this.declareSymbol<EnumSymbol>(enumName, Keywords.Enum, parentScope);
     }
 
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
@@ -72,4 +73,4 @@ export class EnumDeclarationHandler extends Handler {
     }
 }
 
-Handler.registerHandler("EnumDeclaration", EnumDeclarationHandler);
+Handler.registerHandler(Keywords.EnumDeclaration, EnumDeclarationHandler);

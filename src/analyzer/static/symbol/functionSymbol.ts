@@ -1,9 +1,10 @@
 import {Access} from "../../../types/access";
 import type {TypeReference} from "../type/typeReference";
 import {Symbol} from "./symbol";
+import {Keywords} from "../../../types/keywords";
 
 export class FunctionSymbol extends Symbol {
-    public readonly type: string = "function";
+    public readonly type: string = Keywords.Function;
 
     public accessibility: Access;
     // 
@@ -17,4 +18,4 @@ export class FunctionSymbol extends Symbol {
 
 }
 
-Symbol.registerSymbol("Function", FunctionSymbol);
+Symbol.registerSymbol(Keywords.Function, FunctionSymbol);

@@ -2,9 +2,10 @@ import {TSymbolOrSymbolArray} from "../symbol/symbol";
 import {Scope} from "./scope";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import type {FunctionSymbol} from "../symbol/functionSymbol";
+import {Keywords, ScopeKeywords} from "../../../types/keywords";
 
 export class PropertyScope extends Scope {
-    public readonly type: string = "PropertyScope";
+    public readonly type: string = ScopeKeywords.PropertyScope;
 
     public getterSymbol: TNullable<FunctionSymbol>;
     public setterSymbol: TNullable<FunctionSymbol>;
@@ -34,4 +35,4 @@ export class PropertyScope extends Scope {
 
 }
 
-Scope.registerScope("Property", PropertyScope);
+Scope.registerScope(Keywords.Property, PropertyScope);

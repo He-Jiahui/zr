@@ -10,9 +10,10 @@ import {TestSymbol} from "../../../static/symbol/testSymbol";
 import {TestScope} from "../../../static/scope/testScope";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {Keywords, SpecialSigns} from "../../../../types/keywords";
 
 export type TestType = {
-    type: "Test",
+    type: Keywords.Test,
     name: StringType,
     parameters: ParameterType[];
     args: ParameterType;
@@ -61,7 +62,7 @@ export class TestHandler extends Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "Test",
+            type: Keywords.Test,
             name: this.nameHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value as ParameterType),
             args: this.argsHandler?.value,
@@ -70,8 +71,8 @@ export class TestHandler extends Handler {
     }
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
-        const testName: string = "%" + this.value.name.value;
-        const symbol = this.declareSymbol<TestSymbol>(testName, "Test", parentScope);
+        const testName: string = SpecialSigns.TestSign + this.value.name.value;
+        const symbol = this.declareSymbol<TestSymbol>(testName, Keywords.Test, parentScope);
         return symbol;
     }
 
@@ -83,11 +84,11 @@ export class TestHandler extends Handler {
 
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "parameter": {
+                case Keywords.Parameter: {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case "block": {
+                case Keywords.Block: {
                     scope.setBody(child as BlockSymbol);
                 }
                     break;
@@ -97,4 +98,4 @@ export class TestHandler extends Handler {
     }
 }
 
-Handler.registerHandler("TestDeclaration", TestHandler);
+Handler.registerHandler(Keywords.TestDeclaration, TestHandler);

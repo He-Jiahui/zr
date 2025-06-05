@@ -1,6 +1,7 @@
 import {
     InterfaceDeclaration,
     InterfaceFieldDeclaration,
+    InterfaceMetaSignature,
     InterfaceMethodSignature,
     InterfacePropertySignature
 } from "../../../../parser/generated/parser";
@@ -19,10 +20,14 @@ import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
 import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {PropertySymbol} from "../../../static/symbol/propertySymbol";
 import {GenericSymbol} from "../../../static/symbol/genericSymbol";
+import {Keywords} from "../../../../types/keywords";
+import {MetaSymbol} from "../../../static/symbol/metaSymbol";
+import {InterfaceMetaSignatureType} from "./metaFunctionHandler";
 
 export type InterfaceType = {
-    type: "Interface",
+    type: Keywords.Interface,
     name: IdentifierType,
+    metas: InterfaceMetaSignatureType[],
     methods: InterfaceMethodSignatureType[],
     properties: InterfacePropertySignatureType[],
     fields: InterfaceFieldDeclarationType[],
@@ -34,6 +39,7 @@ export class InterfaceDeclarationHandler extends Handler {
     public value: InterfaceType;
     public readonly membersHandler: Handler[] = [];
     public readonly inheritsHandler: Handler[] = [];
+    public readonly metasHandler: Handler[] = [];
     public genericHandler: TNullable<Handler> = null;
     private nameHandler: TNullable<Handler> = null;
 
@@ -67,31 +73,37 @@ export class InterfaceDeclarationHandler extends Handler {
         const fields: any[] = [];
         const methods: any[] = [];
         const properties: any[] = [];
+        const metas: any[] = [];
         for (const member of members) {
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler?.value as (InterfaceMethodSignature | InterfacePropertySignature | InterfaceFieldDeclaration);
+            const value = handler?.value as (InterfaceMethodSignature | InterfacePropertySignature | InterfaceFieldDeclaration | InterfaceMetaSignature);
             if (!value) {
                 continue;
             }
             switch (value.type) {
-                case "InterfaceFieldDeclaration": {
+                case Keywords.InterfaceFieldDeclaration: {
                     fields.push(value);
                 }
                     break;
-                case "InterfaceMethodSignature": {
+                case Keywords.InterfaceMethodSignature: {
                     methods.push(value);
                 }
                     break;
-                case "InterfacePropertySignature": {
+                case Keywords.InterfaceMetaSignature: {
+                    metas.push(value);
+                }
+                    break;
+                case Keywords.InterfacePropertySignature: {
                     properties.push(value);
                 }
                     break;
             }
         }
         this.value = {
-            type: "Interface",
+            type: Keywords.Interface,
             name: this.nameHandler?.value,
+            metas,
             fields,
             methods,
             properties,
@@ -102,7 +114,7 @@ export class InterfaceDeclarationHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const interfaceName = this.value.name.name;
-        return this.declareSymbol<InterfaceSymbol>(interfaceName, "Interface", parentScope);
+        return this.declareSymbol<InterfaceSymbol>(interfaceName, Keywords.Interface, parentScope);
     }
 
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
@@ -113,19 +125,23 @@ export class InterfaceDeclarationHandler extends Handler {
 
         for (const child of childrenSymbols) {
             switch (child.type) {
-                case "generic": {
+                case Keywords.Generic: {
                     scope.addGeneric(child as GenericSymbol);
                 }
                     break;
-                case "field": {
+                case Keywords.Field: {
                     scope.addField(child as FieldSymbol);
                 }
                     break;
-                case "function": {
+                case Keywords.Meta: {
+                    scope.addMetaFunction(child as MetaSymbol);
+                }
+                    break;
+                case Keywords.Function: {
                     scope.addMethod(child as FunctionSymbol);
                 }
                     break;
-                case "property": {
+                case Keywords.Property: {
                     scope.addProperty(child as PropertySymbol);
                 }
                     break;
@@ -136,4 +152,4 @@ export class InterfaceDeclarationHandler extends Handler {
     }
 }
 
-Handler.registerHandler("InterfaceDeclaration", InterfaceDeclarationHandler);
+Handler.registerHandler(Keywords.InterfaceDeclaration, InterfaceDeclarationHandler);

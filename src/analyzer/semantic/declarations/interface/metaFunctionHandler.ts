@@ -1,46 +1,40 @@
 import {Handler} from "../../common/handler";
-import {StructMetaFunction} from "../../../../parser/generated/parser";
+import {InterfaceMetaSignature} from "../../../../parser/generated/parser";
 import {Access} from "../../../../types/access";
 import type {MetaType} from "../metaHandler";
 import type {ParameterType} from "../../types/parameterHandler";
-import type {BlockType} from "../../statements/blockHandler";
-import {TNullable} from "../../../utils/zrCompilerTypes";
-import {Keywords, SpecialSigns} from "../../../../types/keywords";
 import {Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
-import type {Scope} from "../../../static/scope/scope";
 import {FunctionScope} from "../../../static/scope/functionScope";
-import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
-import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {MetaSymbol} from "../../../static/symbol/metaSymbol";
+import {TNullable} from "../../../utils/zrCompilerTypes";
+import type {Scope} from "../../../static/scope/scope";
+import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {Keywords, SpecialSigns} from "../../../../types/keywords";
 
-export type StructMetaFunctionType = {
-    type: Keywords.StructMetaFunction;
+export type InterfaceMetaSignatureType = {
+    type: Keywords.InterfaceMetaSignature;
     access: Access,
-    static: boolean,
     meta: MetaType,
     parameters: ParameterType[],
     args: ParameterType,
-    body: BlockType
 };
 
-export class MetaFunctionHandler extends Handler {
-    public value: StructMetaFunctionType;
+export class InterfaceMetaSignatureHandler extends Handler {
+    public value: InterfaceMetaSignatureType;
 
     private metaHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
     private argsHandler: TNullable<Handler> = null;
-    private bodyHandler: TNullable<Handler> = null;
 
     protected get _children() {
         return [
             this.metaHandler,
             ...this.parameterHandlers,
             this.argsHandler,
-            this.bodyHandler
         ];
     }
 
-    public _handle(node: StructMetaFunction) {
+    public _handle(node: InterfaceMetaSignature) {
         super._handle(node);
         if (node.meta) {
             const metaHandler = Handler.handle(node.meta, this.context);
@@ -48,17 +42,12 @@ export class MetaFunctionHandler extends Handler {
         } else {
             this.metaHandler = null;
         }
+
         const parameters = node.params;
-        const body = node.body;
         this.parameterHandlers.length = 0;
         for (const parameter of parameters) {
             const handler = Handler.handle(parameter, this.context);
             this.parameterHandlers.push(handler);
-        }
-        if (body) {
-            this.bodyHandler = Handler.handle(body, this.context);
-        } else {
-            this.bodyHandler = null;
         }
         if (node.args) {
             const argsHandler = Handler.handle(node.args, this.context);
@@ -68,13 +57,11 @@ export class MetaFunctionHandler extends Handler {
         }
 
         this.value = {
-            type: Keywords.StructMetaFunction,
+            type: Keywords.InterfaceMetaSignature,
             access: node.access as Access,
-            static: !!node.static,
             meta: this.metaHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
             args: this.argsHandler?.value,
-            body: this.bodyHandler?.value,
         };
     }
 
@@ -85,7 +72,6 @@ export class MetaFunctionHandler extends Handler {
         if (symbol) {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
-            symbol.isStatic = this.value.static;
         }
 
 
@@ -103,16 +89,10 @@ export class MetaFunctionHandler extends Handler {
                     scope.addParameter(child as ParameterSymbol);
                 }
                     break;
-                case Keywords.Block: {
-                    scope.setBody(child as BlockSymbol);
-                }
-                    break;
             }
         }
         return currentScope.ownerSymbol;
     }
-
-
 }
 
-Handler.registerHandler(Keywords.StructMetaFunction, MetaFunctionHandler);
+Handler.registerHandler(Keywords.InterfaceMetaSignature, InterfaceMetaSignatureHandler);

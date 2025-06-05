@@ -8,9 +8,17 @@ import type {GenericDeclarationType} from "../../types/genericDeclarationHandler
 import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
 import type {BlockType} from "../../statements/blockHandler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
+import {Keywords} from "../../../../types/keywords";
+import {Scope} from "../../../static/scope/scope";
+import {Symbol as SymbolDeclaration, Symbol} from "../../../static/symbol/symbol";
+import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
+import {FunctionScope} from "../../../static/scope/functionScope";
+import {GenericSymbol} from "../../../static/symbol/genericSymbol";
+import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 
 export type StructMethodType = {
-    type: "StructMethod";
+    type: Keywords.StructMethod;
     access: Access;
     static: boolean;
     name: IdentifierType;
@@ -82,7 +90,7 @@ export class MethodHandler extends Handler {
             this.bodyHandler = null;
         }
         this.value = {
-            type: "StructMethod",
+            type: Keywords.StructMethod,
             access: access as Access,
             static: !!node.static,
             name: this.nameHandler?.value,
@@ -94,6 +102,42 @@ export class MethodHandler extends Handler {
             body: this.bodyHandler?.value
         };
     }
+
+    protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
+        const funcName: string = this.value.name.name;
+        const symbol = this.declareSymbol<FunctionSymbol>(funcName, Keywords.Function, parentScope);
+        if (!symbol) {
+            return null;
+        }
+        symbol.isStatic = this.value.static;
+        symbol.accessibility = this.value.access;
+        return symbol;
+    }
+
+    protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {
+        if (!currentScope) {
+            return null;
+        }
+        const scope = currentScope as FunctionScope;
+
+        for (const child of childrenSymbols) {
+            switch (child.type) {
+                case Keywords.Generic: {
+                    scope.addGeneric(child as GenericSymbol);
+                }
+                    break;
+                case Keywords.Parameter: {
+                    scope.addParameter(child as ParameterSymbol);
+                }
+                    break;
+                case Keywords.Block: {
+                    scope.setBody(child as BlockSymbol);
+                }
+                    break;
+            }
+        }
+        return scope.ownerSymbol;
+    }
 }
 
-Handler.registerHandler("StructMethod", MethodHandler);
+Handler.registerHandler(Keywords.StructMethod, MethodHandler);

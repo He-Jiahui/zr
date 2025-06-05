@@ -1,12 +1,13 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class FunctionType extends PredefinedType {
-    public readonly name: string = "function";
+    public readonly name: string = TypeKeywords.Function;
 
     protected get _typeName(): string {
-        return "function";
+        return TypeKeywords.Function;
     }
 }
 
 
-PredefinedType.registerType("function", new FunctionType());
+PredefinedType.registerType(TypeKeywords.Function, new FunctionType());

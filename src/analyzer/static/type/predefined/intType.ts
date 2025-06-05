@@ -1,7 +1,8 @@
 import {PredefinedType} from "./predefinedType";
+import {TypeKeywords} from "../../../../types/keywords";
 
 export class IntType extends PredefinedType {
-    public readonly name: string = "int";
+    public readonly name: string = TypeKeywords.Integer;
 
     public readonly unsigned: boolean;
     public readonly size: number;
@@ -13,7 +14,7 @@ export class IntType extends PredefinedType {
     }
 
     protected get _typeName(): string {
-        return `${this.unsigned ? "u" : ""}int${this.size}`;
+        return `${this.unsigned ? "u" : ""}${TypeKeywords.Integer}${this.size}`;
     }
 
 }
@@ -31,22 +32,21 @@ const intTypes = {
 };
 
 
-PredefinedType.registerType("char", intTypes.int8);
-PredefinedType.registerType("int8", intTypes.int8);
-PredefinedType.registerType("byte", intTypes.uint8);
-PredefinedType.registerType("uint8", intTypes.uint8);
+PredefinedType.registerType(TypeKeywords.Char, intTypes.int8);
+PredefinedType.registerType(TypeKeywords.Int8, intTypes.int8);
+PredefinedType.registerType(TypeKeywords.Byte, intTypes.uint8);
+PredefinedType.registerType(TypeKeywords.UInt8, intTypes.uint8);
+PredefinedType.registerType(TypeKeywords.Short, intTypes.int16);
+PredefinedType.registerType(TypeKeywords.Int16, intTypes.int16);
+PredefinedType.registerType(TypeKeywords.UShort, intTypes.uint16);
+PredefinedType.registerType(TypeKeywords.UInt16, intTypes.uint16);
 
-PredefinedType.registerType("short", intTypes.int16);
-PredefinedType.registerType("int16", intTypes.int16);
-PredefinedType.registerType("ushort", intTypes.uint16);
-PredefinedType.registerType("uint16", intTypes.uint16);
+PredefinedType.registerType(TypeKeywords.Integer, intTypes.int32);
+PredefinedType.registerType(TypeKeywords.Int32, intTypes.int32);
+PredefinedType.registerType(TypeKeywords.UInt, intTypes.uint32);
+PredefinedType.registerType(TypeKeywords.UInt32, intTypes.uint32);
 
-PredefinedType.registerType("int", intTypes.int32);
-PredefinedType.registerType("int32", intTypes.int32);
-PredefinedType.registerType("uint", intTypes.uint32);
-PredefinedType.registerType("uint32", intTypes.uint32);
-
-PredefinedType.registerType("long", intTypes.int64);
-PredefinedType.registerType("int64", intTypes.int64);
-PredefinedType.registerType("ulong", intTypes.uint64);
-PredefinedType.registerType("uint64", intTypes.uint64);
+PredefinedType.registerType(TypeKeywords.Long, intTypes.int64);
+PredefinedType.registerType(TypeKeywords.Int64, intTypes.int64);
+PredefinedType.registerType(TypeKeywords.ULong, intTypes.uint64);
+PredefinedType.registerType(TypeKeywords.UInt64, intTypes.uint64);

@@ -2,9 +2,10 @@ import type {ExpressionType} from ".";
 import {DecoratorExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type DecoratorExpressionType = {
-    type: 'DecoratorExpression',
+    type: Keywords.DecoratorExpression,
     expr: ExpressionType,
 }
 
@@ -23,10 +24,10 @@ export class DecoratorExpressionHandler extends Handler {
 
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.value = {
-            type: 'DecoratorExpression',
+            type: Keywords.DecoratorExpression,
             expr: this.exprHandler?.value as ExpressionType
         }
     }
 }
 
-Handler.registerHandler("DecoratorExpression", DecoratorExpressionHandler);
+Handler.registerHandler(Keywords.DecoratorExpression, DecoratorExpressionHandler);

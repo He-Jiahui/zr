@@ -1,9 +1,10 @@
-import type { Access } from "../../../types/access";
-import { VariableSymbol } from "./variableSymbol";
-import { Symbol } from "./symbol";
+import type {Access} from "../../../types/access";
+import {VariableSymbol} from "./variableSymbol";
+import {Symbol} from "./symbol";
+import {Keywords} from "../../../types/keywords";
 
-export class FieldSymbol extends VariableSymbol{
-    public readonly type:string = "field";
+export class FieldSymbol extends VariableSymbol {
+    public readonly type: string = Keywords.Field;
 
     public accessibility: Access;
     public isStatic: boolean;
@@ -12,4 +13,4 @@ export class FieldSymbol extends VariableSymbol{
 
 }
 
-Symbol.registerSymbol("Field", FieldSymbol);
+Symbol.registerSymbol(Keywords.Field, FieldSymbol);

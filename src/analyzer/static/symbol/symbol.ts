@@ -6,6 +6,7 @@ import {TMaybeArray, TMaybeUndefined, TNullable} from "../../utils/zrCompilerTyp
 import {ZrInternalError} from "../../../errors/zrInternalError";
 import type {Handler} from "../../semantic/common/handler";
 import {MetaType} from "../type/meta/metaType";
+import {Keywords, SpecialSymbols} from "../../../types/keywords";
 
 export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
     private static readonly symbolMap: Map<string, typeof Symbol> = new Map<string, typeof Symbol>();
@@ -79,9 +80,10 @@ export class SymbolTable<T extends Symbol> {
 
     public addSymbol(symbol: TSymbolOrSymbolArray<T>): boolean {
         return checkSymbolOrSymbolArray(symbol, (symbol) => {
-            if (symbol.type === "Function") {
+            if (symbol.type === Keywords.Function) {
                 // TODO: Function Symbol We need to check its signature in type check round, it can be overloaded
                 // so we pass the check here
+                this.symbolTable.push(symbol);
                 return true;
             }
             // variable destruction pattern can have multiple symbols with names, we should check all of them
@@ -94,12 +96,17 @@ export class SymbolTable<T extends Symbol> {
                 return finalResult;
             }
             // if the symbol is block symbol, we should add it to the symbol table without checking
-            if (symbol.name === "$Block") {
+            if (symbol.name === SpecialSymbols.Block) {
+                this.symbolTable.push(symbol);
+                return true;
+            }
+            // if the symbol is try cache finally symbol, we should add it to the symbol table without checking
+            if (symbol.name === SpecialSymbols.TryCatchFinallyBlock) {
                 this.symbolTable.push(symbol);
                 return true;
             }
             // if the symbol is lambda symbol, we should add it to the symbol table without checking
-            if (symbol.name === "$Lambda") {
+            if (symbol.name === SpecialSymbols.Lambda) {
                 this.symbolTable.push(symbol);
                 return true;
             }

@@ -1,9 +1,10 @@
 import {ExpressionType} from "./index";
 import {Handler} from "../common/handler";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type UnpackLiteralType = {
-    type: "UnpackLiteralExpression",
+    type: Keywords.UnpackLiteralExpression,
     element: ExpressionType
 }
 
@@ -21,10 +22,10 @@ export class UnpackLiteralHandler extends Handler {
         super._handle(node);
         this.elementHandler = Handler.handle(node.element, this.context);
         this.value = {
-            type: "UnpackLiteralExpression",
+            type: Keywords.UnpackLiteralExpression,
             element: this.elementHandler?.value
         }
     }
 }
 
-Handler.registerHandler("UnpackLiteral", UnpackLiteralHandler);
+Handler.registerHandler(Keywords.UnpackLiteral, UnpackLiteralHandler);

@@ -2,9 +2,10 @@ import {UnaryExpression, UnaryOperator} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {PrimaryType} from "./primaryHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type UnaryOperatorType = {
-    type: "UnaryOperator",
+    type: Keywords.UnaryOperator,
     operator: "!" | "~" | "+" | "-" | "$" | "new" | string
 }
 
@@ -14,16 +15,16 @@ export class UnaryOperatorHandler extends Handler {
     _handle(node: UnaryOperator) {
         super._handle(node);
         this.value = {
-            type: "UnaryOperator",
+            type: Keywords.UnaryOperator,
             operator: node.operator
         };
     }
 }
 
-Handler.registerHandler("UnaryOperator", UnaryOperatorHandler);
+Handler.registerHandler(Keywords.UnaryOperator, UnaryOperatorHandler);
 
 export type UnaryType = {
-    type: "UnaryExpression",
+    type: Keywords.UnaryExpression,
     operator: string,
     arguments: UnaryType
 } | PrimaryType;
@@ -46,11 +47,11 @@ export class UnaryHandler extends Handler {
         this.operatorHandler = Handler.handle(node.op, this.context);
         this.argumentHandler = Handler.handle(node.argument, this.context);
         this.value = {
-            type: "UnaryExpression",
+            type: Keywords.UnaryExpression,
             operator: this.operatorHandler?.value,
             arguments: this.argumentHandler?.value
         };
     }
 }
 
-Handler.registerHandler("Unary", UnaryHandler);
+Handler.registerHandler(Keywords.Unary, UnaryHandler);

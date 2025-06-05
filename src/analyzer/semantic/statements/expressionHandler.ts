@@ -2,9 +2,10 @@ import {ExpressionStatement} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import {ExpressionType} from "../expressions";
 import {TNullable} from "../../utils/zrCompilerTypes";
+import {Keywords} from "../../../types/keywords";
 
 export type ExpressionStatementType = {
-    type: 'ExpressionStatement';
+    type: Keywords.ExpressionStatement;
     expr: ExpressionType;
 }
 
@@ -23,10 +24,10 @@ export class ExpressionStatementHandler extends Handler {
         super._handle(node);
         this.exprHandler = Handler.handle(node.expr, this.context);
         this.value = {
-            type: 'ExpressionStatement',
+            type: Keywords.ExpressionStatement,
             expr: this.exprHandler?.value as ExpressionType
         }
     }
 }
 
-Handler.registerHandler("ExpressionStatement", ExpressionStatementHandler);
+Handler.registerHandler(Keywords.ExpressionStatement, ExpressionStatementHandler);

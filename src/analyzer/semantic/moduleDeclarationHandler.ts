@@ -3,9 +3,10 @@ import {Handler} from "./common/handler";
 import type {IdentifierType} from "./declarations/identifierHandler";
 import type {StringType} from "./literals/stringHandler";
 import {TNullable} from "../utils/zrCompilerTypes";
+import {Keywords} from "../../types/keywords";
 
 export type ModuleDeclarationType = {
-    type: "ModuleDeclaration",
+    type: Keywords.ModuleDeclaration,
     name: StringType | IdentifierType
 }
 
@@ -26,10 +27,10 @@ export class ModuleDeclarationHandler extends Handler {
         this.nameHandler = Handler.handle(name, this.context);
 
         this.value = {
-            type: "ModuleDeclaration",
+            type: Keywords.ModuleDeclaration,
             name: this.nameHandler?.value,
         }
     }
 }
 
-Handler.registerHandler("ModuleDeclaration", ModuleDeclarationHandler);
+Handler.registerHandler(Keywords.ModuleDeclaration, ModuleDeclarationHandler);

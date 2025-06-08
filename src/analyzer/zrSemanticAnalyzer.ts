@@ -8,6 +8,8 @@ import {ZrHandlerDispatcher} from "./utils/zrHandlerDispatcher";
 import {TNullable} from "./utils/zrCompilerTypes";
 import {Symbol as SymbolDeclaration} from "./static/symbol/symbol";
 import {prettyPrintSymbolTables} from "../utils/prettyPrint";
+import type {TypeInferContext} from "./static/type/typeInferContext";
+import type {TypeAssignContext} from "./static/type/typeAssignContext";
 
 export class ZrSemanticAnalyzer {
     private context: ScriptContext;
@@ -33,6 +35,13 @@ export class ZrSemanticAnalyzer {
             (handler, lowerResult: Array<SymbolDeclaration>, selfTopDownResult: TNullable<SymbolDeclaration>) => {
                 return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;
             }) as SymbolDeclaration;
+
+        this.handlerDispatcher.runTaskAround((handler, upperResult: TNullable<TypeInferContext>) => {
+                return handler.inferType(upperResult);
+            },
+            (handler, lowerResult: Array<TypeAssignContext>, selfTopDownResult: TNullable<TypeInferContext>) => {
+                return handler.assignType(lowerResult, selfTopDownResult);
+            })
         prettyPrintSymbolTables(this.topSymbol);
 
 

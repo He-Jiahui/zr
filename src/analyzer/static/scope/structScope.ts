@@ -15,6 +15,10 @@ export class StructScope extends Scope {
     protected readonly metaFunctions: SymbolTable<MetaSymbol> = new SymbolTable<MetaSymbol>();
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.methods];
 
+    public get genericSymbols() {
+        return this.generics.getAllSymbols();
+    }
+
     public addGeneric(generic: TSymbolOrSymbolArray<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;

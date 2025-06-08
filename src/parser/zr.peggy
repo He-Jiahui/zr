@@ -895,10 +895,11 @@ TestDeclaration
 
 // === 工具规则 ===
 AccessModifier = PUB / PRI / PRO
-Type = name:(GenericType / TupleType / IDENTIFIER) _ dimensions:(LBRACKET RBRACKET)* {
+Type = name:(GenericType / TupleType / IDENTIFIER) _ subType:(DOT _ Type)? _ dimensions:(LBRACKET RBRACKET)* {
   return {
     type: "Type",
     name,
+    subType: subType? subType[2] : null,
     dimensions: dimensions.length,
     location: location()
   }

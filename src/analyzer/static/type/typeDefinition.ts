@@ -5,11 +5,16 @@ import {type ScriptContext, ScriptContextAccessibleObject} from "../../../common
 export class TypeDefinition<T extends (ScriptContext | TMaybeUndefined<ScriptContext>)> extends ScriptContextAccessibleObject<T> {
 
     public name: TMaybeUndefined<string>;
-
     public location?: FileRange;
 
     public constructor(context: T) {
         super(context);
+    }
+
+    protected _isGeneric: boolean = false;
+
+    public get isGeneric() {
+        return this._isGeneric;
     }
 
     public get typeName() {

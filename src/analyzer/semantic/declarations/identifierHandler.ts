@@ -18,6 +18,7 @@ export class IdentifierHandler extends Handler {
             name: node.name
         }
     }
+
 }
 
 Handler.registerHandler(Keywords.Identifier, IdentifierHandler);

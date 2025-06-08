@@ -6,6 +6,7 @@ import {Symbol as SymbolDeclaration, SymbolOrSymbolArray, TSymbolOrSymbolArray} 
 import {TNullable, TSemanticType} from "../../utils/zrCompilerTypes";
 import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeAssignContext} from "../../static/type/typeAssignContext";
+import {TypeDefinition} from "../../static/type/typeDefinition";
 
 export type AnyNode = {
     type: string;
@@ -18,6 +19,7 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     public value: TSemanticType<any>;
     public location: FileRange;
     protected _symbol: TNullable<SymbolDeclaration>;
+    protected _currentScope: TNullable<Scope>;
 
     public constructor(context: ScriptContext) {
         super(context);
@@ -56,6 +58,7 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
 
     public collectDeclarations<T extends SymbolDeclaration>(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>): TSymbolOrSymbolArray<T> {
         this.context.pushHandler(this);
+        this._currentScope = currentScope;
         const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope) as TSymbolOrSymbolArray<T>;
         this.context.popHandler();
         return declarationSymbols;
@@ -69,7 +72,7 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return this._assignType(childrenContexts, currentInferContext);
     }
 
-    public declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
+    protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
         const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
         this._symbol = createdSymbol;
         const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
@@ -77,6 +80,22 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
             createdSymbol.childScope = createdScope;
         }
         return createdSymbol;
+    }
+
+    protected findSymbolInScope(symbolName: string): TNullable<SymbolDeclaration> {
+        if (this._currentScope) {
+            return this._currentScope.getSymbol(symbolName);
+        } else {
+            return null;
+        }
+    }
+
+    protected findTypeInScope(typeName: string): TNullable<TypeDefinition<any>> {
+        if (this._currentScope) {
+            return this._currentScope.getType(typeName);
+        } else {
+            return null;
+        }
     }
 
     protected _signByParentHandler(sign: string) {

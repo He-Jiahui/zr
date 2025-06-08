@@ -1,9 +1,9 @@
 import {MetaType} from "./metaType";
-import type {ClassSymbol} from "../../symbol/classSymbol";
+import type {StructSymbol} from "../../symbol/structSymbol";
 import {Keywords} from "../../../../types/keywords";
 
-export class ClassMetaType extends MetaType<ClassSymbol> {
-    protected _onTypeCreated(symbol: ClassSymbol) {
+export class StructMetaType extends MetaType<StructSymbol> {
+    protected _onTypeCreated(symbol: StructSymbol) {
         symbol.generatedType = this;
         if (symbol.childScope) {
             if (symbol.childScope.genericSymbols.length > 0) {
@@ -13,4 +13,4 @@ export class ClassMetaType extends MetaType<ClassSymbol> {
     }
 }
 
-MetaType.registerType(Keywords.Class, ClassMetaType);
+MetaType.registerType(Keywords.Struct, StructMetaType);

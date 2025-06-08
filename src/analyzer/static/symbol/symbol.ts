@@ -18,6 +18,8 @@ export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
     // if symbols has sub symbols, like destruction patterns symbol
     public readonly subSymbols: Symbol[] = [];
 
+    public generatedType: MetaType<any>;
+
     constructor(name: TMaybeUndefined<string>, context: ScriptContext) {
         super(context);
         this.name = name;
@@ -132,6 +134,10 @@ export class SymbolTable<T extends Symbol> {
     public getSymbols(name: string) {
         // TODO: if this symbol table is for function
         return this.symbolTable.filter(s => s.name === name);
+    }
+
+    public getAllSymbols() {
+        return this.symbolTable;
     }
 }
 

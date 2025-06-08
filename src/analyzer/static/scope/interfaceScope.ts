@@ -20,6 +20,10 @@ export class InterfaceScope extends Scope {
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.generics, this.fields, this.properties, this.methods, this.metaFunctions];
 
+    public get genericSymbols() {
+        return this.generics.getAllSymbols();
+    }
+
     public addGeneric(generic: TSymbolOrSymbolArray<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;

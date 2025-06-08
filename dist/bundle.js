@@ -46,6 +46,7 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     }
     collectDeclarations(childrenSymbols, currentScope) {
         this.context.pushHandler(this);
+        this._currentScope = currentScope;
         const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope);
         this.context.popHandler();
         return declarationSymbols;
@@ -64,6 +65,22 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
             createdSymbol.childScope = createdScope;
         }
         return createdSymbol;
+    }
+    findSymbolInScope(symbolName) {
+        if (this._currentScope) {
+            return this._currentScope.getSymbol(symbolName);
+        }
+        else {
+            return null;
+        }
+    }
+    findTypeInScope(typeName) {
+        if (this._currentScope) {
+            return this._currentScope.getType(typeName);
+        }
+        else {
+            return null;
+        }
     }
     _signByParentHandler(sign) {
     }
@@ -4185,6 +4202,7 @@ class GenericImplementHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.typeArgumentsHandler = [];
+        this.nameHandler = null;
     }
     get _children() {
         return [
@@ -4192,8 +4210,10 @@ class GenericImplementHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
+        var _a;
         super._handle(node);
         const typeArguments = node.params;
+        this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         this.typeArgumentsHandler.length = 0;
         for (const typeArgument of typeArguments) {
             const handler = handler_1.Handler.handle(typeArgument, this.context);
@@ -4201,6 +4221,7 @@ class GenericImplementHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Generic,
+            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
         };
     }
@@ -4343,10 +4364,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class TypeHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.nameHandler = null;
+        this.subTypeHandler = null;
+        this._typeReference = null;
     }
     get _children() {
         return [
@@ -4354,14 +4379,97 @@ class TypeHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
+        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
+        if (node.subType) {
+            this.subTypeHandler = handler_1.Handler.handle(node.subType, this.context);
+        }
+        else {
+            this.subTypeHandler = null;
+        }
         this.value = {
             type: keywords_1.Keywords.Type,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            subType: (_b = this.subTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
             dimensions: node.dimensions
         };
+    }
+    _inferType(upperTypeInferContext) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        const typeName = this.value.name;
+        let createdContext = null;
+        let foundSymbol = null;
+        switch (typeName.type) {
+            case keywords_1.Keywords.Identifier:
+                {
+                    const identifierName = typeName.name;
+                    const upperType = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.upperType;
+                    const inTypeChain = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.inTypeChain;
+                    if (upperType) {
+                        const parentSymbol = (_b = (_a = upperType.userDeclaredType()) === null || _a === void 0 ? void 0 : _a.relatedSymbol) !== null && _b !== void 0 ? _b : null;
+                        foundSymbol = (_d = (_c = parentSymbol === null || parentSymbol === void 0 ? void 0 : parentSymbol.childScope) === null || _c === void 0 ? void 0 : _c.getSymbol(identifierName)) !== null && _d !== void 0 ? _d : null;
+                        const symbolType = (_e = foundSymbol === null || foundSymbol === void 0 ? void 0 : foundSymbol.generatedType) !== null && _e !== void 0 ? _e : null;
+                        upperTypeInferContext.generateDotType(symbolType);
+                        createdContext = upperTypeInferContext;
+                    }
+                    else {
+                        foundSymbol = this.findSymbolInScope(identifierName);
+                        createdContext = typeInferContext_1.TypeInferContext.createTypeInferContext(foundSymbol);
+                    }
+                    if (!foundSymbol && inTypeChain) {
+                        // TODO: 错误处理
+                        new zrInternalError_1.ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
+                        return null;
+                    }
+                }
+                break;
+            case keywords_1.Keywords.Generic:
+                {
+                    const identifierName = typeName.name.name;
+                    const upperType = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.upperType;
+                    const inTypeChain = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.inTypeChain;
+                    if (upperType) {
+                        const parentSymbol = (_g = (_f = upperType.userDeclaredType()) === null || _f === void 0 ? void 0 : _f.relatedSymbol) !== null && _g !== void 0 ? _g : null;
+                        foundSymbol = (_j = (_h = parentSymbol === null || parentSymbol === void 0 ? void 0 : parentSymbol.childScope) === null || _h === void 0 ? void 0 : _h.getSymbol(identifierName)) !== null && _j !== void 0 ? _j : null;
+                        const symbolType = (_k = foundSymbol === null || foundSymbol === void 0 ? void 0 : foundSymbol.generatedType) !== null && _k !== void 0 ? _k : null;
+                        upperTypeInferContext.generateDotType(symbolType);
+                        createdContext = upperTypeInferContext;
+                    }
+                    else {
+                        foundSymbol = this.findSymbolInScope(identifierName);
+                        createdContext = typeInferContext_1.TypeInferContext.createTypeInferContext(foundSymbol);
+                    }
+                    if (!foundSymbol && inTypeChain) {
+                        // TODO: 错误处理
+                        new zrInternalError_1.ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
+                        return null;
+                    }
+                    if (foundSymbol && foundSymbol.generatedType && !foundSymbol.generatedType.isGeneric) {
+                        // TODO: 错误处理
+                        new zrInternalError_1.ZrInternalError(`symbol ${identifierName} is not generic`, this.context).report();
+                        return null;
+                    }
+                    // we will handle generic type on assign step
+                }
+                break;
+            case keywords_1.Keywords.Tuple:
+                {
+                    // const elements = typeName.elements;
+                    createdContext = typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Array);
+                    // we will handle generic type on assign step
+                }
+                break;
+        }
+        this._typeReference = (_l = createdContext === null || createdContext === void 0 ? void 0 : createdContext.upperType) !== null && _l !== void 0 ? _l : null;
+        if (this.value.dimensions > 0) {
+            // convert it as array
+            createdContext = typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Array);
+        }
+        if (createdContext) {
+            createdContext.inTypeChain = !!(this.value.subType);
+        }
+        return createdContext;
     }
 }
 exports.TypeHandler = TypeHandler;
@@ -4472,6 +4580,9 @@ class ClassScope extends scope_1.Scope {
         this.methods = new symbol_1.SymbolTable();
         this.metaFunctions = new symbol_1.SymbolTable();
         this.symbolTableList = [this.generics, this.fields, this.properties, this.methods, this.metaFunctions];
+    }
+    get genericSymbols() {
+        return this.generics.getAllSymbols();
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -4605,6 +4716,9 @@ class FunctionScope extends scope_1.Scope {
         this.parameters = new symbol_1.SymbolTable();
         this.symbolTableList = [this.generics, this.parameters, () => this.body];
     }
+    get genericSymbols() {
+        return this.generics.getAllSymbols();
+    }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;
@@ -4677,6 +4791,9 @@ class InterfaceScope extends scope_1.Scope {
         this.methods = new symbol_1.SymbolTable();
         this.metaFunctions = new symbol_1.SymbolTable();
         this.symbolTableList = [this.generics, this.fields, this.properties, this.methods, this.metaFunctions];
+    }
+    get genericSymbols() {
+        return this.generics.getAllSymbols();
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -4993,6 +5110,9 @@ class StructScope extends scope_1.Scope {
         this.methods = new symbol_1.SymbolTable();
         this.metaFunctions = new symbol_1.SymbolTable();
         this.symbolTableList = [this.generics, this.fields, this.methods];
+    }
+    get genericSymbols() {
+        return this.generics.getAllSymbols();
     }
     addGeneric(generic) {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
@@ -5587,6 +5707,9 @@ class SymbolTable {
         // TODO: if this symbol table is for function
         return this.symbolTable.filter(s => s.name === name);
     }
+    getAllSymbols() {
+        return this.symbolTable;
+    }
 }
 exports.SymbolTable = SymbolTable;
 function reportDuplicatedSymbol(triggerSymbol, conflictSymbol) {
@@ -5701,10 +5824,38 @@ const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 class ClassMetaType extends metaType_1.MetaType {
     _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+        if (symbol.childScope) {
+            if (symbol.childScope.genericSymbols.length > 0) {
+                this._isGeneric = true;
+            }
+        }
     }
 }
 exports.ClassMetaType = ClassMetaType;
 metaType_1.MetaType.registerType(keywords_1.Keywords.Class, ClassMetaType);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/enumMetaType.ts":
+/*!*******************************************************!*\
+  !*** ./src/analyzer/static/type/meta/enumMetaType.ts ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EnumMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class EnumMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+    }
+}
+exports.EnumMetaType = EnumMetaType;
+metaType_1.MetaType.registerType(keywords_1.Keywords.Enum, EnumMetaType);
 
 
 /***/ }),
@@ -5719,6 +5870,36 @@ metaType_1.MetaType.registerType(keywords_1.Keywords.Class, ClassMetaType);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
 __webpack_require__(/*! ./classMetaType */ "./src/analyzer/static/type/meta/classMetaType.ts");
+__webpack_require__(/*! ./enumMetaType */ "./src/analyzer/static/type/meta/enumMetaType.ts");
+__webpack_require__(/*! ./interfaceMetaType */ "./src/analyzer/static/type/meta/interfaceMetaType.ts");
+__webpack_require__(/*! ./structMetaType */ "./src/analyzer/static/type/meta/structMetaType.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/interfaceMetaType.ts":
+/*!************************************************************!*\
+  !*** ./src/analyzer/static/type/meta/interfaceMetaType.ts ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InterfaceMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class InterfaceMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+        if (symbol.childScope) {
+            if (symbol.childScope.genericSymbols.length > 0) {
+                this._isGeneric = true;
+            }
+        }
+    }
+}
+exports.InterfaceMetaType = InterfaceMetaType;
+metaType_1.MetaType.registerType(keywords_1.Keywords.Interface, InterfaceMetaType);
 
 
 /***/ }),
@@ -5734,6 +5915,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaType = void 0;
 const typeDefinition_1 = __webpack_require__(/*! ../typeDefinition */ "./src/analyzer/static/type/typeDefinition.ts");
 class MetaType extends typeDefinition_1.TypeDefinition {
+    get relatedSymbol() {
+        return this._relatedSymbol;
+    }
     static registerType(typeName, type) {
         MetaType.metaTypeMap.set(typeName, type);
     }
@@ -5744,6 +5928,7 @@ class MetaType extends typeDefinition_1.TypeDefinition {
             return null;
         }
         const instance = new prototype(context);
+        instance._relatedSymbol = symbol;
         instance._onTypeCreated(symbol);
         return instance;
     }
@@ -5752,6 +5937,33 @@ class MetaType extends typeDefinition_1.TypeDefinition {
 }
 exports.MetaType = MetaType;
 MetaType.metaTypeMap = new Map();
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/structMetaType.ts":
+/*!*********************************************************!*\
+  !*** ./src/analyzer/static/type/meta/structMetaType.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StructMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class StructMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+        if (symbol.childScope) {
+            if (symbol.childScope.genericSymbols.length > 0) {
+                this._isGeneric = true;
+            }
+        }
+    }
+}
+exports.StructMetaType = StructMetaType;
+metaType_1.MetaType.registerType(keywords_1.Keywords.Struct, StructMetaType);
 
 
 /***/ }),
@@ -5771,6 +5983,7 @@ class ArrayType extends predefinedType_1.PredefinedType {
     constructor() {
         super();
         this.name = keywords_1.TypeKeywords.Array;
+        this._isGeneric = true;
     }
     get _typeName() {
         return keywords_1.TypeKeywords.Array;
@@ -6107,6 +6320,10 @@ const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */
 class TypeDefinition extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(context) {
         super(context);
+        this._isGeneric = false;
+    }
+    get isGeneric() {
+        return this._isGeneric;
     }
     get typeName() {
         return this._typeName;
@@ -6139,12 +6356,32 @@ exports.DefinedTypeSet = DefinedTypeSet;
 /*!******************************************************!*\
   !*** ./src/analyzer/static/type/typeInferContext.ts ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeInferContext = void 0;
+const typeReference_1 = __webpack_require__(/*! ./typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ./predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class TypeInferContext {
+    static createTypeInferContext(upperSymbol) {
+        const context = new TypeInferContext();
+        if (upperSymbol === null || upperSymbol === void 0 ? void 0 : upperSymbol.generatedType) {
+            context.upperType = typeReference_1.TypeReference.createReference(upperSymbol.generatedType);
+        }
+        return context;
+    }
+    static createPredefinedTypeContext(typeName) {
+        const context = new TypeInferContext();
+        const predefined = predefinedType_1.PredefinedType.getPredefinedType(typeName);
+        if (predefined) {
+            context.upperType = typeReference_1.TypeReference.createReference(predefined);
+        }
+        return context;
+    }
+    generateDotType(symbolType) {
+        this.upperType = symbolType ? typeReference_1.TypeReference.createReference(symbolType, this.upperType) : null;
+    }
 }
 exports.TypeInferContext = TypeInferContext;
 
@@ -6155,12 +6392,36 @@ exports.TypeInferContext = TypeInferContext;
 /*!***************************************************!*\
   !*** ./src/analyzer/static/type/typeReference.ts ***!
   \***************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeReference = void 0;
+const metaType_1 = __webpack_require__(/*! ./meta/metaType */ "./src/analyzer/static/type/meta/metaType.ts");
 class TypeReference {
+    constructor() {
+        this.upperTypeInfo = null;
+        this.genericTypeArguments = [];
+    }
+    get name() {
+        var _a;
+        return (_a = this.targetType) === null || _a === void 0 ? void 0 : _a.typeName;
+    }
+    ;
+    static createReference(targetType, upperTypeInfo) {
+        const typeReference = new TypeReference();
+        if (upperTypeInfo) {
+            typeReference.upperTypeInfo = upperTypeInfo;
+        }
+        typeReference.targetType = targetType;
+        return typeReference;
+    }
+    userDeclaredType() {
+        if (this.targetType instanceof metaType_1.MetaType) {
+            return this.targetType;
+        }
+        return null;
+    }
 }
 exports.TypeReference = TypeReference;
 
@@ -6264,6 +6525,11 @@ class ZrSemanticAnalyzer {
         }, (handler, lowerResult, selfTopDownResult) => {
             var _a, _b;
             return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
+        });
+        this.handlerDispatcher.runTaskAround((handler, upperResult) => {
+            return handler.inferType(upperResult);
+        }, (handler, lowerResult, selfTopDownResult) => {
+            return handler.assignType(lowerResult, selfTopDownResult);
         });
         (0, prettyPrint_1.prettyPrintSymbolTables)(this.topSymbol);
     }
@@ -8256,13 +8522,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f82 = function (name, dimensions) {
+        var peg$f82 = function (name, subType, dimensions) {
             // @ts-ignore
             return {
                 // @ts-ignore
                 type: "Type",
                 // @ts-ignore
                 name,
+                // @ts-ignore
+                subType: subType ? subType[2] : null,
                 // @ts-ignore
                 dimensions: dimensions.length,
                 // @ts-ignore
@@ -16527,7 +16795,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
         // @ts-ignore
         function peg$parseType() {
             // @ts-ignore
-            var s0, s1, s2, s3, s4, s5, s6;
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8;
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
@@ -16547,76 +16815,115 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 s2 = peg$parse_();
                 // @ts-ignore
-                s3 = [];
+                s3 = peg$currPos;
                 // @ts-ignore
-                s4 = peg$currPos;
+                s4 = peg$parseDOT();
                 // @ts-ignore
-                s5 = peg$parseLBRACKET();
-                // @ts-ignore
-                if (s5 !== peg$FAILED) {
+                if (s4 !== peg$FAILED) {
                     // @ts-ignore
-                    s6 = peg$parseRBRACKET();
+                    s5 = peg$parse_();
+                    // @ts-ignore
+                    s6 = peg$parseType();
                     // @ts-ignore
                     if (s6 !== peg$FAILED) {
                         // @ts-ignore
-                        s5 = [s5, s6];
+                        s4 = [s4, s5, s6];
                         // @ts-ignore
-                        s4 = s5;
+                        s3 = s4;
                         // @ts-ignore
                     }
                     else {
                         // @ts-ignore
-                        peg$currPos = s4;
+                        peg$currPos = s3;
                         // @ts-ignore
-                        s4 = peg$FAILED;
+                        s3 = peg$FAILED;
                     }
                     // @ts-ignore
                 }
                 else {
                     // @ts-ignore
-                    peg$currPos = s4;
+                    peg$currPos = s3;
                     // @ts-ignore
-                    s4 = peg$FAILED;
+                    s3 = peg$FAILED;
                 }
                 // @ts-ignore
-                while (s4 !== peg$FAILED) {
+                if (s3 === peg$FAILED) {
                     // @ts-ignore
-                    s3.push(s4);
+                    s3 = null;
+                }
+                // @ts-ignore
+                s4 = peg$parse_();
+                // @ts-ignore
+                s5 = [];
+                // @ts-ignore
+                s6 = peg$currPos;
+                // @ts-ignore
+                s7 = peg$parseLBRACKET();
+                // @ts-ignore
+                if (s7 !== peg$FAILED) {
                     // @ts-ignore
-                    s4 = peg$currPos;
+                    s8 = peg$parseRBRACKET();
                     // @ts-ignore
-                    s5 = peg$parseLBRACKET();
-                    // @ts-ignore
-                    if (s5 !== peg$FAILED) {
+                    if (s8 !== peg$FAILED) {
                         // @ts-ignore
-                        s6 = peg$parseRBRACKET();
+                        s7 = [s7, s8];
                         // @ts-ignore
-                        if (s6 !== peg$FAILED) {
+                        s6 = s7;
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        peg$currPos = s6;
+                        // @ts-ignore
+                        s6 = peg$FAILED;
+                    }
+                    // @ts-ignore
+                }
+                else {
+                    // @ts-ignore
+                    peg$currPos = s6;
+                    // @ts-ignore
+                    s6 = peg$FAILED;
+                }
+                // @ts-ignore
+                while (s6 !== peg$FAILED) {
+                    // @ts-ignore
+                    s5.push(s6);
+                    // @ts-ignore
+                    s6 = peg$currPos;
+                    // @ts-ignore
+                    s7 = peg$parseLBRACKET();
+                    // @ts-ignore
+                    if (s7 !== peg$FAILED) {
+                        // @ts-ignore
+                        s8 = peg$parseRBRACKET();
+                        // @ts-ignore
+                        if (s8 !== peg$FAILED) {
                             // @ts-ignore
-                            s5 = [s5, s6];
+                            s7 = [s7, s8];
                             // @ts-ignore
-                            s4 = s5;
+                            s6 = s7;
                             // @ts-ignore
                         }
                         else {
                             // @ts-ignore
-                            peg$currPos = s4;
+                            peg$currPos = s6;
                             // @ts-ignore
-                            s4 = peg$FAILED;
+                            s6 = peg$FAILED;
                         }
                         // @ts-ignore
                     }
                     else {
                         // @ts-ignore
-                        peg$currPos = s4;
+                        peg$currPos = s6;
                         // @ts-ignore
-                        s4 = peg$FAILED;
+                        s6 = peg$FAILED;
                     }
                 }
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s0 = peg$f82(s1, s3);
+                s0 = peg$f82(s1, s3, s5);
                 // @ts-ignore
             }
             else {

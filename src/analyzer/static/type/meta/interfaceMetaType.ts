@@ -1,9 +1,9 @@
+import type {InterfaceSymbol} from "../../symbol/interfaceSymbol";
 import {MetaType} from "./metaType";
-import type {ClassSymbol} from "../../symbol/classSymbol";
 import {Keywords} from "../../../../types/keywords";
 
-export class ClassMetaType extends MetaType<ClassSymbol> {
-    protected _onTypeCreated(symbol: ClassSymbol) {
+export class InterfaceMetaType extends MetaType<InterfaceSymbol> {
+    protected _onTypeCreated(symbol: InterfaceSymbol) {
         symbol.generatedType = this;
         if (symbol.childScope) {
             if (symbol.childScope.genericSymbols.length > 0) {
@@ -13,4 +13,4 @@ export class ClassMetaType extends MetaType<ClassSymbol> {
     }
 }
 
-MetaType.registerType(Keywords.Class, ClassMetaType);
+MetaType.registerType(Keywords.Interface, InterfaceMetaType);

@@ -15,6 +15,10 @@ export class FunctionScope extends Scope {
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     protected symbolTableList = [this.generics, this.parameters, () => this.body];
 
+    public get genericSymbols() {
+        return this.generics.getAllSymbols();
+    }
+
     public addGeneric(generic: TSymbolOrSymbolArray<GenericSymbol>): boolean {
         const success = this.checkSymbolUnique(generic) && this.generics.addSymbol(generic);
         return success;

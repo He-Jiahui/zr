@@ -1688,13 +1688,15 @@ return {type: "IdentifierLiteral", value, location: location()}};// @ts-ignore
     }
   };// @ts-ignore
 
-  var peg$f82 = function(name, dimensions) {
+  var peg$f82 = function(name, subType, dimensions) {
 // @ts-ignore
   return {
 // @ts-ignore
     type: "Type",
 // @ts-ignore
     name,
+// @ts-ignore
+    subType: subType? subType[2] : null,
 // @ts-ignore
     dimensions: dimensions.length,
 // @ts-ignore
@@ -9946,7 +9948,7 @@ peg$parseAccessModifier() {
   function // @ts-ignore
 peg$parseType() {
 // @ts-ignore
-    var s0, s1, s2, s3, s4, s5, s6;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8;
 
 // @ts-ignore
     s0 = peg$currPos;
@@ -9967,72 +9969,109 @@ peg$parseType() {
 // @ts-ignore
       s2 = peg$parse_();
 // @ts-ignore
-      s3 = [];
+      s3 = peg$currPos;
 // @ts-ignore
-      s4 = peg$currPos;
+      s4 = peg$parseDOT();
 // @ts-ignore
-      s5 = peg$parseLBRACKET();
+      if (s4 !== peg$FAILED) {
 // @ts-ignore
-      if (s5 !== peg$FAILED) {
+        s5 = peg$parse_();
 // @ts-ignore
-        s6 = peg$parseRBRACKET();
+        s6 = peg$parseType();
 // @ts-ignore
         if (s6 !== peg$FAILED) {
 // @ts-ignore
-          s5 = [s5, s6];
+          s4 = [s4, s5, s6];
 // @ts-ignore
-          s4 = s5;
+          s3 = s4;
 // @ts-ignore
         } else {
 // @ts-ignore
-          peg$currPos = s4;
+          peg$currPos = s3;
 // @ts-ignore
-          s4 = peg$FAILED;
+          s3 = peg$FAILED;
         }
 // @ts-ignore
       } else {
 // @ts-ignore
-        peg$currPos = s4;
+        peg$currPos = s3;
 // @ts-ignore
-        s4 = peg$FAILED;
+        s3 = peg$FAILED;
       }
 // @ts-ignore
-      while (s4 !== peg$FAILED) {
+      if (s3 === peg$FAILED) {
 // @ts-ignore
-        s3.push(s4);
+        s3 = null;
+      }
 // @ts-ignore
-        s4 = peg$currPos;
+      s4 = peg$parse_();
 // @ts-ignore
-        s5 = peg$parseLBRACKET();
+      s5 = [];
 // @ts-ignore
-        if (s5 !== peg$FAILED) {
+      s6 = peg$currPos;
 // @ts-ignore
-          s6 = peg$parseRBRACKET();
+      s7 = peg$parseLBRACKET();
 // @ts-ignore
-          if (s6 !== peg$FAILED) {
+      if (s7 !== peg$FAILED) {
 // @ts-ignore
-            s5 = [s5, s6];
+        s8 = peg$parseRBRACKET();
 // @ts-ignore
-            s4 = s5;
+        if (s8 !== peg$FAILED) {
+// @ts-ignore
+          s7 = [s7, s8];
+// @ts-ignore
+          s6 = s7;
+// @ts-ignore
+        } else {
+// @ts-ignore
+          peg$currPos = s6;
+// @ts-ignore
+          s6 = peg$FAILED;
+        }
+// @ts-ignore
+      } else {
+// @ts-ignore
+        peg$currPos = s6;
+// @ts-ignore
+        s6 = peg$FAILED;
+      }
+// @ts-ignore
+      while (s6 !== peg$FAILED) {
+// @ts-ignore
+        s5.push(s6);
+// @ts-ignore
+        s6 = peg$currPos;
+// @ts-ignore
+        s7 = peg$parseLBRACKET();
+// @ts-ignore
+        if (s7 !== peg$FAILED) {
+// @ts-ignore
+          s8 = peg$parseRBRACKET();
+// @ts-ignore
+          if (s8 !== peg$FAILED) {
+// @ts-ignore
+            s7 = [s7, s8];
+// @ts-ignore
+            s6 = s7;
 // @ts-ignore
           } else {
 // @ts-ignore
-            peg$currPos = s4;
+            peg$currPos = s6;
 // @ts-ignore
-            s4 = peg$FAILED;
+            s6 = peg$FAILED;
           }
 // @ts-ignore
         } else {
 // @ts-ignore
-          peg$currPos = s4;
+          peg$currPos = s6;
 // @ts-ignore
-          s4 = peg$FAILED;
+          s6 = peg$FAILED;
         }
       }
 // @ts-ignore
       peg$savedPos = s0;
 // @ts-ignore
-      s0 = peg$f82(s1, s3);
+      s0 = peg$f82(s1, s3, s5);
 // @ts-ignore
     } else {
 // @ts-ignore
@@ -14999,6 +15038,7 @@ export type AccessModifier = PUB | PRI | PRO;
 export type Type = {
   type: "Type";
   name: GenericType | TupleType | IDENTIFIER;
+  subType: any;
   dimensions: number;
   location: {
     source: string | undefined;

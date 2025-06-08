@@ -4,6 +4,8 @@ import {TypeKeywords} from "../../../../types/keywords";
 export class ArrayType extends PredefinedType {
     public readonly name: string = TypeKeywords.Array;
 
+    protected readonly _isGeneric = true;
+
     public constructor() {
         super();
     }

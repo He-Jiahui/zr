@@ -1,6 +1,6 @@
-import type {ExpressionType} from ".";
 import {Handler} from "../common/handler";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type FunctionCallType = {
     type: Keywords.FunctionCall,
@@ -28,7 +28,7 @@ export class FunctionCallHandler extends Handler {
         }
         this.value = {
             type: Keywords.FunctionCall,
-            args: this.argsHandler.map(handler => handler?.value),
+            args: this.argsHandler.map(handler => handler?.value)
         };
     }
 }

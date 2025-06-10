@@ -2,13 +2,14 @@ import {VariableDeclaration} from "../../../../parser/generated/parser";
 import {Symbol, Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 import {Handler} from "../../common/handler";
-import type {ExpressionType} from "../../expressions";
+
 import type {AllType} from "../../types/types";
-import type {IdentifierType} from "../identifierHandler"
+import type {IdentifierType} from "../identifierHandler";
 import type {DestructuringArrayType, DestructuringObjectType} from "./destructuringHandler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type VariableType = {
     type: Keywords.VariableDeclaration,
@@ -46,14 +47,14 @@ export class VariableHandler extends Handler {
             pattern: this.patternHandler?.value,
             value: this.valueHandler?.value,
             typeInfo: this.typeHandler?.value
-        }
+        };
     }
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
         const getDeclaration = (identifier: IdentifierType) => {
             const symbol = this.declareSymbol<VariableSymbol>(identifier.name, Keywords.Variable, parentScope);
             return symbol;
-        }
+        };
         const collect = () => {
             switch (this.value.pattern.type) {
                 case Keywords.Identifier:
@@ -70,7 +71,7 @@ export class VariableHandler extends Handler {
                 }
             }
             return null;
-        }
+        };
         const declaration = collect();
         if (declaration instanceof Array) {
             const symbol = this.declareSymbol<VariableSymbol>("", Keywords.Variable, parentScope);

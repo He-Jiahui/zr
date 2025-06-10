@@ -1,7 +1,7 @@
-import {ExpressionType} from "./index";
 import {Handler} from "../common/handler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type UnpackLiteralType = {
     type: Keywords.UnpackLiteralExpression,
@@ -24,7 +24,7 @@ export class UnpackLiteralHandler extends Handler {
         this.value = {
             type: Keywords.UnpackLiteralExpression,
             element: this.elementHandler?.value
-        }
+        };
     }
 }
 

@@ -1,7 +1,7 @@
-import type {ExpressionType} from "."
 import {ArrayLiteral} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type ArrayLiteralType = {
     type: Keywords.ArrayLiteralExpression,
@@ -28,7 +28,7 @@ export class ArrayLiteralHandler extends Handler {
         this.value = {
             type: Keywords.ArrayLiteralExpression,
             elements: this.elementsHandler.map(handler => handler?.value)
-        }
+        };
     }
 }
 

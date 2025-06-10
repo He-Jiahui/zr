@@ -1,13 +1,13 @@
 import {Parameter} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {IdentifierType} from "../declarations/identifierHandler";
-import type {ExpressionType} from "../expressions";
 import type {AllType} from "./types";
 import {Symbol} from "../../static/symbol/symbol";
 import {ParameterSymbol} from "../../static/symbol/parameterSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Scope} from "../../static/scope/scope";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "../expressions/types";
 
 export type ParameterType = {
     type: Keywords.Parameter,
@@ -49,7 +49,7 @@ export class ParameterHandler extends Handler {
             type: Keywords.Parameter,
             name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
-            defaultValue: this.defaultValueHandler?.value,
+            defaultValue: this.defaultValueHandler?.value
         };
     }
 

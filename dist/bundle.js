@@ -339,7 +339,7 @@ class FieldHandler extends handler_1.Handler {
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
             init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value,
-            decorators: this.decoratorsHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            decorators: this.decoratorsHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -450,7 +450,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             super: this.superHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
+            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -899,7 +899,7 @@ class EnumMemberHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.EnumMember,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value,
+            value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1096,6 +1096,7 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.Identifier, IdentifierHand
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./types */ "./src/analyzer/semantic/declarations/types.ts");
 __webpack_require__(/*! ./identifierHandler */ "./src/analyzer/semantic/declarations/identifierHandler.ts");
 __webpack_require__(/*! ./metaHandler */ "./src/analyzer/semantic/declarations/metaHandler.ts");
 __webpack_require__(/*! ./struct/index */ "./src/analyzer/semantic/declarations/struct/index.ts");
@@ -1702,7 +1703,7 @@ class FieldHandler extends handler_1.Handler {
         return [
             this.nameHandler,
             this.typeInfoHandler,
-            this.initHandler,
+            this.initHandler
         ];
     }
     _handle(node) {
@@ -1729,7 +1730,7 @@ class FieldHandler extends handler_1.Handler {
             static: !!node.static,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
-            init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value,
+            init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -2220,6 +2221,18 @@ class TestHandler extends handler_1.Handler {
 }
 exports.TestHandler = TestHandler;
 handler_1.Handler.registerHandler(keywords_1.Keywords.TestDeclaration, TestHandler);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/declarations/types.ts":
+/*!*****************************************************!*\
+  !*** ./src/analyzer/semantic/declarations/types.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
@@ -2736,7 +2749,7 @@ class FunctionCallHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.FunctionCall,
-            args: this.argsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            args: this.argsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
@@ -2805,6 +2818,7 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.IfExpression, IfExpression
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./types */ "./src/analyzer/semantic/expressions/types.ts");
 __webpack_require__(/*! ./ifHandler */ "./src/analyzer/semantic/expressions/ifHandler.ts");
 __webpack_require__(/*! ./switchHandler */ "./src/analyzer/semantic/expressions/switchHandler.ts");
 __webpack_require__(/*! ./forHandler */ "./src/analyzer/semantic/expressions/forHandler.ts");
@@ -3042,7 +3056,7 @@ class MemberAccessHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.MemberExpression,
             property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
-            computed,
+            computed
         };
     }
 }
@@ -3251,6 +3265,18 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.SwitchDefault, SwitchDefau
 
 /***/ }),
 
+/***/ "./src/analyzer/semantic/expressions/types.ts":
+/*!****************************************************!*\
+  !*** ./src/analyzer/semantic/expressions/types.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+
 /***/ "./src/analyzer/semantic/expressions/unaryHandler.ts":
 /*!***********************************************************!*\
   !*** ./src/analyzer/semantic/expressions/unaryHandler.ts ***!
@@ -3390,6 +3416,7 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.WhileLoop, WhileLoopExpres
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./types */ "./src/analyzer/semantic/types.ts");
 __webpack_require__(/*! ./common/index */ "./src/analyzer/semantic/common/index.ts");
 __webpack_require__(/*! ./literals/index */ "./src/analyzer/semantic/literals/index.ts");
 __webpack_require__(/*! ./types/index */ "./src/analyzer/semantic/types/index.ts");
@@ -3488,6 +3515,7 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.Float, FloatHandler);
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./types */ "./src/analyzer/semantic/literals/types.ts");
 __webpack_require__(/*! ./booleanHandler */ "./src/analyzer/semantic/literals/booleanHandler.ts");
 __webpack_require__(/*! ./stringHandler */ "./src/analyzer/semantic/literals/stringHandler.ts");
 __webpack_require__(/*! ./charHandler */ "./src/analyzer/semantic/literals/charHandler.ts");
@@ -3573,6 +3601,18 @@ class StringHandler extends handler_1.Handler {
 }
 exports.StringHandler = StringHandler;
 handler_1.Handler.registerHandler(keywords_1.Keywords.String, StringHandler);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/literals/types.ts":
+/*!*************************************************!*\
+  !*** ./src/analyzer/semantic/literals/types.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
@@ -4139,9 +4179,34 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.ExpressionStatement, Expre
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__webpack_require__(/*! ./types */ "./src/analyzer/semantic/statements/types.ts");
 __webpack_require__(/*! ./blockHandler */ "./src/analyzer/semantic/statements/blockHandler.ts");
 __webpack_require__(/*! ./expressionHandler */ "./src/analyzer/semantic/statements/expressionHandler.ts");
 __webpack_require__(/*! ./controls/index */ "./src/analyzer/semantic/statements/controls/index.ts");
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/statements/types.ts":
+/*!***************************************************!*\
+  !*** ./src/analyzer/semantic/statements/types.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+
+/***/ "./src/analyzer/semantic/types.ts":
+/*!****************************************!*\
+  !*** ./src/analyzer/semantic/types.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
@@ -4297,7 +4362,7 @@ class ParameterHandler extends handler_1.Handler {
             type: keywords_1.Keywords.Parameter,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
-            defaultValue: (_c = this.defaultValueHandler) === null || _c === void 0 ? void 0 : _c.value,
+            defaultValue: (_c = this.defaultValueHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -4343,7 +4408,7 @@ class TupleImplementHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Tuple,
-            elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
@@ -4482,12 +4547,10 @@ handler_1.Handler.registerHandler(keywords_1.Keywords.Type, TypeHandler);
 /*!**********************************************!*\
   !*** ./src/analyzer/semantic/types/types.ts ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__webpack_require__(/*! ./genericHandler */ "./src/analyzer/semantic/types/genericHandler.ts");
-__webpack_require__(/*! ./tupleHandler */ "./src/analyzer/semantic/types/tupleHandler.ts");
 
 
 /***/ }),
@@ -5608,6 +5671,14 @@ class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
         this.subSymbols = [];
         this.name = name;
     }
+    get handler() {
+        const context = this.context;
+        return context.getHandlerFromSymbol(this);
+    }
+    get relevantType() {
+        const context = this.context;
+        return context.getTypeFromSymbol(this);
+    }
     static registerSymbol(symbolType, symbol) {
         Symbol.symbolMap.set(symbolType, symbol);
     }
@@ -5616,14 +5687,15 @@ class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
         if (!symbolClass) {
             return null;
         }
-        const symbol = new symbolClass(symbolName, handler.context);
+        const context = handler.context;
+        const symbol = new symbolClass(symbolName, context);
         if (!symbol) {
-            new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
+            new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, context).report(); // TODO: throw
             return null;
         }
         symbol.location = location !== null && location !== void 0 ? location : handler.location;
         symbol.ownerScope = parentScope;
-        const context = symbol.context;
+        context.linkSymbolAndHandler(symbol, handler);
         const symbolCreatedType = metaType_1.MetaType.createType(symbol.type, symbol);
         if (symbolCreatedType) {
             context.linkTypeAndSymbol(symbolCreatedType, symbol);
@@ -5860,6 +5932,28 @@ metaType_1.MetaType.registerType(keywords_1.Keywords.Enum, EnumMetaType);
 
 /***/ }),
 
+/***/ "./src/analyzer/static/type/meta/functionMetaType.ts":
+/*!***********************************************************!*\
+  !*** ./src/analyzer/static/type/meta/functionMetaType.ts ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FunctionMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class FunctionMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+    }
+}
+exports.FunctionMetaType = FunctionMetaType;
+metaType_1.MetaType.registerType(keywords_1.Keywords.Function, FunctionMetaType);
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/type/meta/index.ts":
 /*!************************************************!*\
   !*** ./src/analyzer/static/type/meta/index.ts ***!
@@ -5869,6 +5963,8 @@ metaType_1.MetaType.registerType(keywords_1.Keywords.Enum, EnumMetaType);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+__webpack_require__(/*! ./functionMetaType */ "./src/analyzer/static/type/meta/functionMetaType.ts");
+__webpack_require__(/*! ./metaMetaType */ "./src/analyzer/static/type/meta/metaMetaType.ts");
 __webpack_require__(/*! ./classMetaType */ "./src/analyzer/static/type/meta/classMetaType.ts");
 __webpack_require__(/*! ./enumMetaType */ "./src/analyzer/static/type/meta/enumMetaType.ts");
 __webpack_require__(/*! ./interfaceMetaType */ "./src/analyzer/static/type/meta/interfaceMetaType.ts");
@@ -5900,6 +5996,28 @@ class InterfaceMetaType extends metaType_1.MetaType {
 }
 exports.InterfaceMetaType = InterfaceMetaType;
 metaType_1.MetaType.registerType(keywords_1.Keywords.Interface, InterfaceMetaType);
+
+
+/***/ }),
+
+/***/ "./src/analyzer/static/type/meta/metaMetaType.ts":
+/*!*******************************************************!*\
+  !*** ./src/analyzer/static/type/meta/metaMetaType.ts ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MetaMetaType = void 0;
+const metaType_1 = __webpack_require__(/*! ./metaType */ "./src/analyzer/static/type/meta/metaType.ts");
+const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+class MetaMetaType extends metaType_1.MetaType {
+    _onTypeCreated(symbol) {
+        symbol.generatedType = this;
+    }
+}
+exports.MetaMetaType = MetaMetaType;
+metaType_1.MetaType.registerType(keywords_1.Keywords.Meta, MetaMetaType);
 
 
 /***/ }),
@@ -6585,6 +6703,7 @@ class ScriptContext {
     constructor(info) {
         this.encoding = "utf-8";
         this._handlerStack = [];
+        this._symbolHandlerMap = new Map();
         this._typeSymbolMap = new Map();
         this._symbolTypeMap = new Map();
         this.compilingDirectory = info.compilingDirectory;
@@ -6597,9 +6716,16 @@ class ScriptContext {
     popHandler() {
         return this._handlerStack.pop();
     }
+    linkSymbolAndHandler(symbol, handler) {
+        this._symbolHandlerMap.set(symbol, handler);
+    }
     linkTypeAndSymbol(type, symbol) {
         this._typeSymbolMap.set(type, symbol);
         this._symbolTypeMap.set(symbol, type);
+    }
+    getHandlerFromSymbol(symbol) {
+        var _a;
+        return (_a = this._symbolHandlerMap.get(symbol)) !== null && _a !== void 0 ? _a : null;
     }
     getTypeFromSymbol(symbol) {
         var _a;

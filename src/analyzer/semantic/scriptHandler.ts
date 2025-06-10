@@ -3,7 +3,6 @@ import {ModuleScope} from "../static/scope/moduleScope";
 import {ModuleSymbol} from "../static/symbol/moduleSymbol";
 import {Handler} from "./common/handler";
 import type {ModuleDeclarationHandler, ModuleDeclarationType} from "./moduleDeclarationHandler";
-import type {TopLevelStatementType} from "./statements";
 import {TNullable} from "../utils/zrCompilerTypes";
 import {Symbol as SymbolDeclaration} from "../static/symbol/symbol";
 import {Scope} from "../static/scope/scope";
@@ -15,6 +14,7 @@ import {FunctionSymbol} from "../static/symbol/functionSymbol";
 import {VariableSymbol} from "../static/symbol/variableSymbol";
 import {TestSymbol} from "../static/symbol/testSymbol";
 import {Keywords} from "../../types/keywords";
+import type {TopLevelStatementType} from "./statements/types";
 
 export type ScriptType = {
     type: Keywords.Script,
@@ -52,7 +52,7 @@ export class ScriptHandler extends Handler {
             type: Keywords.Script,
             module: this.moduleHandler?.value,
             statements: this.statementHandlers.map(handler => handler?.value)
-        }
+        };
     }
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>) {

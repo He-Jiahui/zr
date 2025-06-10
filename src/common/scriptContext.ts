@@ -64,6 +64,8 @@ export class ScriptContext {
 
     private readonly _handlerStack: Handler[] = [];
 
+    private readonly _symbolHandlerMap: Map<SymbolDeclaration, Handler> = new Map<SymbolDeclaration, Handler>();
+
     private readonly _typeSymbolMap: Map<TypeDefinition<ScriptContext>, SymbolDeclaration> = new Map();
     private readonly _symbolTypeMap: Map<SymbolDeclaration, TypeDefinition<ScriptContext>> = new Map();
 
@@ -81,9 +83,17 @@ export class ScriptContext {
         return this._handlerStack.pop();
     }
 
+    public linkSymbolAndHandler(symbol: SymbolDeclaration, handler: Handler) {
+        this._symbolHandlerMap.set(symbol, handler);
+    }
+
     public linkTypeAndSymbol(type: TypeDefinition<ScriptContext>, symbol: SymbolDeclaration) {
         this._typeSymbolMap.set(type, symbol);
         this._symbolTypeMap.set(symbol, type);
+    }
+
+    public getHandlerFromSymbol(symbol: SymbolDeclaration): TNullable<Handler> {
+        return this._symbolHandlerMap.get(symbol) ?? null;
     }
 
     public getTypeFromSymbol(symbol: SymbolDeclaration): TNullable<TypeDefinition<ScriptContext>> {

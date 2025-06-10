@@ -25,6 +25,16 @@ export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
         this.name = name;
     }
 
+    public get handler() {
+        const context = this.context;
+        return context.getHandlerFromSymbol(this);
+    }
+
+    public get relevantType() {
+        const context = this.context;
+        return context.getTypeFromSymbol(this);
+    }
+
     public static registerSymbol(symbolType: string, symbol: typeof Symbol) {
         Symbol.symbolMap.set(symbolType, symbol);
     }
@@ -34,15 +44,18 @@ export class Symbol extends ScriptContextAccessibleObject<ScriptContext> {
         if (!symbolClass) {
             return null;
         }
-        const symbol = new symbolClass(symbolName, handler.context) as T;
+        const context: ScriptContext = handler.context;
+        const symbol = new symbolClass(symbolName, context) as T;
+
         if (!symbol) {
-            new ZrInternalError(`Symbol ${symbolType} is not registered`, handler.context).report(); // TODO: throw
+            new ZrInternalError(`Symbol ${symbolType} is not registered`, context).report(); // TODO: throw
             return null;
         }
         symbol.location = location ?? handler.location;
         symbol.ownerScope = parentScope;
 
-        const context = symbol.context;
+        context.linkSymbolAndHandler(symbol, handler);
+
         const symbolCreatedType = MetaType.createType(symbol.type, symbol);
         if (symbolCreatedType) {
             context.linkTypeAndSymbol(symbolCreatedType, symbol);

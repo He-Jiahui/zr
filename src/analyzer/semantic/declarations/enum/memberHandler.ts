@@ -2,11 +2,11 @@ import {EnumMember} from "../../../../parser/generated/parser";
 import {Symbol} from "../../../static/symbol/symbol";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 import {Handler} from "../../common/handler";
-import type {ExpressionType} from "../../expressions";
 import type {IdentifierType} from "../identifierHandler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type EnumMemberType = {
     type: Keywords.EnumMember,
@@ -38,7 +38,7 @@ export class EnumMemberHandler extends Handler {
         this.value = {
             type: Keywords.EnumMember,
             name: this.nameHandler?.value,
-            value: this.valueHandler?.value,
+            value: this.valueHandler?.value
         };
     }
 

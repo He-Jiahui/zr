@@ -1,9 +1,9 @@
-import type {ExpressionType} from ".";
 import {IfExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {BlockType} from "../statements/blockHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type IfExpressionType = {
     type: Keywords.IfExpression,
@@ -43,7 +43,7 @@ export class IfExpressionHandler extends Handler {
             condition: this.conditionHandler?.value as ExpressionType,
             then: this.thenHandler?.value as BlockType,
             else: this.elseHandler?.value as BlockType | IfExpressionType | null
-        }
+        };
     }
 }
 

@@ -1,7 +1,6 @@
 import {PrimaryExpression} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import type {IdentifierType} from "../declarations/identifierHandler";
-import type {LiteralType} from "../literals"
 import type {ArrayLiteralType} from "./arrayLiteralHandler";
 import type {IfExpressionType} from "./ifHandler";
 import type {LambdaType} from "./lambdaHandler";
@@ -12,6 +11,7 @@ import type {WhileLoopExpressionType} from "./whileHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 import {UnpackLiteralType} from "./unpackLiteralHandler";
 import {Keywords} from "../../../types/keywords";
+import type {LiteralType} from "../literals/types";
 
 export type LiteralExpressionType = ValueLiteralType |
     IdentifierLiteralType |
@@ -48,7 +48,7 @@ export class ValueLiteralHandler extends Handler {
         this.value = {
             type: Keywords.ValueLiteralExpression,
             value: this.valueHandler?.value
-        }
+        };
     }
 }
 
@@ -69,7 +69,7 @@ export class IdentifierLiteralHandler extends Handler {
         this.value = {
             type: Keywords.IdentifierLiteralExpression,
             value: this.identifierHandler?.value
-        }
+        };
     }
 }
 

@@ -1,9 +1,9 @@
-import type {ExpressionType} from "."
-import {SwitchCase, SwitchExpression} from "../../../parser/generated/parser"
-import {Handler} from "../common/handler"
-import type {BlockType} from "../statements/blockHandler"
+import {SwitchCase, SwitchExpression} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {BlockType} from "../statements/blockHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type SwitchExpressionType = {
     type: Keywords.SwitchExpression,
@@ -49,7 +49,7 @@ export class SwitchExpressionHandler extends Handler {
             expr: this.exprHandler?.value,
             cases: this.caseHandlers.map(handler => handler?.value),
             default: this.defaultHandler?.value
-        }
+        };
     }
 }
 
@@ -77,7 +77,7 @@ export class SwitchCaseHandler extends Handler {
             type: Keywords.SwitchCase,
             test: this.testHandler.value,
             block: this.blockHandler.value
-        }
+        };
     }
 }
 
@@ -101,7 +101,7 @@ export class SwitchDefaultHandler extends Handler {
         this.value = {
             type: Keywords.SwitchDefault,
             block: this.blockHandler?.value
-        }
+        };
     }
 }
 

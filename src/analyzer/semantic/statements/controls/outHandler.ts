@@ -1,8 +1,9 @@
 import {Handler} from "../../common/handler";
-import type {ExpressionType} from "../../expressions";
+
 import {OutStatement} from "../../../../parser/generated/parser";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type OutStatementType = {
     type: Keywords.OutStatement,
@@ -30,7 +31,7 @@ export class OutHandler extends Handler {
         this.value = {
             type: Keywords.OutStatement,
             expr: this.exprHandler?.value
-        }
+        };
     }
 }
 

@@ -1,4 +1,4 @@
 import "./fieldHandler";
 import "./methodHandler";
 import "./metaFunctionHandler";
-import "./structHandler"
+import "./structHandler";

@@ -1,3 +1,4 @@
+import "./types";
 import "./common/index";
 import "./literals/index";
 import "./types/index";

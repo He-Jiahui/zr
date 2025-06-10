@@ -1,9 +1,9 @@
-import type {ExpressionType} from ".";
 import {MemberAccess} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {IdentifierType} from "../declarations/identifierHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 
 export type MemberAccessType = {
@@ -34,7 +34,7 @@ export class MemberAccessHandler extends Handler {
         this.value = {
             type: Keywords.MemberExpression,
             property: this.propertyHandler?.value,
-            computed,
+            computed
         };
     }
 }

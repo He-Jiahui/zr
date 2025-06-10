@@ -1,6 +1,5 @@
-import type {StatementType} from "."
 import {Block} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import type {BlockSymbol} from "../../static/symbol/blockSymbol";
 import {BlockScope} from "../../static/scope/blockScope";
 import {Symbol as SymbolDeclaration} from "../../static/symbol/symbol";
@@ -8,6 +7,7 @@ import type {VariableSymbol} from "../../static/symbol/variableSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Scope} from "../../static/scope/scope";
 import {Keywords, SpecialSymbols} from "../../../types/keywords";
+import type {StatementType} from "./types";
 
 export type BlockType = {
     type: Keywords.Block,
@@ -38,7 +38,7 @@ export class BlockHandler extends Handler {
             type: Keywords.Block,
             isStatement: node.isStatement,
             body: this.bodyHandler.map(handler => handler?.value as StatementType)
-        }
+        };
     }
 
     protected _signByParentHandler(sign: string) {

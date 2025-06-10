@@ -4,12 +4,12 @@ import {Access} from "../../../../types/access";
 import type {IdentifierType} from "../identifierHandler";
 import type {AllType} from "../../types/types";
 import type {DecoratorExpressionType} from "../../expressions/decoratorHandler";
-import type {ExpressionType} from "../../expressions";
 import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type ClassFieldType = {
     type: Keywords.ClassField;
@@ -66,7 +66,7 @@ export class FieldHandler extends Handler {
             name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
             init: this.initHandler?.value,
-            decorators: this.decoratorsHandlers.map(handler => handler?.value),
+            decorators: this.decoratorsHandlers.map(handler => handler?.value)
         };
     }
 

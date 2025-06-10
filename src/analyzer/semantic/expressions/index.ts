@@ -1,3 +1,4 @@
+import "./types";
 import "./ifHandler";
 import "./switchHandler";
 import "./forHandler";
@@ -20,7 +21,3 @@ import "./conditionalHandler";
 import "./assignmentHandler";
 
 import "./decoratorHandler";
-
-import {AssignmentType} from "./assignmentHandler";
-
-export type ExpressionType = AssignmentType;

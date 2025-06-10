@@ -1,14 +1,14 @@
-import {ForeachLoop, ForLoop} from "../../../parser/generated/parser"
-import {Handler} from "../common/handler"
-import type {IdentifierType} from "../declarations/identifierHandler"
-import type {DestructuringArrayType, DestructuringObjectType} from "../declarations/variable/destructuringHandler"
-import type {VariableType} from "../declarations/variable/variableHandler"
-import type {ExpressionType} from "./index"
-import type {AllType} from "../types/types"
-import type {BlockType} from "../statements/blockHandler"
-import type {ExpressionStatementType} from "../statements/expressionHandler"
+import {ForeachLoop, ForLoop} from "../../../parser/generated/parser";
+import {Handler} from "../common/handler";
+import type {IdentifierType} from "../declarations/identifierHandler";
+import type {DestructuringArrayType, DestructuringObjectType} from "../declarations/variable/destructuringHandler";
+import type {VariableType} from "../declarations/variable/variableHandler";
+import type {AllType} from "../types/types";
+import type {BlockType} from "../statements/blockHandler";
+import type {ExpressionStatementType} from "../statements/expressionHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type ForLoopExpressionType = {
     type: Keywords.ForLoopExpression,
@@ -60,7 +60,7 @@ export class ForLoopExpressionHandler extends Handler {
             condition: this.conditionHandler?.value as ExpressionStatementType | null,
             step: this.stepHandler?.value as ExpressionType | null,
             block: this.blockHandler.value as BlockType
-        }
+        };
     }
 }
 
@@ -107,7 +107,7 @@ export class ForeachLoopExpressionHandler extends Handler {
             typeInfo: this.typeHandler?.value as AllType | null,
             expr: this.exprHandler.value as ExpressionType,
             block: this.blockHandler.value as BlockType
-        }
+        };
     }
 }
 

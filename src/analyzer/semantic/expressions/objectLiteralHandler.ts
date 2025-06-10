@@ -1,10 +1,10 @@
-import type {ExpressionType} from ".";
 import {KeyValuePair, ObjectLiteral} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import type {IdentifierType} from "../declarations/identifierHandler";
 import type {StringType} from "../literals/stringHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type ObjectLiteralType = {
     type: Keywords.ObjectLiteralExpression,
@@ -25,7 +25,7 @@ export class ObjectLiteralHandler extends Handler {
         this.value = {
             type: Keywords.ObjectLiteralExpression,
             properties: this.propertiesHandler.map(handler => handler?.value)
-        }
+        };
     }
 }
 
@@ -59,7 +59,7 @@ export class KeyValuePairHandler extends Handler {
             type: Keywords.KeyValuePairExpression,
             key: this.keyHandler?.value,
             value: this.valueHandler?.value
-        }
+        };
     }
 }
 

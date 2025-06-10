@@ -1,9 +1,9 @@
-import type {ExpressionType} from ".";
 import {ConditionalExpression} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
 import type {LogicalType} from "./logicalHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
+import type {ExpressionType} from "./types";
 
 export type ConditionalType = {
     type: Keywords.ConditionalExpression,

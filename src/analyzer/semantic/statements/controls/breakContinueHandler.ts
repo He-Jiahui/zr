@@ -1,8 +1,8 @@
 import {Handler} from "../../common/handler";
-import type {ExpressionType} from "../../expressions";
 import {BreakContinueStatement} from "../../../../parser/generated/parser";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type BreakContinueStatementType = {
     type: Keywords.BreakContinueStatement,
@@ -32,7 +32,7 @@ export class BreakContinueHandler extends Handler {
             type: Keywords.BreakContinueStatement,
             isContinue: !node.isBreak,
             expr: this.exprHandler?.value
-        }
+        };
     }
 }
 

@@ -3,7 +3,6 @@ import {MetaFunction} from "../../../../parser/generated/parser";
 import {Access} from "../../../../types/access";
 import type {MetaType} from "../metaHandler";
 import type {ParameterType} from "../../types/parameterHandler";
-import type {ExpressionType} from "../../expressions";
 import type {BlockType} from "../../statements/blockHandler";
 import {Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
 import {FunctionScope} from "../../../static/scope/functionScope";
@@ -13,6 +12,7 @@ import type {Scope} from "../../../static/scope/scope";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {Keywords, SpecialSigns} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type ClassMetaFunctionType = {
     type: Keywords.ClassMetaFunction;
@@ -87,7 +87,7 @@ export class MetaFunctionHandler extends Handler {
             super: this.superHandlers.map(handler => handler?.value),
             parameters: this.parameterHandlers.map(handler => handler?.value),
             args: this.argsHandler?.value,
-            body: this.bodyHandler?.value,
+            body: this.bodyHandler?.value
         };
     }
 

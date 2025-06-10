@@ -1,8 +1,8 @@
 import {ReturnStatement} from "../../../../parser/generated/parser";
-import {Handler} from "../../common/handler"
-import type {ExpressionType} from "../../expressions"
+import {Handler} from "../../common/handler";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Keywords} from "../../../../types/keywords";
+import type {ExpressionType} from "../../expressions/types";
 
 export type ReturnStatementType = {
     type: Keywords.ReturnStatement,
@@ -30,7 +30,7 @@ export class ReturnStatementHandler extends Handler {
         this.value = {
             type: Keywords.ReturnStatement,
             expr: this.exprHandler?.value
-        }
+        };
     }
 }
 

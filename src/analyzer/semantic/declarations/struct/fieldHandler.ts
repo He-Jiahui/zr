@@ -3,12 +3,12 @@ import {StructField} from "../../../../parser/generated/parser";
 import {Access} from "../../../../types/access";
 import type {IdentifierType} from "../identifierHandler";
 import type {AllType} from "../../types/types";
-import type {ExpressionType} from "../../expressions";
 import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Keywords} from "../../../../types/keywords";
 import {Scope} from "../../../static/scope/scope";
 import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
+import type {ExpressionType} from "../../expressions/types";
 
 export type StructFieldType = {
     type: Keywords.StructField;
@@ -29,7 +29,7 @@ export class FieldHandler extends Handler {
         return [
             this.nameHandler,
             this.typeInfoHandler,
-            this.initHandler,
+            this.initHandler
         ];
     }
 
@@ -54,7 +54,7 @@ export class FieldHandler extends Handler {
             static: !!node.static,
             name: this.nameHandler?.value,
             typeInfo: this.typeInfoHandler?.value,
-            init: this.initHandler?.value,
+            init: this.initHandler?.value
         };
     }
 

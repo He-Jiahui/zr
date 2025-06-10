@@ -16,6 +16,7 @@ import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {Keywords} from "../../../../types/keywords";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type ClassMethodType = {
     type: Keywords.ClassMethod;
@@ -111,6 +112,7 @@ export class MethodHandler extends Handler {
         }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
+        symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
 

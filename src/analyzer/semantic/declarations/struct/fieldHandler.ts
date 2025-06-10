@@ -9,6 +9,7 @@ import {Scope} from "../../../static/scope/scope";
 import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
 import type {ExpressionType} from "../../expressions/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type StructFieldType = {
     type: Keywords.StructField;
@@ -66,6 +67,7 @@ export class FieldHandler extends Handler {
         }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
+        symbol.typePlaceholder = TypePlaceholder.create(this.value.typeInfo, this);
         return symbol;
     }
 }

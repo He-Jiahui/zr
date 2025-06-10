@@ -36,12 +36,13 @@ ModuleDeclaration
 
 // === 结构体 ===
 StructDeclaration
-  = STRUCT _ name:IDENTIFIER _ generic:GenericDeclaration? _ LBRACE _ members:StructMember* _ RBRACE {
+  = STRUCT _ name:IDENTIFIER _ generic:GenericDeclaration? _ LBRACE _ superPart:(COLON _ TypeList _)? _ members:StructMember* _ RBRACE {
       return { 
         type: "StructDeclaration", 
         name, 
         members,
         generic,
+        inherits: superPart?superPart[2] : [],
         location: location()
       }
   }
@@ -52,7 +53,7 @@ StructMember
   }
 
 StructMetaFunction
-  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _  args:(COMMA _ PARAMS _ Parameter _)?  _ RPAREN _ body:Block {
+  = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return { 
         type: "StructMetaFunction",
         static: staticSymbol,
@@ -61,11 +62,12 @@ StructMetaFunction
         args: args? args[4] : null,
         body, 
         access,
+        returnType: returnPart? returnPart[2] : null,
         location: location()
       }
     }
     /
-    access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ body:Block {
+    access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ body:Block {
       return { 
         type: "StructMetaFunction",
         static: staticSymbol,
@@ -74,6 +76,7 @@ StructMetaFunction
         args,
         body, 
         access,
+        returnType: returnPart? returnPart[2] : null,
         location: location()
       }
     }
@@ -137,7 +140,7 @@ ClassDeclaration
       return { 
         type: "ClassDeclaration", 
         name,  
-        inherits: superPart?superPart[1] : [],
+        inherits: superPart?superPart[2] : [],
         members,
         decorator,
         generic,
@@ -152,7 +155,7 @@ ClassMember
 
 MetaFunction
   = access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ 
-    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ body:Block {
+    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ returnPart:(COLON _ Type)? _ body:Block {
       return { 
         type: "ClassMetaFunction", 
         meta, 
@@ -162,12 +165,13 @@ MetaFunction
         superArgs: argsPart? argsPart[2] : [], 
         body: body,
         access,
+        returnType: returnPart? returnPart[2] : null,
         location: location()
       }
     }
   /
     access:AccessModifier? _ staticSymbol:STATIC? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ 
-    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ body:Block {
+    argsPart:(_ SUPER _ LPAREN _ ArgumentList? _ RPAREN)? _ returnPart:(COLON _ Type)? _ body:Block {
       return { 
         type: "ClassMetaFunction", 
         meta, 
@@ -177,6 +181,7 @@ MetaFunction
         superArgs: argsPart? argsPart[2] : [], 
         body: body,
         access,
+        returnType: returnPart? returnPart[2] : null,
         location: location()
       }
     }
@@ -317,24 +322,26 @@ InterfaceMethodSignature
     }
 
 InterfaceMetaSignature
-  = access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ SEMICOLON  {
+  = access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON  {
       return { 
         type: "InterfaceMetaSignature", 
         meta, 
         params: params || [], 
         args: args? args[4] : null,
         access,
+        returnType: returnPart?returnPart[2] : null,
         location: location()
       }
     }
   /
-    access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ SEMICOLON  {
+    access:AccessModifier? _ meta:MetaIdentifier _ LPAREN _ PARAMS _ args:Parameter _ RPAREN _ returnPart:(COLON _ Type)? _ SEMICOLON  {
       return { 
         type: "InterfaceMetaSignature", 
         meta, 
         params: [], 
         args,
         access,
+        returnType: returnPart?returnPart[2] : null,
         location: location()
       }
     }

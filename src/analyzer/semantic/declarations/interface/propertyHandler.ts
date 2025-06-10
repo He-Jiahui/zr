@@ -13,6 +13,7 @@ import {PropertyScope} from "../../../static/scope/propertyScope";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {FunctionScope} from "../../../static/scope/functionScope";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type InterfacePropertySignatureType = {
     type: Keywords.InterfacePropertySignature,
@@ -86,11 +87,17 @@ export class InterfacePropertySignatureHandler extends Handler {
             const parameterSymbol = this.declareSymbol<ParameterSymbol>("value", Keywords.Parameter, functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
             const functionScope = functionSymbol.childScope as TNullable<FunctionScope>;
+            symbol.returnType = TypePlaceholder.create(this.value.typeInfo, this);
             if (functionScope) {
                 functionScope.addParameter(parameterSymbol);
+                if (parameterSymbol) {
+                    parameterSymbol.typePlaceholder = symbol.returnType;
+                }
             }
         } else {
             // TODO: add return type for getter
+            symbol.returnType = TypePlaceholder.create(this.value.typeInfo, this);
+            functionSymbol.returnType = symbol.returnType;
         }
         return symbol;
     }

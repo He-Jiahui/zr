@@ -53,12 +53,13 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     }
 
     public createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
+        this._currentScope = parentScope;
         return this._createSymbolAndScope(parentScope);
     }
 
     public collectDeclarations<T extends SymbolDeclaration>(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>): TSymbolOrSymbolArray<T> {
         this.context.pushHandler(this);
-        this._currentScope = currentScope;
+        this._currentScope = currentScope ?? this._currentScope;
         const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope) as TSymbolOrSymbolArray<T>;
         this.context.popHandler();
         return declarationSymbols;
@@ -133,6 +134,7 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         this.context.location = location;
         this.context.pushHandler(this);
         this._handle(node);
+        this.context.linkValueAndHandler(this.value, this);
         this.context.popHandler();
     }
 }

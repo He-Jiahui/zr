@@ -506,7 +506,7 @@ function peg$parse(input, options) {
     } 
   };// @ts-ignore
 
-  var peg$f2 = function(name, generic, members) {
+  var peg$f2 = function(name, generic, superPart, members) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -518,6 +518,8 @@ function peg$parse(input, options) {
 // @ts-ignore
         generic,
 // @ts-ignore
+        inherits: superPart?superPart[2] : [],
+// @ts-ignore
         location: location()
       }
   };// @ts-ignore
@@ -527,7 +529,7 @@ function peg$parse(input, options) {
     return dec; 
   };// @ts-ignore
 
-  var peg$f4 = function(access, staticSymbol, meta, params, args, body) {
+  var peg$f4 = function(access, staticSymbol, meta, params, args, returnPart, body) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -545,11 +547,13 @@ function peg$parse(input, options) {
 // @ts-ignore
         access,
 // @ts-ignore
+        returnType: returnPart? returnPart[2] : null,
+// @ts-ignore
         location: location()
       }
     };// @ts-ignore
 
-  var peg$f5 = function(access, staticSymbol, meta, args, body) {
+  var peg$f5 = function(access, staticSymbol, meta, args, returnPart, body) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -566,6 +570,8 @@ function peg$parse(input, options) {
         body, 
 // @ts-ignore
         access,
+// @ts-ignore
+        returnType: returnPart? returnPart[2] : null,
 // @ts-ignore
         location: location()
       }
@@ -655,7 +661,7 @@ function peg$parse(input, options) {
 // @ts-ignore
         name,  
 // @ts-ignore
-        inherits: superPart?superPart[1] : [],
+        inherits: superPart?superPart[2] : [],
 // @ts-ignore
         members,
 // @ts-ignore
@@ -672,7 +678,7 @@ function peg$parse(input, options) {
     return dec;
   };// @ts-ignore
 
-  var peg$f11 = function(access, staticSymbol, meta, params, args, argsPart, body) {
+  var peg$f11 = function(access, staticSymbol, meta, params, args, argsPart, returnPart, body) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -692,11 +698,13 @@ function peg$parse(input, options) {
 // @ts-ignore
         access,
 // @ts-ignore
+        returnType: returnPart? returnPart[2] : null,
+// @ts-ignore
         location: location()
       }
     };// @ts-ignore
 
-  var peg$f12 = function(access, staticSymbol, meta, args, argsPart, body) {
+  var peg$f12 = function(access, staticSymbol, meta, args, argsPart, returnPart, body) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -715,6 +723,8 @@ function peg$parse(input, options) {
         body: body,
 // @ts-ignore
         access,
+// @ts-ignore
+        returnType: returnPart? returnPart[2] : null,
 // @ts-ignore
         location: location()
       }
@@ -923,7 +933,7 @@ function peg$parse(input, options) {
       }
     };// @ts-ignore
 
-  var peg$f23 = function(access, meta, params, args) {
+  var peg$f23 = function(access, meta, params, args, returnPart) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -937,11 +947,13 @@ function peg$parse(input, options) {
 // @ts-ignore
         access,
 // @ts-ignore
+        returnType: returnPart?returnPart[2] : null,
+// @ts-ignore
         location: location()
       }
     };// @ts-ignore
 
-  var peg$f24 = function(access, meta, args) {
+  var peg$f24 = function(access, meta, args, returnPart) {
 // @ts-ignore
       return { 
 // @ts-ignore
@@ -954,6 +966,8 @@ function peg$parse(input, options) {
         args,
 // @ts-ignore
         access,
+// @ts-ignore
+        returnType: returnPart?returnPart[2] : null,
 // @ts-ignore
         location: location()
       }
@@ -2366,7 +2380,7 @@ peg$parseModuleDeclaration() {
   function // @ts-ignore
 peg$parseStructDeclaration() {
 // @ts-ignore
-    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13;
 
 // @ts-ignore
     s0 = peg$currPos;
@@ -2398,26 +2412,65 @@ peg$parseStructDeclaration() {
 // @ts-ignore
           s8 = peg$parse_();
 // @ts-ignore
-          s9 = [];
+          s9 = peg$currPos;
 // @ts-ignore
-          s10 = peg$parseStructMember();
+          s10 = peg$parseCOLON();
 // @ts-ignore
-          while (s10 !== peg$FAILED) {
+          if (s10 !== peg$FAILED) {
 // @ts-ignore
-            s9.push(s10);
+            s11 = peg$parse_();
 // @ts-ignore
-            s10 = peg$parseStructMember();
+            s12 = peg$parseTypeList();
+// @ts-ignore
+            if (s12 !== peg$FAILED) {
+// @ts-ignore
+              s13 = peg$parse_();
+// @ts-ignore
+              s10 = [s10, s11, s12, s13];
+// @ts-ignore
+              s9 = s10;
+// @ts-ignore
+            } else {
+// @ts-ignore
+              peg$currPos = s9;
+// @ts-ignore
+              s9 = peg$FAILED;
+            }
+// @ts-ignore
+          } else {
+// @ts-ignore
+            peg$currPos = s9;
+// @ts-ignore
+            s9 = peg$FAILED;
+          }
+// @ts-ignore
+          if (s9 === peg$FAILED) {
+// @ts-ignore
+            s9 = null;
           }
 // @ts-ignore
           s10 = peg$parse_();
 // @ts-ignore
-          s11 = peg$parseRBRACE();
+          s11 = [];
 // @ts-ignore
-          if (s11 !== peg$FAILED) {
+          s12 = peg$parseStructMember();
+// @ts-ignore
+          while (s12 !== peg$FAILED) {
+// @ts-ignore
+            s11.push(s12);
+// @ts-ignore
+            s12 = peg$parseStructMember();
+          }
+// @ts-ignore
+          s12 = peg$parse_();
+// @ts-ignore
+          s13 = peg$parseRBRACE();
+// @ts-ignore
+          if (s13 !== peg$FAILED) {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f2(s3, s5, s9);
+            s0 = peg$f2(s3, s5, s9, s11);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -2497,7 +2550,7 @@ peg$parseStructMember() {
   function // @ts-ignore
 peg$parseStructMetaFunction() {
 // @ts-ignore
-    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18;
 
 // @ts-ignore
     s0 = peg$currPos;
@@ -2599,13 +2652,50 @@ peg$parseStructMetaFunction() {
 // @ts-ignore
           s14 = peg$parse_();
 // @ts-ignore
-          s15 = peg$parseBlock();
+          s15 = peg$currPos;
 // @ts-ignore
-          if (s15 !== peg$FAILED) {
+          s16 = peg$parseCOLON();
+// @ts-ignore
+          if (s16 !== peg$FAILED) {
+// @ts-ignore
+            s17 = peg$parse_();
+// @ts-ignore
+            s18 = peg$parseType();
+// @ts-ignore
+            if (s18 !== peg$FAILED) {
+// @ts-ignore
+              s16 = [s16, s17, s18];
+// @ts-ignore
+              s15 = s16;
+// @ts-ignore
+            } else {
+// @ts-ignore
+              peg$currPos = s15;
+// @ts-ignore
+              s15 = peg$FAILED;
+            }
+// @ts-ignore
+          } else {
+// @ts-ignore
+            peg$currPos = s15;
+// @ts-ignore
+            s15 = peg$FAILED;
+          }
+// @ts-ignore
+          if (s15 === peg$FAILED) {
+// @ts-ignore
+            s15 = null;
+          }
+// @ts-ignore
+          s16 = peg$parse_();
+// @ts-ignore
+          s17 = peg$parseBlock();
+// @ts-ignore
+          if (s17 !== peg$FAILED) {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f4(s1, s3, s5, s9, s11, s15);
+            s0 = peg$f4(s1, s3, s5, s9, s11, s15, s17);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -2687,13 +2777,50 @@ peg$parseStructMetaFunction() {
 // @ts-ignore
                 s14 = peg$parse_();
 // @ts-ignore
-                s15 = peg$parseBlock();
+                s15 = peg$currPos;
 // @ts-ignore
-                if (s15 !== peg$FAILED) {
+                s16 = peg$parseCOLON();
+// @ts-ignore
+                if (s16 !== peg$FAILED) {
+// @ts-ignore
+                  s17 = peg$parse_();
+// @ts-ignore
+                  s18 = peg$parseType();
+// @ts-ignore
+                  if (s18 !== peg$FAILED) {
+// @ts-ignore
+                    s16 = [s16, s17, s18];
+// @ts-ignore
+                    s15 = s16;
+// @ts-ignore
+                  } else {
+// @ts-ignore
+                    peg$currPos = s15;
+// @ts-ignore
+                    s15 = peg$FAILED;
+                  }
+// @ts-ignore
+                } else {
+// @ts-ignore
+                  peg$currPos = s15;
+// @ts-ignore
+                  s15 = peg$FAILED;
+                }
+// @ts-ignore
+                if (s15 === peg$FAILED) {
+// @ts-ignore
+                  s15 = null;
+                }
+// @ts-ignore
+                s16 = peg$parse_();
+// @ts-ignore
+                s17 = peg$parseBlock();
+// @ts-ignore
+                if (s17 !== peg$FAILED) {
 // @ts-ignore
                   peg$savedPos = s0;
 // @ts-ignore
-                  s0 = peg$f5(s1, s3, s5, s11, s15);
+                  s0 = peg$f5(s1, s3, s5, s11, s15, s17);
 // @ts-ignore
                 } else {
 // @ts-ignore
@@ -3606,13 +3733,50 @@ peg$parseMetaFunction() {
 // @ts-ignore
           s16 = peg$parse_();
 // @ts-ignore
-          s17 = peg$parseBlock();
+          s17 = peg$currPos;
 // @ts-ignore
-          if (s17 !== peg$FAILED) {
+          s18 = peg$parseCOLON();
+// @ts-ignore
+          if (s18 !== peg$FAILED) {
+// @ts-ignore
+            s19 = peg$parse_();
+// @ts-ignore
+            s20 = peg$parseType();
+// @ts-ignore
+            if (s20 !== peg$FAILED) {
+// @ts-ignore
+              s18 = [s18, s19, s20];
+// @ts-ignore
+              s17 = s18;
+// @ts-ignore
+            } else {
+// @ts-ignore
+              peg$currPos = s17;
+// @ts-ignore
+              s17 = peg$FAILED;
+            }
+// @ts-ignore
+          } else {
+// @ts-ignore
+            peg$currPos = s17;
+// @ts-ignore
+            s17 = peg$FAILED;
+          }
+// @ts-ignore
+          if (s17 === peg$FAILED) {
+// @ts-ignore
+            s17 = null;
+          }
+// @ts-ignore
+          s18 = peg$parse_();
+// @ts-ignore
+          s19 = peg$parseBlock();
+// @ts-ignore
+          if (s19 !== peg$FAILED) {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f11(s1, s3, s5, s9, s11, s15, s17);
+            s0 = peg$f11(s1, s3, s5, s9, s11, s15, s17, s19);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -3755,13 +3919,50 @@ peg$parseMetaFunction() {
 // @ts-ignore
                 s16 = peg$parse_();
 // @ts-ignore
-                s17 = peg$parseBlock();
+                s17 = peg$currPos;
 // @ts-ignore
-                if (s17 !== peg$FAILED) {
+                s18 = peg$parseCOLON();
+// @ts-ignore
+                if (s18 !== peg$FAILED) {
+// @ts-ignore
+                  s19 = peg$parse_();
+// @ts-ignore
+                  s20 = peg$parseType();
+// @ts-ignore
+                  if (s20 !== peg$FAILED) {
+// @ts-ignore
+                    s18 = [s18, s19, s20];
+// @ts-ignore
+                    s17 = s18;
+// @ts-ignore
+                  } else {
+// @ts-ignore
+                    peg$currPos = s17;
+// @ts-ignore
+                    s17 = peg$FAILED;
+                  }
+// @ts-ignore
+                } else {
+// @ts-ignore
+                  peg$currPos = s17;
+// @ts-ignore
+                  s17 = peg$FAILED;
+                }
+// @ts-ignore
+                if (s17 === peg$FAILED) {
+// @ts-ignore
+                  s17 = null;
+                }
+// @ts-ignore
+                s18 = peg$parse_();
+// @ts-ignore
+                s19 = peg$parseBlock();
+// @ts-ignore
+                if (s19 !== peg$FAILED) {
 // @ts-ignore
                   peg$savedPos = s0;
 // @ts-ignore
-                  s0 = peg$f12(s1, s3, s5, s11, s15, s17);
+                  s0 = peg$f12(s1, s3, s5, s11, s15, s17, s19);
 // @ts-ignore
                 } else {
 // @ts-ignore
@@ -5117,7 +5318,7 @@ peg$parseInterfaceMethodSignature() {
   function // @ts-ignore
 peg$parseInterfaceMetaSignature() {
 // @ts-ignore
-    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15;
+    var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16;
 
 // @ts-ignore
     s0 = peg$currPos;
@@ -5210,13 +5411,50 @@ peg$parseInterfaceMetaSignature() {
 // @ts-ignore
           s12 = peg$parse_();
 // @ts-ignore
-          s13 = peg$parseSEMICOLON();
+          s13 = peg$currPos;
 // @ts-ignore
-          if (s13 !== peg$FAILED) {
+          s14 = peg$parseCOLON();
+// @ts-ignore
+          if (s14 !== peg$FAILED) {
+// @ts-ignore
+            s15 = peg$parse_();
+// @ts-ignore
+            s16 = peg$parseType();
+// @ts-ignore
+            if (s16 !== peg$FAILED) {
+// @ts-ignore
+              s14 = [s14, s15, s16];
+// @ts-ignore
+              s13 = s14;
+// @ts-ignore
+            } else {
+// @ts-ignore
+              peg$currPos = s13;
+// @ts-ignore
+              s13 = peg$FAILED;
+            }
+// @ts-ignore
+          } else {
+// @ts-ignore
+            peg$currPos = s13;
+// @ts-ignore
+            s13 = peg$FAILED;
+          }
+// @ts-ignore
+          if (s13 === peg$FAILED) {
+// @ts-ignore
+            s13 = null;
+          }
+// @ts-ignore
+          s14 = peg$parse_();
+// @ts-ignore
+          s15 = peg$parseSEMICOLON();
+// @ts-ignore
+          if (s15 !== peg$FAILED) {
 // @ts-ignore
             peg$savedPos = s0;
 // @ts-ignore
-            s0 = peg$f23(s1, s3, s7, s9);
+            s0 = peg$f23(s1, s3, s7, s9, s13);
 // @ts-ignore
           } else {
 // @ts-ignore
@@ -5289,13 +5527,50 @@ peg$parseInterfaceMetaSignature() {
 // @ts-ignore
                 s12 = peg$parse_();
 // @ts-ignore
-                s13 = peg$parseSEMICOLON();
+                s13 = peg$currPos;
 // @ts-ignore
-                if (s13 !== peg$FAILED) {
+                s14 = peg$parseCOLON();
+// @ts-ignore
+                if (s14 !== peg$FAILED) {
+// @ts-ignore
+                  s15 = peg$parse_();
+// @ts-ignore
+                  s16 = peg$parseType();
+// @ts-ignore
+                  if (s16 !== peg$FAILED) {
+// @ts-ignore
+                    s14 = [s14, s15, s16];
+// @ts-ignore
+                    s13 = s14;
+// @ts-ignore
+                  } else {
+// @ts-ignore
+                    peg$currPos = s13;
+// @ts-ignore
+                    s13 = peg$FAILED;
+                  }
+// @ts-ignore
+                } else {
+// @ts-ignore
+                  peg$currPos = s13;
+// @ts-ignore
+                  s13 = peg$FAILED;
+                }
+// @ts-ignore
+                if (s13 === peg$FAILED) {
+// @ts-ignore
+                  s13 = null;
+                }
+// @ts-ignore
+                s14 = peg$parse_();
+// @ts-ignore
+                s15 = peg$parseSEMICOLON();
+// @ts-ignore
+                if (s15 !== peg$FAILED) {
 // @ts-ignore
                   peg$savedPos = s0;
 // @ts-ignore
-                  s0 = peg$f24(s1, s3, s9);
+                  s0 = peg$f24(s1, s3, s9, s13);
 // @ts-ignore
                 } else {
 // @ts-ignore
@@ -14254,6 +14529,7 @@ export type StructDeclaration = {
   name: IDENTIFIER;
   members: StructMember[];
   generic: GenericDeclaration | null;
+  inherits: any;
   location: {
     source: string | undefined;
     start: { offset: number; line: number; column: number };
@@ -14270,6 +14546,7 @@ export type StructMetaFunction =
       args: any;
       body: Block;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };
@@ -14284,6 +14561,7 @@ export type StructMetaFunction =
       args: Parameter;
       body: Block;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };
@@ -14362,6 +14640,7 @@ export type MetaFunction =
       superArgs: any;
       body: Block;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };
@@ -14377,6 +14656,7 @@ export type MetaFunction =
       superArgs: any;
       body: Block;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };
@@ -14523,6 +14803,7 @@ export type InterfaceMetaSignature =
       params: never[] | NonNullable<ParameterList | null>;
       args: any;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };
@@ -14535,6 +14816,7 @@ export type InterfaceMetaSignature =
       params: [];
       args: Parameter;
       access: AccessModifier | null;
+      returnType: any;
       location: {
         source: string | undefined;
         start: { offset: number; line: number; column: number };

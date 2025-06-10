@@ -10,6 +10,8 @@ import {TNullable} from "../../../utils/zrCompilerTypes";
 import type {Scope} from "../../../static/scope/scope";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {Keywords, SpecialSigns} from "../../../../types/keywords";
+import {AllType} from "../../types/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type InterfaceMetaSignatureType = {
     type: Keywords.InterfaceMetaSignature;
@@ -17,6 +19,7 @@ export type InterfaceMetaSignatureType = {
     meta: MetaType,
     parameters: ParameterType[],
     args: ParameterType,
+    returnType: AllType
 };
 
 export class InterfaceMetaSignatureHandler extends Handler {
@@ -25,6 +28,7 @@ export class InterfaceMetaSignatureHandler extends Handler {
     private metaHandler: TNullable<Handler> = null;
     private readonly parameterHandlers: Handler[] = [];
     private argsHandler: TNullable<Handler> = null;
+    private returnTypeHandler: TNullable<Handler> = null;
 
     protected get _children() {
         return [
@@ -55,12 +59,19 @@ export class InterfaceMetaSignatureHandler extends Handler {
         } else {
             this.argsHandler = null;
         }
+        if (node.returnType) {
+            this.returnTypeHandler = Handler.handle(node.returnType, this.context);
+        } else {
+            this.returnTypeHandler = null;
+        }
+
 
         this.value = {
             type: Keywords.InterfaceMetaSignature,
             access: node.access as Access,
             meta: this.metaHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
+            returnType: this.returnTypeHandler?.value,
             args: this.argsHandler?.value
         };
     }
@@ -72,9 +83,8 @@ export class InterfaceMetaSignatureHandler extends Handler {
         if (symbol) {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
+            symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         }
-
-
         return symbol;
     }
 

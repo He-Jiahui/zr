@@ -42,11 +42,12 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         this._signByParentHandler(sign);
     }
     createSymbolAndScope(parentScope) {
+        this._currentScope = parentScope;
         return this._createSymbolAndScope(parentScope);
     }
     collectDeclarations(childrenSymbols, currentScope) {
         this.context.pushHandler(this);
-        this._currentScope = currentScope;
+        this._currentScope = currentScope !== null && currentScope !== void 0 ? currentScope : this._currentScope;
         const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope);
         this.context.popHandler();
         return declarationSymbols;
@@ -109,6 +110,7 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         this.context.location = location;
         this.context.pushHandler(this);
         this._handle(node);
+        this.context.linkValueAndHandler(this.value, this);
         this.context.popHandler();
     }
 }
@@ -142,6 +144,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ClassDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class ClassDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -235,6 +238,14 @@ class ClassDeclarationHandler extends handler_1.Handler {
         const className = this.value.name.name;
         const symbol = this.declareSymbol(className, keywords_1.Keywords.Class, parentScope);
         // we can not decide super class
+        if (symbol) {
+            symbol.inheritFrom.length = 0;
+            // add inherits
+            for (const inherit of this.value.inherits) {
+                // process each inherit
+                symbol.inheritFrom.push(typePlaceholder_1.TypePlaceholder.create(inherit, this));
+            }
+        }
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -291,6 +302,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FieldHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class FieldHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -350,6 +362,7 @@ class FieldHandler extends handler_1.Handler {
         }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
+        symbol.typePlaceholder = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
         return symbol;
     }
 }
@@ -387,6 +400,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaFunctionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class MetaFunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -395,6 +409,7 @@ class MetaFunctionHandler extends handler_1.Handler {
         this.argsHandler = null;
         this.bodyHandler = null;
         this.superHandlers = [];
+        this.returnTypeHandler = null;
     }
     get _children() {
         return [
@@ -406,7 +421,7 @@ class MetaFunctionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -442,6 +457,12 @@ class MetaFunctionHandler extends handler_1.Handler {
         else {
             this.bodyHandler = null;
         }
+        if (node.returnType) {
+            this.returnTypeHandler = handler_1.Handler.handle(node.returnType, this.context);
+        }
+        else {
+            this.returnTypeHandler = null;
+        }
         this.value = {
             type: keywords_1.Keywords.ClassMetaFunction,
             access: node.access,
@@ -450,7 +471,8 @@ class MetaFunctionHandler extends handler_1.Handler {
             super: this.superHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value
+            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
+            returnType: (_d = this.returnTypeHandler) === null || _d === void 0 ? void 0 : _d.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -461,6 +483,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
             symbol.isStatic = this.value.static;
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         }
         return symbol;
     }
@@ -503,6 +526,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MethodHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class MethodHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -588,6 +612,7 @@ class MethodHandler extends handler_1.Handler {
         }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
+        symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -635,6 +660,7 @@ exports.PropertyHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class PropertyHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -733,9 +759,15 @@ class PropertyHandler extends handler_1.Handler {
             if (functionScope) {
                 functionScope.addParameter(parameterSymbol);
             }
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.targetType, this);
+            if (parameterSymbol) {
+                parameterSymbol.typePlaceholder = symbol.returnType;
+            }
         }
         else {
             // TODO: add return type for getter
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.targetType, this);
+            functionSymbol.returnType = symbol.returnType;
         }
         return symbol;
     }
@@ -788,6 +820,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EnumDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class EnumDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -829,7 +862,11 @@ class EnumDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const enumName = this.value.name.name;
-        return this.declareSymbol(enumName, keywords_1.Keywords.Enum, parentScope);
+        const symbol = this.declareSymbol(enumName, keywords_1.Keywords.Enum, parentScope);
+        if (symbol) {
+            symbol.baseType = typePlaceholder_1.TypePlaceholder.create(this.value.baseType, this);
+        }
+        return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
         if (!currentScope) {
@@ -929,6 +966,7 @@ exports.FunctionHandler = void 0;
 const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class FunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1014,6 +1052,7 @@ class FunctionHandler extends handler_1.Handler {
         }
         symbol.accessibility = access_1.Access.PUBLIC;
         symbol.isStatic = true;
+        symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -1121,6 +1160,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceFieldDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class InterfaceFieldDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1158,6 +1198,7 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
             return null;
         }
         symbol.accessibility = this.value.access;
+        symbol.typePlaceholder = typePlaceholder_1.TypePlaceholder.create(this.value.targetType, this);
         return symbol;
     }
 }
@@ -1195,6 +1236,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class InterfaceDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1278,7 +1320,14 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const interfaceName = this.value.name.name;
-        return this.declareSymbol(interfaceName, keywords_1.Keywords.Interface, parentScope);
+        const symbol = this.declareSymbol(interfaceName, keywords_1.Keywords.Interface, parentScope);
+        if (symbol) {
+            symbol.inheritsFrom.length = 0;
+            for (const inherit of this.value.inherits) {
+                symbol.inheritsFrom.push(typePlaceholder_1.TypePlaceholder.create(inherit, this));
+            }
+        }
+        return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
         if (!currentScope) {
@@ -1334,12 +1383,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceMetaSignatureHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class InterfaceMetaSignatureHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.metaHandler = null;
         this.parameterHandlers = [];
         this.argsHandler = null;
+        this.returnTypeHandler = null;
     }
     get _children() {
         return [
@@ -1349,7 +1400,7 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
+        var _a, _b, _c;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -1371,12 +1422,19 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         else {
             this.argsHandler = null;
         }
+        if (node.returnType) {
+            this.returnTypeHandler = handler_1.Handler.handle(node.returnType, this.context);
+        }
+        else {
+            this.returnTypeHandler = null;
+        }
         this.value = {
             type: keywords_1.Keywords.InterfaceMetaSignature,
             access: node.access,
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value
+            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
+            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1386,6 +1444,7 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         if (symbol) {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         }
         return symbol;
     }
@@ -1423,6 +1482,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InterfaceMethodSignatureHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class InterfaceMethodSignatureHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1488,6 +1548,7 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
             return null;
         }
         symbol.accessibility = this.value.access;
+        symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -1535,6 +1596,7 @@ exports.InterfacePropertySignatureHandler = void 0;
 const access_1 = __webpack_require__(/*! ../../../../types/access */ "./src/types/access.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class InterfacePropertySignatureHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1598,12 +1660,18 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
             const parameterSymbol = this.declareSymbol("value", keywords_1.Keywords.Parameter, functionSymbol.childScope);
             // TODO parameterSymbol type should be determined by the propertyType
             const functionScope = functionSymbol.childScope;
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
             if (functionScope) {
                 functionScope.addParameter(parameterSymbol);
+                if (parameterSymbol) {
+                    parameterSymbol.typePlaceholder = symbol.returnType;
+                }
             }
         }
         else {
             // TODO: add return type for getter
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
+            functionSymbol.returnType = symbol.returnType;
         }
         return symbol;
     }
@@ -1692,6 +1760,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FieldHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class FieldHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1741,6 +1810,7 @@ class FieldHandler extends handler_1.Handler {
         }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
+        symbol.typePlaceholder = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
         return symbol;
     }
 }
@@ -1777,6 +1847,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MetaFunctionHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class MetaFunctionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1784,6 +1855,7 @@ class MetaFunctionHandler extends handler_1.Handler {
         this.parameterHandlers = [];
         this.argsHandler = null;
         this.bodyHandler = null;
+        this.returnTypeHandler = null;
     }
     get _children() {
         return [
@@ -1794,7 +1866,7 @@ class MetaFunctionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -1816,6 +1888,12 @@ class MetaFunctionHandler extends handler_1.Handler {
         else {
             this.bodyHandler = null;
         }
+        if (node.returnType) {
+            this.returnTypeHandler = handler_1.Handler.handle(node.returnType, this.context);
+        }
+        else {
+            this.returnTypeHandler = null;
+        }
         if (node.args) {
             const argsHandler = handler_1.Handler.handle(node.args, this.context);
             this.argsHandler = argsHandler;
@@ -1830,7 +1908,8 @@ class MetaFunctionHandler extends handler_1.Handler {
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value
+            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
+            returnType: (_d = this.returnTypeHandler) === null || _d === void 0 ? void 0 : _d.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1841,6 +1920,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
             symbol.isStatic = this.value.static;
+            symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         }
         return symbol;
     }
@@ -1883,6 +1963,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MethodHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class MethodHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1968,6 +2049,7 @@ class MethodHandler extends handler_1.Handler {
         }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
+        symbol.returnType = typePlaceholder_1.TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -2014,12 +2096,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StructDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class StructDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
         this.membersHandler = [];
         this.genericHandler = null;
         this.nameHandler = null;
+        this.inheritsHandler = [];
     }
     get _children() {
         return [
@@ -2041,6 +2125,10 @@ class StructDeclarationHandler extends handler_1.Handler {
         }
         else {
             this.genericHandler = null;
+        }
+        this.inheritsHandler.length = 0;
+        for (const inherit of node.inherits) {
+            this.inheritsHandler.push(handler_1.Handler.handle(inherit, this.context));
         }
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
@@ -2071,6 +2159,7 @@ class StructDeclarationHandler extends handler_1.Handler {
             type: keywords_1.Keywords.Struct,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value,
+            inherits: this.inheritsHandler.map(handler => handler.value),
             fields,
             methods,
             metaFunctions
@@ -2079,6 +2168,12 @@ class StructDeclarationHandler extends handler_1.Handler {
     _createSymbolAndScope(parentScope) {
         const structName = this.value.name.name;
         const symbol = this.declareSymbol(structName, keywords_1.Keywords.Struct, parentScope);
+        if (symbol) {
+            symbol.inheritsFrom.length = 0;
+            for (const inherit of this.value.inherits) {
+                symbol.inheritsFrom.push(typePlaceholder_1.TypePlaceholder.create(inherit, this));
+            }
+        }
         return symbol;
     }
     _collectDeclarations(childrenSymbols, currentScope) {
@@ -2327,6 +2422,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VariableHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class VariableHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2365,8 +2461,13 @@ class VariableHandler extends handler_1.Handler {
         };
         const collect = () => {
             switch (this.value.pattern.type) {
-                case keywords_1.Keywords.Identifier:
-                    return getDeclaration(this.value.pattern);
+                case keywords_1.Keywords.Identifier: {
+                    const symbol = getDeclaration(this.value.pattern);
+                    if (symbol) {
+                        symbol.typePlaceholder = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
+                    }
+                    return symbol;
+                }
                 case keywords_1.Keywords.DestructuringArray: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);
@@ -4326,6 +4427,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ParameterHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typePlaceholder_1 = __webpack_require__(/*! ../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
 class ParameterHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -4367,7 +4469,11 @@ class ParameterHandler extends handler_1.Handler {
     }
     _createSymbolAndScope(parentScope) {
         const name = this.value.name.name;
-        return this.declareSymbol(name, keywords_1.Keywords.Parameter, parentScope);
+        const symbol = this.declareSymbol(name, keywords_1.Keywords.Parameter, parentScope);
+        if (symbol) {
+            symbol.typePlaceholder = typePlaceholder_1.TypePlaceholder.create(this.value.typeInfo, this);
+        }
+        return symbol;
     }
 }
 exports.ParameterHandler = ParameterHandler;
@@ -4438,6 +4544,9 @@ class TypeHandler extends handler_1.Handler {
         this.subTypeHandler = null;
         this._typeReference = null;
     }
+    get typeReference() {
+        return this._typeReference;
+    }
     get _children() {
         return [
             this.nameHandler
@@ -4487,6 +4596,10 @@ class TypeHandler extends handler_1.Handler {
                         new zrInternalError_1.ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                         return null;
                     }
+                    // no symbol found, we guess it is a predefined type
+                    if (!foundSymbol) {
+                        createdContext = typeInferContext_1.TypeInferContext.createPredefinedTypeContext(identifierName);
+                    }
                 }
                 break;
             case keywords_1.Keywords.Generic:
@@ -4514,6 +4627,10 @@ class TypeHandler extends handler_1.Handler {
                         // TODO: 错误处理
                         new zrInternalError_1.ZrInternalError(`symbol ${identifierName} is not generic`, this.context).report();
                         return null;
+                    }
+                    // no symbol found, we guess it is a predefined type
+                    if (!foundSymbol) {
+                        createdContext = typeInferContext_1.TypeInferContext.createPredefinedTypeContext(identifierName);
                     }
                     // we will handle generic type on assign step
                 }
@@ -5364,6 +5481,7 @@ class ClassSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
         this.type = keywords_1.Keywords.Class;
+        this.inheritFrom = [];
         this.interfaces = [];
         this.decorators = [];
     }
@@ -5520,6 +5638,7 @@ class InterfaceSymbol extends symbol_1.Symbol {
         super(...arguments);
         this.type = keywords_1.Keywords.Interface;
         this.interfaces = [];
+        this.inheritsFrom = [];
         this.decorators = [];
     }
 }
@@ -5640,6 +5759,7 @@ class StructSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
         this.type = keywords_1.Keywords.Struct;
+        this.inheritsFrom = [];
     }
 }
 exports.StructSymbol = StructSymbol;
@@ -6506,6 +6626,40 @@ exports.TypeInferContext = TypeInferContext;
 
 /***/ }),
 
+/***/ "./src/analyzer/static/type/typePlaceholder.ts":
+/*!*****************************************************!*\
+  !*** ./src/analyzer/static/type/typePlaceholder.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TypePlaceholder = void 0;
+const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
+class TypePlaceholder extends scriptContext_1.ScriptContextAccessibleObject {
+    constructor() {
+        super(...arguments);
+        this.targetValueNode = null;
+    }
+    get toTypeReference() {
+        if (!this.targetValueNode) {
+            return null;
+        }
+        const typeHandler = this.context.getHandlerFromValue(this.targetValueNode);
+        return typeHandler.typeReference;
+    }
+    static create(typeNode, parentHandler) {
+        const context = parentHandler.context;
+        const placeholder = new TypePlaceholder(context);
+        placeholder.targetValueNode = typeNode;
+        return placeholder;
+    }
+}
+exports.TypePlaceholder = TypePlaceholder;
+
+
+/***/ }),
+
 /***/ "./src/analyzer/static/type/typeReference.ts":
 /*!***************************************************!*\
   !*** ./src/analyzer/static/type/typeReference.ts ***!
@@ -6638,8 +6792,8 @@ class ZrSemanticAnalyzer {
         this.handlerDispatcher = new zrHandlerDispatcher_1.ZrHandlerDispatcher(this.scriptHandler);
         // create symbol and scope
         this.topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
-            var _a, _b;
-            return (_b = handler.createSymbolAndScope((_a = upperResult === null || upperResult === void 0 ? void 0 : upperResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : null;
+            var _a, _b, _c;
+            return (_c = handler.createSymbolAndScope((_b = (_a = upperResult === null || upperResult === void 0 ? void 0 : upperResult.childScope) !== null && _a !== void 0 ? _a : upperResult === null || upperResult === void 0 ? void 0 : upperResult.ownerScope) !== null && _b !== void 0 ? _b : null)) !== null && _c !== void 0 ? _c : null;
         }, (handler, lowerResult, selfTopDownResult) => {
             var _a, _b;
             return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
@@ -6703,6 +6857,7 @@ class ScriptContext {
     constructor(info) {
         this.encoding = "utf-8";
         this._handlerStack = [];
+        this._valueHandlerMap = new Map();
         this._symbolHandlerMap = new Map();
         this._typeSymbolMap = new Map();
         this._symbolTypeMap = new Map();
@@ -6716,12 +6871,19 @@ class ScriptContext {
     popHandler() {
         return this._handlerStack.pop();
     }
+    linkValueAndHandler(value, handler) {
+        this._valueHandlerMap.set(value, handler);
+    }
     linkSymbolAndHandler(symbol, handler) {
         this._symbolHandlerMap.set(symbol, handler);
     }
     linkTypeAndSymbol(type, symbol) {
         this._typeSymbolMap.set(type, symbol);
         this._symbolTypeMap.set(symbol, type);
+    }
+    getHandlerFromValue(value) {
+        var _a;
+        return (_a = this._valueHandlerMap.get(value)) !== null && _a !== void 0 ? _a : null;
     }
     getHandlerFromSymbol(symbol) {
         var _a;
@@ -7538,7 +7700,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f2 = function (name, generic, members) {
+        var peg$f2 = function (name, generic, superPart, members) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7550,6 +7712,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 generic,
                 // @ts-ignore
+                inherits: superPart ? superPart[2] : [],
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
@@ -7557,7 +7721,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             return dec;
         }; // @ts-ignore
-        var peg$f4 = function (access, staticSymbol, meta, params, args, body) {
+        var peg$f4 = function (access, staticSymbol, meta, params, args, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7575,10 +7739,12 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 access,
                 // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f5 = function (access, staticSymbol, meta, args, body) {
+        var peg$f5 = function (access, staticSymbol, meta, args, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7595,6 +7761,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 body,
                 // @ts-ignore
                 access,
+                // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
                 // @ts-ignore
                 location: location()
             };
@@ -7680,7 +7848,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 name,
                 // @ts-ignore
-                inherits: superPart ? superPart[1] : [],
+                inherits: superPart ? superPart[2] : [],
                 // @ts-ignore
                 members,
                 // @ts-ignore
@@ -7695,7 +7863,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             return dec;
         }; // @ts-ignore
-        var peg$f11 = function (access, staticSymbol, meta, params, args, argsPart, body) {
+        var peg$f11 = function (access, staticSymbol, meta, params, args, argsPart, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7715,10 +7883,12 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 access,
                 // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f12 = function (access, staticSymbol, meta, args, argsPart, body) {
+        var peg$f12 = function (access, staticSymbol, meta, args, argsPart, returnPart, body) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7737,6 +7907,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 body: body,
                 // @ts-ignore
                 access,
+                // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
                 // @ts-ignore
                 location: location()
             };
@@ -7934,7 +8106,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f23 = function (access, meta, params, args) {
+        var peg$f23 = function (access, meta, params, args, returnPart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7948,10 +8120,12 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 access,
                 // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f24 = function (access, meta, args) {
+        var peg$f24 = function (access, meta, args, returnPart) {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -7964,6 +8138,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 args,
                 // @ts-ignore
                 access,
+                // @ts-ignore
+                returnType: returnPart ? returnPart[2] : null,
                 // @ts-ignore
                 location: location()
             };
@@ -9268,7 +9444,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
         // @ts-ignore
         function peg$parseStructDeclaration() {
             // @ts-ignore
-            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13;
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
@@ -9299,26 +9475,67 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         s8 = peg$parse_();
                         // @ts-ignore
-                        s9 = [];
+                        s9 = peg$currPos;
                         // @ts-ignore
-                        s10 = peg$parseStructMember();
+                        s10 = peg$parseCOLON();
                         // @ts-ignore
-                        while (s10 !== peg$FAILED) {
+                        if (s10 !== peg$FAILED) {
                             // @ts-ignore
-                            s9.push(s10);
+                            s11 = peg$parse_();
                             // @ts-ignore
-                            s10 = peg$parseStructMember();
+                            s12 = peg$parseTypeList();
+                            // @ts-ignore
+                            if (s12 !== peg$FAILED) {
+                                // @ts-ignore
+                                s13 = peg$parse_();
+                                // @ts-ignore
+                                s10 = [s10, s11, s12, s13];
+                                // @ts-ignore
+                                s9 = s10;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s9;
+                                // @ts-ignore
+                                s9 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s9;
+                            // @ts-ignore
+                            s9 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s9 === peg$FAILED) {
+                            // @ts-ignore
+                            s9 = null;
                         }
                         // @ts-ignore
                         s10 = peg$parse_();
                         // @ts-ignore
-                        s11 = peg$parseRBRACE();
+                        s11 = [];
                         // @ts-ignore
-                        if (s11 !== peg$FAILED) {
+                        s12 = peg$parseStructMember();
+                        // @ts-ignore
+                        while (s12 !== peg$FAILED) {
+                            // @ts-ignore
+                            s11.push(s12);
+                            // @ts-ignore
+                            s12 = peg$parseStructMember();
+                        }
+                        // @ts-ignore
+                        s12 = peg$parse_();
+                        // @ts-ignore
+                        s13 = peg$parseRBRACE();
+                        // @ts-ignore
+                        if (s13 !== peg$FAILED) {
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f2(s3, s5, s9);
+                            s0 = peg$f2(s3, s5, s9, s11);
                             // @ts-ignore
                         }
                         else {
@@ -9396,7 +9613,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
         // @ts-ignore
         function peg$parseStructMetaFunction() {
             // @ts-ignore
-            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17;
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18;
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
@@ -9500,13 +9717,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         s14 = peg$parse_();
                         // @ts-ignore
-                        s15 = peg$parseBlock();
+                        s15 = peg$currPos;
                         // @ts-ignore
-                        if (s15 !== peg$FAILED) {
+                        s16 = peg$parseCOLON();
+                        // @ts-ignore
+                        if (s16 !== peg$FAILED) {
+                            // @ts-ignore
+                            s17 = peg$parse_();
+                            // @ts-ignore
+                            s18 = peg$parseType();
+                            // @ts-ignore
+                            if (s18 !== peg$FAILED) {
+                                // @ts-ignore
+                                s16 = [s16, s17, s18];
+                                // @ts-ignore
+                                s15 = s16;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s15;
+                                // @ts-ignore
+                                s15 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s15;
+                            // @ts-ignore
+                            s15 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s15 === peg$FAILED) {
+                            // @ts-ignore
+                            s15 = null;
+                        }
+                        // @ts-ignore
+                        s16 = peg$parse_();
+                        // @ts-ignore
+                        s17 = peg$parseBlock();
+                        // @ts-ignore
+                        if (s17 !== peg$FAILED) {
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f4(s1, s3, s5, s9, s11, s15);
+                            s0 = peg$f4(s1, s3, s5, s9, s11, s15, s17);
                             // @ts-ignore
                         }
                         else {
@@ -9592,13 +9848,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                     // @ts-ignore
                                     s14 = peg$parse_();
                                     // @ts-ignore
-                                    s15 = peg$parseBlock();
+                                    s15 = peg$currPos;
                                     // @ts-ignore
-                                    if (s15 !== peg$FAILED) {
+                                    s16 = peg$parseCOLON();
+                                    // @ts-ignore
+                                    if (s16 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        s17 = peg$parse_();
+                                        // @ts-ignore
+                                        s18 = peg$parseType();
+                                        // @ts-ignore
+                                        if (s18 !== peg$FAILED) {
+                                            // @ts-ignore
+                                            s16 = [s16, s17, s18];
+                                            // @ts-ignore
+                                            s15 = s16;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            peg$currPos = s15;
+                                            // @ts-ignore
+                                            s15 = peg$FAILED;
+                                        }
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        peg$currPos = s15;
+                                        // @ts-ignore
+                                        s15 = peg$FAILED;
+                                    }
+                                    // @ts-ignore
+                                    if (s15 === peg$FAILED) {
+                                        // @ts-ignore
+                                        s15 = null;
+                                    }
+                                    // @ts-ignore
+                                    s16 = peg$parse_();
+                                    // @ts-ignore
+                                    s17 = peg$parseBlock();
+                                    // @ts-ignore
+                                    if (s17 !== peg$FAILED) {
                                         // @ts-ignore
                                         peg$savedPos = s0;
                                         // @ts-ignore
-                                        s0 = peg$f5(s1, s3, s5, s11, s15);
+                                        s0 = peg$f5(s1, s3, s5, s11, s15, s17);
                                         // @ts-ignore
                                     }
                                     else {
@@ -10534,13 +10829,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         s16 = peg$parse_();
                         // @ts-ignore
-                        s17 = peg$parseBlock();
+                        s17 = peg$currPos;
                         // @ts-ignore
-                        if (s17 !== peg$FAILED) {
+                        s18 = peg$parseCOLON();
+                        // @ts-ignore
+                        if (s18 !== peg$FAILED) {
+                            // @ts-ignore
+                            s19 = peg$parse_();
+                            // @ts-ignore
+                            s20 = peg$parseType();
+                            // @ts-ignore
+                            if (s20 !== peg$FAILED) {
+                                // @ts-ignore
+                                s18 = [s18, s19, s20];
+                                // @ts-ignore
+                                s17 = s18;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s17;
+                                // @ts-ignore
+                                s17 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s17;
+                            // @ts-ignore
+                            s17 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s17 === peg$FAILED) {
+                            // @ts-ignore
+                            s17 = null;
+                        }
+                        // @ts-ignore
+                        s18 = peg$parse_();
+                        // @ts-ignore
+                        s19 = peg$parseBlock();
+                        // @ts-ignore
+                        if (s19 !== peg$FAILED) {
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f11(s1, s3, s5, s9, s11, s15, s17);
+                            s0 = peg$f11(s1, s3, s5, s9, s11, s15, s17, s19);
                             // @ts-ignore
                         }
                         else {
@@ -10690,13 +11024,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                     // @ts-ignore
                                     s16 = peg$parse_();
                                     // @ts-ignore
-                                    s17 = peg$parseBlock();
+                                    s17 = peg$currPos;
                                     // @ts-ignore
-                                    if (s17 !== peg$FAILED) {
+                                    s18 = peg$parseCOLON();
+                                    // @ts-ignore
+                                    if (s18 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        s19 = peg$parse_();
+                                        // @ts-ignore
+                                        s20 = peg$parseType();
+                                        // @ts-ignore
+                                        if (s20 !== peg$FAILED) {
+                                            // @ts-ignore
+                                            s18 = [s18, s19, s20];
+                                            // @ts-ignore
+                                            s17 = s18;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            peg$currPos = s17;
+                                            // @ts-ignore
+                                            s17 = peg$FAILED;
+                                        }
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        peg$currPos = s17;
+                                        // @ts-ignore
+                                        s17 = peg$FAILED;
+                                    }
+                                    // @ts-ignore
+                                    if (s17 === peg$FAILED) {
+                                        // @ts-ignore
+                                        s17 = null;
+                                    }
+                                    // @ts-ignore
+                                    s18 = peg$parse_();
+                                    // @ts-ignore
+                                    s19 = peg$parseBlock();
+                                    // @ts-ignore
+                                    if (s19 !== peg$FAILED) {
                                         // @ts-ignore
                                         peg$savedPos = s0;
                                         // @ts-ignore
-                                        s0 = peg$f12(s1, s3, s5, s11, s15, s17);
+                                        s0 = peg$f12(s1, s3, s5, s11, s15, s17, s19);
                                         // @ts-ignore
                                     }
                                     else {
@@ -12085,7 +12458,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
         // @ts-ignore
         function peg$parseInterfaceMetaSignature() {
             // @ts-ignore
-            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15;
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16;
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
@@ -12180,13 +12553,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         s12 = peg$parse_();
                         // @ts-ignore
-                        s13 = peg$parseSEMICOLON();
+                        s13 = peg$currPos;
                         // @ts-ignore
-                        if (s13 !== peg$FAILED) {
+                        s14 = peg$parseCOLON();
+                        // @ts-ignore
+                        if (s14 !== peg$FAILED) {
+                            // @ts-ignore
+                            s15 = peg$parse_();
+                            // @ts-ignore
+                            s16 = peg$parseType();
+                            // @ts-ignore
+                            if (s16 !== peg$FAILED) {
+                                // @ts-ignore
+                                s14 = [s14, s15, s16];
+                                // @ts-ignore
+                                s13 = s14;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s13;
+                                // @ts-ignore
+                                s13 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s13;
+                            // @ts-ignore
+                            s13 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s13 === peg$FAILED) {
+                            // @ts-ignore
+                            s13 = null;
+                        }
+                        // @ts-ignore
+                        s14 = peg$parse_();
+                        // @ts-ignore
+                        s15 = peg$parseSEMICOLON();
+                        // @ts-ignore
+                        if (s15 !== peg$FAILED) {
                             // @ts-ignore
                             peg$savedPos = s0;
                             // @ts-ignore
-                            s0 = peg$f23(s1, s3, s7, s9);
+                            s0 = peg$f23(s1, s3, s7, s9, s13);
                             // @ts-ignore
                         }
                         else {
@@ -12263,13 +12675,52 @@ const peggyParser = // Generated by Peggy 3.0.2.
                                     // @ts-ignore
                                     s12 = peg$parse_();
                                     // @ts-ignore
-                                    s13 = peg$parseSEMICOLON();
+                                    s13 = peg$currPos;
                                     // @ts-ignore
-                                    if (s13 !== peg$FAILED) {
+                                    s14 = peg$parseCOLON();
+                                    // @ts-ignore
+                                    if (s14 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        s15 = peg$parse_();
+                                        // @ts-ignore
+                                        s16 = peg$parseType();
+                                        // @ts-ignore
+                                        if (s16 !== peg$FAILED) {
+                                            // @ts-ignore
+                                            s14 = [s14, s15, s16];
+                                            // @ts-ignore
+                                            s13 = s14;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            peg$currPos = s13;
+                                            // @ts-ignore
+                                            s13 = peg$FAILED;
+                                        }
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        peg$currPos = s13;
+                                        // @ts-ignore
+                                        s13 = peg$FAILED;
+                                    }
+                                    // @ts-ignore
+                                    if (s13 === peg$FAILED) {
+                                        // @ts-ignore
+                                        s13 = null;
+                                    }
+                                    // @ts-ignore
+                                    s14 = peg$parse_();
+                                    // @ts-ignore
+                                    s15 = peg$parseSEMICOLON();
+                                    // @ts-ignore
+                                    if (s15 !== peg$FAILED) {
                                         // @ts-ignore
                                         peg$savedPos = s0;
                                         // @ts-ignore
-                                        s0 = peg$f24(s1, s3, s9);
+                                        s0 = peg$f24(s1, s3, s9, s13);
                                         // @ts-ignore
                                     }
                                     else {

@@ -8,6 +8,7 @@ import {Keywords} from "../../../../types/keywords";
 import {Scope} from "../../../static/scope/scope";
 import {Symbol} from "../../../static/symbol/symbol";
 import {FieldSymbol} from "../../../static/symbol/fieldSymbol";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type InterfaceFieldDeclarationType = {
     type: Keywords.InterfaceFieldDeclaration,
@@ -52,6 +53,7 @@ export class InterfaceFieldDeclarationHandler extends Handler {
             return null;
         }
         symbol.accessibility = this.value.access;
+        symbol.typePlaceholder = TypePlaceholder.create(this.value.targetType, this);
         return symbol;
     }
 }

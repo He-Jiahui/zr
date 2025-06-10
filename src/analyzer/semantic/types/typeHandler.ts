@@ -23,6 +23,10 @@ export class TypeHandler extends Handler {
     private subTypeHandler: TNullable<Handler> = null;
     private _typeReference: TNullable<TypeReference> = null;
 
+    public get typeReference() {
+        return this._typeReference;
+    }
+
     protected get _children() {
         return [
             this.nameHandler
@@ -69,6 +73,10 @@ export class TypeHandler extends Handler {
                     new ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                     return null;
                 }
+                // no symbol found, we guess it is a predefined type
+                if (!foundSymbol) {
+                    createdContext = TypeInferContext.createPredefinedTypeContext(identifierName);
+                }
             }
                 break;
             case Keywords.Generic: {
@@ -97,6 +105,11 @@ export class TypeHandler extends Handler {
                     // TODO: 错误处理
                     new ZrInternalError(`symbol ${identifierName} is not generic`, this.context).report();
                     return null;
+                }
+
+                // no symbol found, we guess it is a predefined type
+                if (!foundSymbol) {
+                    createdContext = TypeInferContext.createPredefinedTypeContext(identifierName);
                 }
                 // we will handle generic type on assign step
             }

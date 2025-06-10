@@ -30,7 +30,7 @@ export class ZrSemanticAnalyzer {
 
         // create symbol and scope
         this.topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult: TNullable<SymbolDeclaration>) => {
-                return handler.createSymbolAndScope(upperResult?.childScope ?? null) ?? null;
+                return handler.createSymbolAndScope(upperResult?.childScope ?? upperResult?.ownerScope ?? null) ?? null;
             },
             (handler, lowerResult: Array<SymbolDeclaration>, selfTopDownResult: TNullable<SymbolDeclaration>) => {
                 return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;

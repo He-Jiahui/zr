@@ -4,6 +4,7 @@ import type {Handler} from "../analyzer/semantic/common/handler";
 import {TMaybeUndefined, TNullable} from "../analyzer/utils/zrCompilerTypes";
 import type {Symbol as SymbolDeclaration} from "../analyzer/static/symbol/symbol";
 import type {TypeDefinition} from "../analyzer/static/type/typeDefinition";
+import {AllGrammarType} from "../analyzer/semantic/types";
 
 export class ScriptContextAccessibleObject<T extends (ScriptContext | TMaybeUndefined<ScriptContext>)> {
     private static readonly objectScriptContextMap: Map<any, ScriptContext> = new Map();
@@ -64,6 +65,7 @@ export class ScriptContext {
 
     private readonly _handlerStack: Handler[] = [];
 
+    private readonly _valueHandlerMap: Map<AllGrammarType, Handler> = new Map<AllGrammarType, Handler>();
     private readonly _symbolHandlerMap: Map<SymbolDeclaration, Handler> = new Map<SymbolDeclaration, Handler>();
 
     private readonly _typeSymbolMap: Map<TypeDefinition<ScriptContext>, SymbolDeclaration> = new Map();
@@ -83,6 +85,10 @@ export class ScriptContext {
         return this._handlerStack.pop();
     }
 
+    public linkValueAndHandler(value: AllGrammarType, handler: Handler) {
+        this._valueHandlerMap.set(value, handler);
+    }
+
     public linkSymbolAndHandler(symbol: SymbolDeclaration, handler: Handler) {
         this._symbolHandlerMap.set(symbol, handler);
     }
@@ -90,6 +96,10 @@ export class ScriptContext {
     public linkTypeAndSymbol(type: TypeDefinition<ScriptContext>, symbol: SymbolDeclaration) {
         this._typeSymbolMap.set(type, symbol);
         this._symbolTypeMap.set(symbol, type);
+    }
+
+    public getHandlerFromValue(value: AllGrammarType): TNullable<Handler> {
+        return this._valueHandlerMap.get(value) ?? null;
     }
 
     public getHandlerFromSymbol(symbol: SymbolDeclaration): TNullable<Handler> {

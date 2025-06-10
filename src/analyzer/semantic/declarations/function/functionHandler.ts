@@ -16,6 +16,7 @@ import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {Keywords} from "../../../../types/keywords";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type FunctionType = {
     type: Keywords.Function,
@@ -109,6 +110,7 @@ export class FunctionHandler extends Handler {
         }
         symbol.accessibility = Access.PUBLIC;
         symbol.isStatic = true;
+        symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
 

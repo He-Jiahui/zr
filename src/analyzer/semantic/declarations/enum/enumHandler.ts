@@ -10,6 +10,7 @@ import {Symbol, Symbol as SymbolDeclaration} from "../../../static/symbol/symbol
 import {Scope} from "../../../static/scope/scope";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 import {Keywords} from "../../../../types/keywords";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type EnumType = {
     type: Keywords.Enum,
@@ -58,7 +59,12 @@ export class EnumDeclarationHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const enumName = this.value.name.name;
-        return this.declareSymbol<EnumSymbol>(enumName, Keywords.Enum, parentScope);
+        const symbol = this.declareSymbol<EnumSymbol>(enumName, Keywords.Enum, parentScope);
+        if (symbol) {
+            symbol.baseType = TypePlaceholder.create(this.value.baseType, this);
+        }
+
+        return symbol;
     }
 
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {

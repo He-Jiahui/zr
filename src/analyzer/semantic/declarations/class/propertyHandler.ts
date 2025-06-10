@@ -15,6 +15,7 @@ import {Scope} from "../../../static/scope/scope";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {PropertyScope} from "../../../static/scope/propertyScope";
 import {Keywords, SpecialSymbols} from "../../../../types/keywords";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type ClassPropertyType = {
     type: Keywords.ClassProperty;
@@ -124,8 +125,14 @@ export class PropertyHandler extends Handler {
             if (functionScope) {
                 functionScope.addParameter(parameterSymbol);
             }
+            symbol.returnType = TypePlaceholder.create(this.value.targetType, this);
+            if (parameterSymbol) {
+                parameterSymbol.typePlaceholder = symbol.returnType;
+            }
         } else {
             // TODO: add return type for getter
+            symbol.returnType = TypePlaceholder.create(this.value.targetType, this);
+            functionSymbol.returnType = symbol.returnType;
         }
         return symbol;
     }

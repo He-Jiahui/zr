@@ -1,14 +1,14 @@
 import {Access} from "../../../types/access";
-import type {TypeReference} from "../type/typeReference";
 import {Symbol} from "./symbol";
 import {Keywords} from "../../../types/keywords";
+import {TypePlaceholder} from "../type/typePlaceholder";
 
 export class FunctionSymbol extends Symbol {
     public readonly type: string = Keywords.Function;
 
     public accessibility: Access;
     // 
-    public returnType: TypeReference;
+    public returnType: TypePlaceholder;
     // 
     public readonly overloads: FunctionSymbol[] = [];
     // 

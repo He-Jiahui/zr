@@ -10,6 +10,7 @@ import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
 import {Keywords} from "../../../../types/keywords";
 import type {ExpressionType} from "../../expressions/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type VariableType = {
     type: Keywords.VariableDeclaration,
@@ -57,8 +58,13 @@ export class VariableHandler extends Handler {
         };
         const collect = () => {
             switch (this.value.pattern.type) {
-                case Keywords.Identifier:
-                    return getDeclaration(this.value.pattern);
+                case Keywords.Identifier: {
+                    const symbol = getDeclaration(this.value.pattern);
+                    if (symbol) {
+                        symbol.typePlaceholder = TypePlaceholder.create(this.value.typeInfo, this);
+                    }
+                    return symbol;
+                }
                 case Keywords.DestructuringArray: {
                     return this.value.pattern.keys.map(key => {
                         return getDeclaration(key);

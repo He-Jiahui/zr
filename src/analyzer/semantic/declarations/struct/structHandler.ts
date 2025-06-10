@@ -15,6 +15,8 @@ import type {MetaSymbol} from "../../../static/symbol/metaSymbol";
 import {Keywords} from "../../../../types/keywords";
 import type {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import type {GenericDeclarationType} from "../../types/genericDeclarationHandler";
+import type {AllType} from "../../types/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type StructType = {
     type: Keywords.Struct;
@@ -22,14 +24,16 @@ export type StructType = {
     generic: GenericDeclarationType;
     fields: StructFieldType[];
     methods: StructMethodType[];
+    inherits: AllType[];
     metaFunctions: StructMetaFunctionType[];
 }
 
 export class StructDeclarationHandler extends Handler {
     public value: StructType;
-    public readonly membersHandler: Handler[] = [];
+    private readonly membersHandler: Handler[] = [];
     private genericHandler: TNullable<Handler> = null;
     private nameHandler: TNullable<Handler> = null;
+    private readonly inheritsHandler: Handler[] = [];
 
 
     protected get _children() {
@@ -53,6 +57,10 @@ export class StructDeclarationHandler extends Handler {
         } else {
             this.genericHandler = null;
         }
+        this.inheritsHandler.length = 0;
+        for (const inherit of node.inherits) {
+            this.inheritsHandler.push(Handler.handle(inherit, this.context));
+        }
         for (const member of members) {
             const handler = Handler.handle(member, this.context);
             this.membersHandler.push(handler);
@@ -75,10 +83,12 @@ export class StructDeclarationHandler extends Handler {
                     break;
             }
         }
+
         this.value = {
             type: Keywords.Struct,
             name: this.nameHandler?.value,
             generic: this.genericHandler?.value,
+            inherits: this.inheritsHandler.map(handler => handler.value),
             fields,
             methods,
             metaFunctions
@@ -88,6 +98,12 @@ export class StructDeclarationHandler extends Handler {
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
         const structName: string = this.value.name.name;
         const symbol = this.declareSymbol<StructSymbol>(structName, Keywords.Struct, parentScope);
+        if (symbol) {
+            symbol.inheritsFrom.length = 0;
+            for (const inherit of this.value.inherits) {
+                symbol.inheritsFrom.push(TypePlaceholder.create(inherit, this));
+            }
+        }
         return symbol;
     }
 

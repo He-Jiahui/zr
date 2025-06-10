@@ -16,6 +16,7 @@ import {FunctionScope} from "../../../static/scope/functionScope";
 import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type StructMethodType = {
     type: Keywords.StructMethod;
@@ -111,6 +112,7 @@ export class MethodHandler extends Handler {
         }
         symbol.isStatic = this.value.static;
         symbol.accessibility = this.value.access;
+        symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
 

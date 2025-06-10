@@ -23,6 +23,8 @@ import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {Keywords} from "../../../../types/keywords";
 import {MetaSymbol} from "../../../static/symbol/metaSymbol";
 import {InterfaceMetaSignatureType} from "./metaFunctionHandler";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
+import {AllType} from "../../types/types";
 
 export type InterfaceType = {
     type: Keywords.Interface,
@@ -31,7 +33,7 @@ export type InterfaceType = {
     methods: InterfaceMethodSignatureType[],
     properties: InterfacePropertySignatureType[],
     fields: InterfaceFieldDeclarationType[],
-    inherits: IdentifierType[],
+    inherits: AllType[],
     generic: GenericDeclarationType,
 }
 
@@ -114,7 +116,14 @@ export class InterfaceDeclarationHandler extends Handler {
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const interfaceName = this.value.name.name;
-        return this.declareSymbol<InterfaceSymbol>(interfaceName, Keywords.Interface, parentScope);
+        const symbol = this.declareSymbol<InterfaceSymbol>(interfaceName, Keywords.Interface, parentScope);
+        if (symbol) {
+            symbol.inheritsFrom.length = 0;
+            for (const inherit of this.value.inherits) {
+                symbol.inheritsFrom.push(TypePlaceholder.create(inherit, this));
+            }
+        }
+        return symbol;
     }
 
     protected _collectDeclarations(childrenSymbols: Array<SymbolDeclaration>, currentScope: TNullable<Scope>) {

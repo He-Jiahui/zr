@@ -18,11 +18,13 @@ import {FunctionSymbol} from "../../../static/symbol/functionSymbol";
 import {MetaSymbol} from "../../../static/symbol/metaSymbol";
 import {PropertySymbol} from "../../../static/symbol/propertySymbol";
 import {Keywords} from "../../../../types/keywords";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
+import type {AllType} from "../../types/types";
 
 export type ClassType = {
     type: Keywords.Class;
     name: IdentifierType;
-    inherits: IdentifierType[];
+    inherits: AllType[];
     decorators: DecoratorExpressionType[];
     generic: GenericDeclarationType;
     fields: ClassFieldType[];
@@ -120,6 +122,15 @@ export class ClassDeclarationHandler extends Handler {
         const className: string = this.value.name.name;
         const symbol = this.declareSymbol<ClassSymbol>(className, Keywords.Class, parentScope);
         // we can not decide super class
+        if (symbol) {
+            symbol.inheritFrom.length = 0;
+            // add inherits
+            for (const inherit of this.value.inherits) {
+                // process each inherit
+                symbol.inheritFrom.push(TypePlaceholder.create(inherit, this));
+            }
+        }
+
         return symbol;
     }
 
@@ -128,6 +139,7 @@ export class ClassDeclarationHandler extends Handler {
             return null;
         }
         const scope = currentScope as ClassScope;
+
         for (const child of childrenSymbols) {
             switch (child.type) {
                 case Keywords.Generic: {

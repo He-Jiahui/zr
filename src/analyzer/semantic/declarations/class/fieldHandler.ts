@@ -10,6 +10,7 @@ import {TNullable} from "../../../utils/zrCompilerTypes";
 import {Scope} from "../../../static/scope/scope";
 import {Keywords} from "../../../../types/keywords";
 import type {ExpressionType} from "../../expressions/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type ClassFieldType = {
     type: Keywords.ClassField;
@@ -78,6 +79,7 @@ export class FieldHandler extends Handler {
         }
         symbol.accessibility = this.value.access;
         symbol.isStatic = this.value.static;
+        symbol.typePlaceholder = TypePlaceholder.create(this.value.typeInfo, this);
         return symbol;
     }
 }

@@ -13,6 +13,8 @@ import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
 import {Keywords, SpecialSigns} from "../../../../types/keywords";
 import type {ExpressionType} from "../../expressions/types";
+import type {AllType} from "../../types/types";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type ClassMetaFunctionType = {
     type: Keywords.ClassMetaFunction;
@@ -22,7 +24,8 @@ export type ClassMetaFunctionType = {
     parameters: ParameterType[],
     args: ParameterType,
     super: ExpressionType[],
-    body: BlockType
+    body: BlockType,
+    returnType: AllType
 };
 
 export class MetaFunctionHandler extends Handler {
@@ -33,6 +36,7 @@ export class MetaFunctionHandler extends Handler {
     private argsHandler: TNullable<Handler> = null;
     private bodyHandler: TNullable<Handler> = null;
     private readonly superHandlers: Handler[] = [];
+    private returnTypeHandler: TNullable<Handler> = null;
 
     protected get _children() {
         return [
@@ -79,6 +83,12 @@ export class MetaFunctionHandler extends Handler {
             this.bodyHandler = null;
         }
 
+        if (node.returnType) {
+            this.returnTypeHandler = Handler.handle(node.returnType, this.context);
+        } else {
+            this.returnTypeHandler = null;
+        }
+
         this.value = {
             type: Keywords.ClassMetaFunction,
             access: node.access as Access,
@@ -87,7 +97,8 @@ export class MetaFunctionHandler extends Handler {
             super: this.superHandlers.map(handler => handler?.value),
             parameters: this.parameterHandlers.map(handler => handler?.value),
             args: this.argsHandler?.value,
-            body: this.bodyHandler?.value
+            body: this.bodyHandler?.value,
+            returnType: this.returnTypeHandler?.value
         };
     }
 
@@ -99,6 +110,7 @@ export class MetaFunctionHandler extends Handler {
             symbol.metaType = metaType;
             symbol.accessibility = this.value.access;
             symbol.isStatic = this.value.static;
+            symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         }
 
 

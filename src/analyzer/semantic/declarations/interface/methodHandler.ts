@@ -14,6 +14,7 @@ import {FunctionScope} from "../../../static/scope/functionScope";
 import {GenericSymbol} from "../../../static/symbol/genericSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {BlockSymbol} from "../../../static/symbol/blockSymbol";
+import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 
 export type InterfaceMethodSignatureType = {
     type: Keywords.InterfaceMethodSignature,
@@ -87,6 +88,7 @@ export class InterfaceMethodSignatureHandler extends Handler {
             return null;
         }
         symbol.accessibility = this.value.access;
+        symbol.returnType = TypePlaceholder.create(this.value.returnType, this);
         return symbol;
     }
 

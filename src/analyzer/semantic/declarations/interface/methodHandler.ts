@@ -39,7 +39,7 @@ export class InterfaceMethodSignatureHandler extends Handler {
             ...this.parameterHandlers,
             this.argsHandler,
             this.genericHandler,
-            this.returnTypeHandler,
+            this.returnTypeHandler
         ];
     }
 
@@ -76,7 +76,7 @@ export class InterfaceMethodSignatureHandler extends Handler {
             returnType: this.returnTypeHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
             args: this.argsHandler?.value,
-            generic: this.genericHandler?.value,
+            generic: this.genericHandler?.value
         };
     }
 

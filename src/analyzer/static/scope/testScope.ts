@@ -31,4 +31,4 @@ export class TestScope extends Scope {
     }
 }
 
-Scope.registerScope(Keywords.Test, TestScope)
+Scope.registerScope(Keywords.Test, TestScope);

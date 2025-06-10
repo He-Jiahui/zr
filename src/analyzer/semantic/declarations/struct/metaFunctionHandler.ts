@@ -74,7 +74,7 @@ export class MetaFunctionHandler extends Handler {
             meta: this.metaHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
             args: this.argsHandler?.value,
-            body: this.bodyHandler?.value,
+            body: this.bodyHandler?.value
         };
     }
 

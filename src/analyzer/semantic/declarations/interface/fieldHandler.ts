@@ -41,7 +41,7 @@ export class InterfaceFieldDeclarationHandler extends Handler {
             type: Keywords.InterfaceFieldDeclaration,
             name: this.nameHandler?.value,
             access: access as Access,
-            targetType: this.targetTypeHandler?.value,
+            targetType: this.targetTypeHandler?.value
         };
     }
 

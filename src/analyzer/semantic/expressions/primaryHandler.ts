@@ -39,8 +39,8 @@ export class PrimaryHandler extends Handler {
         this.value = {
             type: Keywords.PrimaryExpression,
             property: this.propertyHandler?.value,
-            members: this.memberHandlers.map(handler => handler?.value),
-        }
+            members: this.memberHandlers.map(handler => handler?.value)
+        };
     }
 }
 

@@ -50,4 +50,4 @@ export class TryScope extends Scope {
     }
 }
 
-Scope.registerScope(Keywords.Try, TryScope)
+Scope.registerScope(Keywords.Try, TryScope);

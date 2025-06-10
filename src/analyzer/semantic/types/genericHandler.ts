@@ -1,5 +1,5 @@
 import {Handler} from "../common/handler";
-import type {AllType} from "./types"
+import type {AllType} from "./types";
 import {GenericType as GenericImplementType} from "../../../parser/generated/parser";
 import {Keywords} from "../../../types/keywords";
 import type {IdentifierType} from "../declarations/identifierHandler";
@@ -34,7 +34,7 @@ export class GenericImplementHandler extends Handler {
         this.value = {
             type: Keywords.Generic,
             name: this.nameHandler?.value,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value),
+            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value)
         };
     }
 }

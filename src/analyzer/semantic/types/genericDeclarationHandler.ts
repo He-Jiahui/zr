@@ -28,7 +28,7 @@ export class GenericDeclarationHandler extends Handler {
         }
         this.value = {
             type: Keywords.GenericDeclaration,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value),
+            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value)
         };
     }
 }

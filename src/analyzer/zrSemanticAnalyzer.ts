@@ -41,7 +41,7 @@ export class ZrSemanticAnalyzer {
             },
             (handler, lowerResult: Array<TypeAssignContext>, selfTopDownResult: TNullable<TypeInferContext>) => {
                 return handler.assignType(lowerResult, selfTopDownResult);
-            })
+            });
         prettyPrintSymbolTables(this.topSymbol);
 
 

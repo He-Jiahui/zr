@@ -15,8 +15,8 @@ export class NullHandler extends Handler {
         // this.value = node.value;
         this.value = {
             type: Keywords.NullLiteral,
-            value: null,
-        }
+            value: null
+        };
     }
 }
 

@@ -30,7 +30,7 @@ export class InterfaceMetaSignatureHandler extends Handler {
         return [
             this.metaHandler,
             ...this.parameterHandlers,
-            this.argsHandler,
+            this.argsHandler
         ];
     }
 
@@ -61,7 +61,7 @@ export class InterfaceMetaSignatureHandler extends Handler {
             access: node.access as Access,
             meta: this.metaHandler?.value,
             parameters: this.parameterHandlers.map(handler => handler?.value),
-            args: this.argsHandler?.value,
+            args: this.argsHandler?.value
         };
     }
 

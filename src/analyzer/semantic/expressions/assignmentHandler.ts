@@ -1,5 +1,5 @@
 import {AssignmentExpression} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import type {ConditionalType} from "./conditionalHandler";
 import {TExpression, TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";

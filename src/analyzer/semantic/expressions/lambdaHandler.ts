@@ -1,7 +1,7 @@
 import {LambdaExpression} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
-import type {BlockType} from "../statements/blockHandler"
-import type {ParameterType} from "../types/parameterHandler"
+import {Handler} from "../common/handler";
+import type {BlockType} from "../statements/blockHandler";
+import type {ParameterType} from "../types/parameterHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Symbol as SymbolDeclaration, Symbol} from "../../static/symbol/symbol";
 import {Scope} from "../../static/scope/scope";
@@ -53,7 +53,7 @@ export class LambdaHandler extends Handler {
             params: this.paramsHandler.map(handler => handler?.value as ParameterType),
             args: this.argsHandler?.value as ParameterType,
             blocks: this.blockHandler?.value
-        }
+        };
     }
 
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {

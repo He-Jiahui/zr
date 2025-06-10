@@ -51,7 +51,7 @@ export class InterfacePropertySignatureHandler extends Handler {
             name: nameHandler?.value,
             access: access as Access,
             typeInfo: this.typeInfoHandler?.value,
-            propertyType: propertyType as PropertyType,
+            propertyType: propertyType as PropertyType
         };
     }
 

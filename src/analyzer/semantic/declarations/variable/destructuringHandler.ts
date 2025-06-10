@@ -1,6 +1,6 @@
 import {DestructuringArrayPattern, DestructuringPattern} from "../../../../parser/generated/parser";
-import {Handler} from "../../common/handler"
-import type {IdentifierType} from "../identifierHandler"
+import {Handler} from "../../common/handler";
+import type {IdentifierType} from "../identifierHandler";
 import {Keywords} from "../../../../types/keywords";
 
 export type DestructuringObjectType = {
@@ -28,7 +28,7 @@ export class DestructuringObjectHandler extends Handler {
         this.value = {
             type: Keywords.DestructuringObject,
             keys: this.keyHandlers.map(handler => handler.value)
-        }
+        };
     }
 }
 
@@ -59,7 +59,7 @@ export class DestructuringArrayHandler extends Handler {
         this.value = {
             type: Keywords.DestructuringArray,
             keys: this.keyHandlers.map(handler => handler.value)
-        }
+        };
     }
 }
 

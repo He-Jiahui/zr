@@ -1,5 +1,5 @@
 import {IDENTIFIER} from "../../../parser/generated/parser";
-import {Handler} from "../common/handler"
+import {Handler} from "../common/handler";
 import {Keywords} from "../../../types/keywords";
 
 export type IdentifierType = {
@@ -16,7 +16,7 @@ export class IdentifierHandler extends Handler {
         this.value = {
             type: Keywords.Identifier,
             name: node.name
-        }
+        };
     }
 
 }

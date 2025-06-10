@@ -112,7 +112,7 @@ export class ClassDeclarationHandler extends Handler {
             fields,
             methods,
             metaFunctions,
-            properties,
+            properties
         };
     }
 

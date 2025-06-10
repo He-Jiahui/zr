@@ -28,8 +28,8 @@ export class ModuleDeclarationHandler extends Handler {
 
         this.value = {
             type: Keywords.ModuleDeclaration,
-            name: this.nameHandler?.value,
-        }
+            name: this.nameHandler?.value
+        };
     }
 }
 

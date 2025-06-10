@@ -66,7 +66,7 @@ export class TryCatchFinallyStatementHandler extends Handler {
             block: this.blockHandler.value,
             catchPattern: this.catchPatternHandlers.map(handler => handler?.value),
             catchBlock: this.catchBlockHandler?.value,
-            finallyBlock: this.finallyBlockHandler?.value,
+            finallyBlock: this.finallyBlockHandler?.value
         };
     }
 

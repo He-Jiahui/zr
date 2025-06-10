@@ -228,7 +228,7 @@ class ClassDeclarationHandler extends handler_1.Handler {
             fields,
             methods,
             metaFunctions,
-            properties,
+            properties
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1148,7 +1148,7 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
             type: keywords_1.Keywords.InterfaceFieldDeclaration,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
             access: access,
-            targetType: (_b = this.targetTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
+            targetType: (_b = this.targetTypeHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1345,7 +1345,7 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         return [
             this.metaHandler,
             ...this.parameterHandlers,
-            this.argsHandler,
+            this.argsHandler
         ];
     }
     _handle(node) {
@@ -1376,7 +1376,7 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
             access: node.access,
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
+            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1438,7 +1438,7 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
             ...this.parameterHandlers,
             this.argsHandler,
             this.genericHandler,
-            this.returnTypeHandler,
+            this.returnTypeHandler
         ];
     }
     _handle(node) {
@@ -1478,7 +1478,7 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
             returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value,
-            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value,
+            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1565,7 +1565,7 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
             name: nameHandler === null || nameHandler === void 0 ? void 0 : nameHandler.value,
             access: access,
             typeInfo: (_a = this.typeInfoHandler) === null || _a === void 0 ? void 0 : _a.value,
-            propertyType: propertyType,
+            propertyType: propertyType
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1830,7 +1830,7 @@ class MetaFunctionHandler extends handler_1.Handler {
             meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
             parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
+            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -3164,7 +3164,7 @@ class PrimaryHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.PrimaryExpression,
             property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
-            members: this.memberHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            members: this.memberHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
@@ -3569,7 +3569,7 @@ class NullHandler extends handler_1.Handler {
         // this.value = node.value;
         this.value = {
             type: keywords_1.Keywords.NullLiteral,
-            value: null,
+            value: null
         };
     }
 }
@@ -3645,7 +3645,7 @@ class ModuleDeclarationHandler extends handler_1.Handler {
         this.nameHandler = handler_1.Handler.handle(name, this.context);
         this.value = {
             type: keywords_1.Keywords.ModuleDeclaration,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value
         };
     }
 }
@@ -4082,7 +4082,7 @@ class TryCatchFinallyStatementHandler extends handler_1.Handler {
             block: this.blockHandler.value,
             catchPattern: this.catchPatternHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
             catchBlock: (_a = this.catchBlockHandler) === null || _a === void 0 ? void 0 : _a.value,
-            finallyBlock: (_b = this.finallyBlockHandler) === null || _b === void 0 ? void 0 : _b.value,
+            finallyBlock: (_b = this.finallyBlockHandler) === null || _b === void 0 ? void 0 : _b.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -4242,7 +4242,7 @@ class GenericDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.GenericDeclaration,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }
@@ -4287,7 +4287,7 @@ class GenericImplementHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.Generic,
             name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
+            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
         };
     }
 }

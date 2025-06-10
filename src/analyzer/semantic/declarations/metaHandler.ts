@@ -1,6 +1,6 @@
 import {MetaIdentifier} from "../../../parser/generated/parser";
 import {Handler} from "../common/handler";
-import type {IdentifierType} from "./identifierHandler"
+import type {IdentifierType} from "./identifierHandler";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {Keywords} from "../../../types/keywords";
 
@@ -24,7 +24,7 @@ export class MetaHandler extends Handler {
         this.value = {
             type: Keywords.Meta,
             name: this.nameHandler?.value
-        }
+        };
     }
 }
 

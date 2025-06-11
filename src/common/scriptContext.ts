@@ -67,6 +67,7 @@ export class ScriptContext {
 
     private readonly _valueHandlerMap: Map<AllGrammarType, Handler> = new Map<AllGrammarType, Handler>();
     private readonly _symbolHandlerMap: Map<SymbolDeclaration, Handler> = new Map<SymbolDeclaration, Handler>();
+    private readonly _handlerSymbolMap: Map<Handler, SymbolDeclaration> = new Map<Handler, SymbolDeclaration>();
 
     private readonly _typeSymbolMap: Map<TypeDefinition<ScriptContext>, SymbolDeclaration> = new Map();
     private readonly _symbolTypeMap: Map<SymbolDeclaration, TypeDefinition<ScriptContext>> = new Map();
@@ -91,6 +92,7 @@ export class ScriptContext {
 
     public linkSymbolAndHandler(symbol: SymbolDeclaration, handler: Handler) {
         this._symbolHandlerMap.set(symbol, handler);
+        this._handlerSymbolMap.set(handler, symbol);
     }
 
     public linkTypeAndSymbol(type: TypeDefinition<ScriptContext>, symbol: SymbolDeclaration) {
@@ -104,6 +106,10 @@ export class ScriptContext {
 
     public getHandlerFromSymbol(symbol: SymbolDeclaration): TNullable<Handler> {
         return this._symbolHandlerMap.get(symbol) ?? null;
+    }
+
+    public getSymbolFromHandler(handler: Handler): TNullable<SymbolDeclaration> {
+        return this._handlerSymbolMap.get(handler.value) ?? null;
     }
 
     public getTypeFromSymbol(symbol: SymbolDeclaration): TNullable<TypeDefinition<ScriptContext>> {

@@ -5,7 +5,7 @@ import {ScriptContext} from "../common/scriptContext";
 import {Handler} from "./semantic/common/handler";
 
 import {ZrHandlerDispatcher} from "./utils/zrHandlerDispatcher";
-import {TNullable} from "./utils/zrCompilerTypes";
+import {TMaybeArray, TNullable} from "./utils/zrCompilerTypes";
 import {Symbol as SymbolDeclaration} from "./static/symbol/symbol";
 import {prettyPrintSymbolTables} from "../utils/prettyPrint";
 import type {TypeInferContext} from "./static/type/typeInferContext";
@@ -36,12 +36,21 @@ export class ZrSemanticAnalyzer {
                 return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;
             }) as SymbolDeclaration;
 
-        this.handlerDispatcher.runTaskAround((handler, upperResult: TNullable<TypeInferContext>) => {
+        const typeInferResult = this.handlerDispatcher.runTaskAround((handler, upperResult: TNullable<TypeInferContext>) => {
                 return handler.inferType(upperResult);
             },
-            (handler, lowerResult: Array<TypeAssignContext>, selfTopDownResult: TNullable<TypeInferContext>) => {
-                return handler.assignType(lowerResult, selfTopDownResult);
+            (handler, lowerResult: Array<TypeInferContext>, selfTopDownResult: TNullable<TypeInferContext>) => {
+                return handler.inferTypeBack(lowerResult, selfTopDownResult);
             });
+
+        const typeAssignResult = this.handlerDispatcher.runTaskBottomUp<TypeAssignContext>((handler, lowerResult: TNullable<TMaybeArray<TypeAssignContext>>) => {
+            if (lowerResult instanceof Array) {
+                return handler.assignType(lowerResult);
+            } else if (lowerResult) {
+                return handler.assignType([lowerResult]);
+            }
+            return handler.assignType([]);
+        });
         prettyPrintSymbolTables(this.topSymbol);
 
 

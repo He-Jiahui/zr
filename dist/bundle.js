@@ -19,6 +19,9 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(context) {
         super(context);
     }
+    get symbol() {
+        return this.context.getSymbolFromHandler(this);
+    }
     get children() {
         return this._children.filter(child => child !== null).map(child => child);
     }
@@ -55,12 +58,14 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     inferType(upperTypeInferContext) {
         return this._inferType(upperTypeInferContext);
     }
-    assignType(childrenContexts, currentInferContext) {
-        return this._assignType(childrenContexts, currentInferContext);
+    inferTypeBack(childrenContexts, currentInferContext) {
+        return this._inferTypeBack(childrenContexts, currentInferContext);
+    }
+    assignType(childrenContexts) {
+        return this._assignType(childrenContexts);
     }
     declareSymbol(symbolName, symbolType, parentScope) {
         const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
-        this._symbol = createdSymbol;
         const createdScope = scope_1.Scope.createScope(symbolType, parentScope, createdSymbol);
         if (createdSymbol) {
             createdSymbol.childScope = createdScope;
@@ -98,7 +103,10 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     _inferType(upperTypeInferContext) {
         return null;
     }
-    _assignType(childrenContexts, currentInferContext) {
+    _inferTypeBack(childrenContexts, currentInferContext) {
+        return null;
+    }
+    _assignType(childrenContexts) {
         return null;
     }
     _handleInternal(node) {
@@ -145,6 +153,9 @@ exports.ClassDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
+const classMetaType_1 = __webpack_require__(/*! ../../../static/type/meta/classMetaType */ "./src/analyzer/static/type/meta/classMetaType.ts");
+const interfaceMetaType_1 = __webpack_require__(/*! ../../../static/type/meta/interfaceMetaType */ "./src/analyzer/static/type/meta/interfaceMetaType.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class ClassDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -239,11 +250,11 @@ class ClassDeclarationHandler extends handler_1.Handler {
         const symbol = this.declareSymbol(className, keywords_1.Keywords.Class, parentScope);
         // we can not decide super class
         if (symbol) {
-            symbol.inheritFrom.length = 0;
+            symbol.inheritsFrom.length = 0;
             // add inherits
             for (const inherit of this.value.inherits) {
                 // process each inherit
-                symbol.inheritFrom.push(typePlaceholder_1.TypePlaceholder.create(inherit, this));
+                symbol.inheritsFrom.push(typePlaceholder_1.TypePlaceholder.create(inherit, this));
             }
         }
         return symbol;
@@ -283,6 +294,37 @@ class ClassDeclarationHandler extends handler_1.Handler {
             }
         }
         return currentScope.ownerSymbol;
+    }
+    _inferTypeBack(childrenContexts, currentInferContext) {
+        const symbol = this.symbol;
+        if (!symbol) {
+            return null;
+        }
+        let baseClass = null;
+        const interfaces = symbol.interfaces;
+        interfaces.length = 0;
+        for (const inherit of symbol.inheritsFrom) {
+            const reference = inherit.toTypeReference;
+            if (!reference) {
+                new zrInternalError_1.ZrInternalError(`Can not resolve inherit type ${inherit}`, this.context).report();
+                continue;
+            }
+            if (reference.targetType instanceof classMetaType_1.ClassMetaType) {
+                // todo
+                if (baseClass) {
+                    new zrInternalError_1.ZrInternalError(`Class ${symbol.name} can not inherit from multiple classes`, this.context).report();
+                    continue;
+                }
+                baseClass = reference.targetType;
+            }
+            if (reference.targetType instanceof interfaceMetaType_1.InterfaceMetaType) {
+                interfaces.push(reference.targetType);
+            }
+            // todo
+            new zrInternalError_1.ZrInternalError(`Class ${symbol.name} can not inherit from ${reference.targetType.name}`, this.context).report();
+        }
+        symbol.baseClass = baseClass;
+        return null;
     }
 }
 exports.ClassDeclarationHandler = ClassDeclarationHandler;
@@ -1237,6 +1279,8 @@ exports.InterfaceDeclarationHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
+const interfaceMetaType_1 = __webpack_require__(/*! ../../../static/type/meta/interfaceMetaType */ "./src/analyzer/static/type/meta/interfaceMetaType.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class InterfaceDeclarationHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1364,6 +1408,27 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
             }
         }
         return scope.ownerSymbol;
+    }
+    _inferTypeBack(childrenContexts, currentInferContext) {
+        const symbol = this.symbol;
+        if (!symbol) {
+            return null;
+        }
+        const interfaces = symbol.interfaces;
+        interfaces.length = 0;
+        for (const inherit of symbol.inheritsFrom) {
+            const reference = inherit.toTypeReference;
+            if (!reference) {
+                new zrInternalError_1.ZrInternalError(`Can not resolve inherit type ${inherit}`, this.context).report();
+                continue;
+            }
+            if (reference.targetType instanceof interfaceMetaType_1.InterfaceMetaType) {
+                interfaces.push(reference.targetType);
+            }
+            // todo
+            new zrInternalError_1.ZrInternalError(`Interface ${symbol.name} can not inherit from ${reference.targetType.name}`, this.context).report();
+        }
+        return null;
     }
 }
 exports.InterfaceDeclarationHandler = InterfaceDeclarationHandler;
@@ -3541,6 +3606,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BooleanHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class BooleanHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3548,6 +3617,12 @@ class BooleanHandler extends handler_1.Handler {
             type: keywords_1.Keywords.BooleanLiteral,
             value: node.value
         };
+    }
+    _inferType(upperTypeInferContext) {
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Boolean);
+    }
+    _assignType(childrenContexts) {
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Boolean)), this);
     }
 }
 exports.BooleanHandler = BooleanHandler;
@@ -3567,6 +3642,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CharHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class CharHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3574,6 +3653,12 @@ class CharHandler extends handler_1.Handler {
             type: keywords_1.Keywords.CharLiteral,
             value: node.value
         };
+    }
+    _inferType(upperTypeInferContext) {
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Char);
+    }
+    _assignType(childrenContexts) {
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Char)), this);
     }
 }
 exports.CharHandler = CharHandler;
@@ -3593,6 +3678,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FloatHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class FloatHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3600,6 +3689,14 @@ class FloatHandler extends handler_1.Handler {
             type: keywords_1.Keywords.FloatLiteral,
             value: node.value
         };
+    }
+    _inferType(upperTypeInferContext) {
+        // todo maybe float64
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Float);
+    }
+    _assignType(childrenContexts) {
+        // todo maybe float64
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Float)), this);
     }
 }
 exports.FloatHandler = FloatHandler;
@@ -3638,6 +3735,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IntegerHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class IntegerHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3645,6 +3746,14 @@ class IntegerHandler extends handler_1.Handler {
             type: keywords_1.Keywords.IntegerLiteral,
             value: node.value
         };
+    }
+    _inferType(upperTypeInferContext) {
+        // todo maybe another int
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Integer);
+    }
+    _assignType(childrenContexts) {
+        // todo maybe another int
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Integer)), this);
     }
 }
 exports.IntegerHandler = IntegerHandler;
@@ -3664,6 +3773,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NullHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class NullHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3672,6 +3785,14 @@ class NullHandler extends handler_1.Handler {
             type: keywords_1.Keywords.NullLiteral,
             value: null
         };
+    }
+    _inferType(upperTypeInferContext) {
+        // todo maybe another int
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Null);
+    }
+    _assignType(childrenContexts) {
+        // todo maybe another int
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Null)), this);
     }
 }
 exports.NullHandler = NullHandler;
@@ -3691,6 +3812,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StringHandler = void 0;
 const handler_1 = __webpack_require__(/*! ../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
+const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
+const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
 class StringHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
@@ -3698,6 +3823,14 @@ class StringHandler extends handler_1.Handler {
             type: keywords_1.Keywords.StringLiteral,
             value: node.value
         };
+    }
+    _inferType(upperTypeInferContext) {
+        // todo maybe another int
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.String);
+    }
+    _assignType(childrenContexts) {
+        // todo maybe another int
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.String)), this);
     }
 }
 exports.StringHandler = StringHandler;
@@ -4593,6 +4726,7 @@ class TypeHandler extends handler_1.Handler {
                     }
                     if (!foundSymbol && inTypeChain) {
                         // TODO: 错误处理
+                        // 需要忽略import的符号(类型为object)
                         new zrInternalError_1.ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                         return null;
                     }
@@ -4620,6 +4754,7 @@ class TypeHandler extends handler_1.Handler {
                     }
                     if (!foundSymbol && inTypeChain) {
                         // TODO: 错误处理
+                        // 需要忽略import的符号(类型为object)
                         new zrInternalError_1.ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                         return null;
                     }
@@ -5481,9 +5616,28 @@ class ClassSymbol extends symbol_1.Symbol {
     constructor() {
         super(...arguments);
         this.type = keywords_1.Keywords.Class;
-        this.inheritFrom = [];
+        this.inheritsFrom = [];
+        this.baseClass = null;
         this.interfaces = [];
         this.decorators = [];
+    }
+    isSubClassOf(inheritSymbol) {
+        if (inheritSymbol === this) {
+            return true;
+        }
+        if (this.baseClass) {
+            if (this.baseClass.relatedSymbol.isSubClassOf(inheritSymbol)) {
+                return true;
+            }
+        }
+        if (inheritSymbol.type === keywords_1.Keywords.Interface) {
+            for (const $interface of this.interfaces) {
+                if ($interface.relatedSymbol.isSubClassOf(inheritSymbol)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 exports.ClassSymbol = ClassSymbol;
@@ -5640,6 +5794,17 @@ class InterfaceSymbol extends symbol_1.Symbol {
         this.interfaces = [];
         this.inheritsFrom = [];
         this.decorators = [];
+    }
+    isSubClassOf(inheritSymbol) {
+        if (inheritSymbol === this) {
+            return true;
+        }
+        for (const $interface of this.interfaces) {
+            if ($interface.relatedSymbol.isSubClassOf(inheritSymbol)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 exports.InterfaceSymbol = InterfaceSymbol;
@@ -6471,6 +6636,7 @@ class ObjectType extends predefinedType_1.PredefinedType {
 }
 exports.ObjectType = ObjectType;
 predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Object, new ObjectType());
+predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.Any, new ObjectType());
 
 
 /***/ }),
@@ -6533,12 +6699,77 @@ predefinedType_1.PredefinedType.registerType(keywords_1.TypeKeywords.String, new
 /*!*******************************************************!*\
   !*** ./src/analyzer/static/type/typeAssignContext.ts ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TypeAssignContext = void 0;
-class TypeAssignContext {
+const typeReference_1 = __webpack_require__(/*! ./typeReference */ "./src/analyzer/static/type/typeReference.ts");
+const scriptContext_1 = __webpack_require__(/*! ../../../common/scriptContext */ "./src/common/scriptContext.ts");
+const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const predefinedType_1 = __webpack_require__(/*! ./predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const classMetaType_1 = __webpack_require__(/*! ./meta/classMetaType */ "./src/analyzer/static/type/meta/classMetaType.ts");
+const interfaceMetaType_1 = __webpack_require__(/*! ./meta/interfaceMetaType */ "./src/analyzer/static/type/meta/interfaceMetaType.ts");
+class TypeAssignContext extends scriptContext_1.ScriptContextAccessibleObject {
+    constructor() {
+        super(...arguments);
+        this.typeReference = null;
+        this.leftContext = null;
+        this.rightContext = null;
+    }
+    static create(originalReference, handler) {
+        const context = handler.context;
+        const assignContext = new TypeAssignContext(context);
+        assignContext.typeReference = originalReference;
+        assignContext.byHandler = handler;
+        return assignContext;
+    }
+    static mergeType(left, right, handler) {
+        var _a, _b;
+        const context = handler.context;
+        if ((!left || !left.typeReference) && (!right || !right.typeReference)) {
+            return TypeAssignContext.create(null, handler);
+        }
+        if (!left || !left.typeReference) {
+            const assignContext = TypeAssignContext.create((_a = right === null || right === void 0 ? void 0 : right.typeReference) !== null && _a !== void 0 ? _a : null, handler);
+            assignContext.leftContext = left;
+            assignContext.rightContext = right;
+            return assignContext;
+        }
+        if (!right || !right.typeReference) {
+            const assignContext = TypeAssignContext.create((_b = left === null || left === void 0 ? void 0 : left.typeReference) !== null && _b !== void 0 ? _b : null, handler);
+            assignContext.leftContext = left;
+            assignContext.rightContext = right;
+            return assignContext;
+        }
+        const lType = left.typeReference.targetType;
+        const rType = right.typeReference.targetType;
+        // two types are same
+        if (lType === rType) {
+            const assignContext = TypeAssignContext.create(left.typeReference, handler);
+            assignContext.leftContext = left;
+            assignContext.rightContext = right;
+            return assignContext;
+        }
+        // base class conversion
+        if ((lType instanceof classMetaType_1.ClassMetaType || lType instanceof interfaceMetaType_1.InterfaceMetaType) && (rType instanceof classMetaType_1.ClassMetaType || lType instanceof interfaceMetaType_1.InterfaceMetaType)) {
+            const lTypeCI = lType;
+            const rTypeCI = rType;
+            if (lTypeCI.relatedSymbol.isSubClassOf(rTypeCI.relatedSymbol)) {
+                return TypeAssignContext.create(typeReference_1.TypeReference.createReference(rType), handler);
+            }
+            else if (rTypeCI.relatedSymbol.isSubClassOf(lTypeCI.relatedSymbol)) {
+                return TypeAssignContext.create(typeReference_1.TypeReference.createReference(lType), handler);
+            }
+            // as object
+            return TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Object)), handler);
+        }
+        //
+        // basic type conversion
+        // todo
+        // if we cannot convert, return null
+        return TypeAssignContext.create(null, handler);
+    }
 }
 exports.TypeAssignContext = TypeAssignContext;
 
@@ -6798,10 +7029,19 @@ class ZrSemanticAnalyzer {
             var _a, _b;
             return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
         });
-        this.handlerDispatcher.runTaskAround((handler, upperResult) => {
+        const typeInferResult = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
             return handler.inferType(upperResult);
         }, (handler, lowerResult, selfTopDownResult) => {
-            return handler.assignType(lowerResult, selfTopDownResult);
+            return handler.inferTypeBack(lowerResult, selfTopDownResult);
+        });
+        const typeAssignResult = this.handlerDispatcher.runTaskBottomUp((handler, lowerResult) => {
+            if (lowerResult instanceof Array) {
+                return handler.assignType(lowerResult);
+            }
+            else if (lowerResult) {
+                return handler.assignType([lowerResult]);
+            }
+            return handler.assignType([]);
         });
         (0, prettyPrint_1.prettyPrintSymbolTables)(this.topSymbol);
     }
@@ -6859,6 +7099,7 @@ class ScriptContext {
         this._handlerStack = [];
         this._valueHandlerMap = new Map();
         this._symbolHandlerMap = new Map();
+        this._handlerSymbolMap = new Map();
         this._typeSymbolMap = new Map();
         this._symbolTypeMap = new Map();
         this.compilingDirectory = info.compilingDirectory;
@@ -6876,6 +7117,7 @@ class ScriptContext {
     }
     linkSymbolAndHandler(symbol, handler) {
         this._symbolHandlerMap.set(symbol, handler);
+        this._handlerSymbolMap.set(handler, symbol);
     }
     linkTypeAndSymbol(type, symbol) {
         this._typeSymbolMap.set(type, symbol);
@@ -6888,6 +7130,10 @@ class ScriptContext {
     getHandlerFromSymbol(symbol) {
         var _a;
         return (_a = this._symbolHandlerMap.get(symbol)) !== null && _a !== void 0 ? _a : null;
+    }
+    getSymbolFromHandler(handler) {
+        var _a;
+        return (_a = this._handlerSymbolMap.get(handler.value)) !== null && _a !== void 0 ? _a : null;
     }
     getTypeFromSymbol(symbol) {
         var _a;
@@ -21873,6 +22119,7 @@ var TypeKeywords;
     TypeKeywords["UInt32"] = "uint32";
     TypeKeywords["UInt64"] = "uint64";
     TypeKeywords["Void"] = "void";
+    TypeKeywords["Any"] = "any";
 })(TypeKeywords || (exports.TypeKeywords = TypeKeywords = {}));
 var SpecialSymbols;
 (function (SpecialSymbols) {

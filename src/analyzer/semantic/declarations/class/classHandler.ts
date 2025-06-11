@@ -20,6 +20,10 @@ import {PropertySymbol} from "../../../static/symbol/propertySymbol";
 import {Keywords} from "../../../../types/keywords";
 import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 import type {AllType} from "../../types/types";
+import {TypeInferContext} from "../../../static/type/typeInferContext";
+import {ClassMetaType} from "../../../static/type/meta/classMetaType";
+import {InterfaceMetaType} from "../../../static/type/meta/interfaceMetaType";
+import {ZrInternalError} from "../../../../errors/zrInternalError";
 
 export type ClassType = {
     type: Keywords.Class;
@@ -123,11 +127,11 @@ export class ClassDeclarationHandler extends Handler {
         const symbol = this.declareSymbol<ClassSymbol>(className, Keywords.Class, parentScope);
         // we can not decide super class
         if (symbol) {
-            symbol.inheritFrom.length = 0;
+            symbol.inheritsFrom.length = 0;
             // add inherits
             for (const inherit of this.value.inherits) {
                 // process each inherit
-                symbol.inheritFrom.push(TypePlaceholder.create(inherit, this));
+                symbol.inheritsFrom.push(TypePlaceholder.create(inherit, this));
             }
         }
 
@@ -166,6 +170,40 @@ export class ClassDeclarationHandler extends Handler {
         }
         return currentScope.ownerSymbol;
 
+    }
+
+    protected _inferTypeBack(childrenContexts: TypeInferContext[], currentInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        const symbol = this.symbol as ClassSymbol;
+        if (!symbol) {
+            return null;
+        }
+
+        let baseClass: TNullable<ClassMetaType> = null;
+        const interfaces: InterfaceMetaType[] = symbol.interfaces;
+        interfaces.length = 0;
+        for (const inherit of symbol.inheritsFrom) {
+            const reference = inherit.toTypeReference;
+            if (!reference) {
+                new ZrInternalError(`Can not resolve inherit type ${inherit}`, this.context).report();
+                continue;
+            }
+            if (reference.targetType instanceof ClassMetaType) {
+                // todo
+                if (baseClass) {
+                    new ZrInternalError(`Class ${symbol.name} can not inherit from multiple classes`, this.context).report();
+                    continue;
+                }
+                baseClass = reference.targetType;
+            }
+
+            if (reference.targetType instanceof InterfaceMetaType) {
+                interfaces.push(reference.targetType);
+            }
+            // todo
+            new ZrInternalError(`Class ${symbol.name} can not inherit from ${reference.targetType.name}`, this.context).report();
+        }
+        symbol.baseClass = baseClass;
+        return null;
     }
 }
 

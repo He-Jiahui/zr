@@ -15,3 +15,5 @@ export class ObjectType extends PredefinedType {
 }
 
 PredefinedType.registerType(TypeKeywords.Object, new ObjectType());
+
+PredefinedType.registerType(TypeKeywords.Any, new ObjectType());

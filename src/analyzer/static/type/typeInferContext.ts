@@ -25,6 +25,7 @@ export class TypeInferContext {
         return context;
     }
 
+
     public generateDotType(symbolType: TNullable<MetaType<any>>) {
         this.upperType = symbolType ? TypeReference.createReference(symbolType, this.upperType) : null;
     }

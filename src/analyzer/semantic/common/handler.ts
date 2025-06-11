@@ -3,7 +3,7 @@ import {NoHandlerError} from "../../../errors/noHandlerError";
 import {FileRange} from "../../../parser/generated/parser";
 import {Scope} from "../../static/scope/scope";
 import {Symbol as SymbolDeclaration, SymbolOrSymbolArray, TSymbolOrSymbolArray} from "../../static/symbol/symbol";
-import {TNullable, TSemanticType} from "../../utils/zrCompilerTypes";
+import {TMaybeArray, TNullable, TSemanticType} from "../../utils/zrCompilerTypes";
 import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeAssignContext} from "../../static/type/typeAssignContext";
 import {TypeDefinition} from "../../static/type/typeDefinition";
@@ -18,11 +18,14 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     private static readonly handlers: Map<string, typeof Handler> = new Map();
     public value: TSemanticType<any>;
     public location: FileRange;
-    protected _symbol: TNullable<SymbolDeclaration>;
     protected _currentScope: TNullable<Scope>;
 
     public constructor(context: ScriptContext) {
         super(context);
+    }
+
+    public get symbol() {
+        return this.context.getSymbolFromHandler(this);
     }
 
     public get children(): Array<Handler> {
@@ -69,13 +72,16 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return this._inferType(upperTypeInferContext);
     }
 
-    public assignType(childrenContexts: Array<TypeAssignContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeAssignContext> {
-        return this._assignType(childrenContexts, currentInferContext);
+    public inferTypeBack(childrenContexts: Array<TypeInferContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        return this._inferTypeBack(childrenContexts, currentInferContext);
+    }
+
+    public assignType(childrenContexts: Array<TypeAssignContext>): TNullable<TMaybeArray<TypeAssignContext>> {
+        return this._assignType(childrenContexts);
     }
 
     protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
         const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
-        this._symbol = createdSymbol;
         const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
         if (createdSymbol) {
             createdSymbol.childScope = createdScope;
@@ -121,7 +127,11 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return null;
     }
 
-    protected _assignType(childrenContexts: Array<TypeAssignContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeAssignContext> {
+    protected _inferTypeBack(childrenContexts: Array<TypeInferContext>, currentInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        return null;
+    }
+
+    protected _assignType(childrenContexts: Array<TypeAssignContext>): TNullable<TMaybeArray<TypeAssignContext>> {
         return null;
     }
 

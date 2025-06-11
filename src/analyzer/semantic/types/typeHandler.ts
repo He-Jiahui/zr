@@ -70,6 +70,7 @@ export class TypeHandler extends Handler {
                 }
                 if (!foundSymbol && inTypeChain) {
                     // TODO: 错误处理
+                    // 需要忽略import的符号(类型为object)
                     new ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                     return null;
                 }
@@ -97,6 +98,7 @@ export class TypeHandler extends Handler {
 
                 if (!foundSymbol && inTypeChain) {
                     // TODO: 错误处理
+                    // 需要忽略import的符号(类型为object)
                     new ZrInternalError(`symbol ${identifierName} not found`, this.context).report();
                     return null;
                 }

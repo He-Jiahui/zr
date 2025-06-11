@@ -25,6 +25,9 @@ import {MetaSymbol} from "../../../static/symbol/metaSymbol";
 import {InterfaceMetaSignatureType} from "./metaFunctionHandler";
 import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 import {AllType} from "../../types/types";
+import {TypeInferContext} from "../../../static/type/typeInferContext";
+import {InterfaceMetaType} from "../../../static/type/meta/interfaceMetaType";
+import {ZrInternalError} from "../../../../errors/zrInternalError";
 
 export type InterfaceType = {
     type: Keywords.Interface,
@@ -158,6 +161,29 @@ export class InterfaceDeclarationHandler extends Handler {
         }
 
         return scope.ownerSymbol;
+    }
+
+    protected _inferTypeBack(childrenContexts: TypeInferContext[], currentInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        const symbol = this.symbol as InterfaceSymbol;
+        if (!symbol) {
+            return null;
+        }
+
+        const interfaces: InterfaceMetaType[] = symbol.interfaces;
+        interfaces.length = 0;
+        for (const inherit of symbol.inheritsFrom) {
+            const reference = inherit.toTypeReference;
+            if (!reference) {
+                new ZrInternalError(`Can not resolve inherit type ${inherit}`, this.context).report();
+                continue;
+            }
+            if (reference.targetType instanceof InterfaceMetaType) {
+                interfaces.push(reference.targetType);
+            }
+            // todo
+            new ZrInternalError(`Interface ${symbol.name} can not inherit from ${reference.targetType.name}`, this.context).report();
+        }
+        return null;
     }
 }
 

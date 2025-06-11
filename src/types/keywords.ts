@@ -186,6 +186,8 @@ export const enum TypeKeywords {
 
     Void = "void",
 
+    Any = "any",
+
 }
 
 export const enum SpecialSymbols {

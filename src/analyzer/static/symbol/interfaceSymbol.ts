@@ -10,12 +10,23 @@ export class InterfaceSymbol extends Symbol {
 
     public generatedType: InterfaceMetaType;
     public childScope: TNullable<InterfaceScope>;
-    public interfaces: InterfaceSymbol[] = [];
+    public readonly interfaces: InterfaceMetaType[] = [];
 
     public readonly inheritsFrom: TypePlaceholder[] = [];
 
     public readonly decorators: any[] = [];
 
+    public isSubClassOf(inheritSymbol: InterfaceSymbol) {
+        if (inheritSymbol === this) {
+            return true;
+        }
+        for (const $interface of this.interfaces) {
+            if ($interface.relatedSymbol.isSubClassOf(inheritSymbol)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 Symbol.registerSymbol(Keywords.Interface, InterfaceSymbol);

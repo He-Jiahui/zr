@@ -1026,6 +1026,9 @@ THROW = "throw"
 TRY = "try"
 CATCH = "catch"
 FINALLY = "finally"
+INFINITY = "Infinity"
+NEG_INFINITY = "NegativeInfinity"
+NAN = "NaN"
 
 // 符号
 PARAMS = "..."
@@ -1065,6 +1068,8 @@ PERCENT = "%"
 AMPERSAND_AMPERSAND = "&&"
 PIPE_PIPE = "||"
 RIGHT_ARROW = "=>"
+
+
 // 字面量
 Literal
   = BOOLEAN
@@ -1087,6 +1092,7 @@ DECIMAL = [1-9][0-9]* {
   return {
     type: "Integer",
     value: parseInt(text(), 10),
+    literal: text(),
     location: location()
   }
 }
@@ -1094,6 +1100,7 @@ HEXADECIMAL = "0x"[0-9a-fA-F]+ {
   return {
     type: "Integer",
     value: parseInt(text(), 16),
+    literal: text(),
     location: location()
   }
 }
@@ -1101,22 +1108,57 @@ OCTAL = "0"[0-7]* {
   return {
     type: "Integer",
     value: parseInt(text(), 8),
+    literal: text(),
     location: location()
   }
 }
-CHAR = "'" ch:(!["\n\r"] .) "'"{
+
+// 转义序列规则
+EscapeSequence
+  = "\\" seq:(
+      "n" { return "\n"; }
+    / "t" { return "\t"; }
+    / "r" { return "\r"; }
+    / "b" { return "\b"; }
+    / "f" { return "\f"; }
+    / "\"" { return "\""; }
+    / "'" { return "'"; }
+    / "\\" { return "\\"; }
+    / "u" hex:([0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F]) { return String.fromCharCode(parseInt(hex.join(''), 16)); }
+    / "x" hex:([0-9a-fA-F] [0-9a-fA-F]) { return String.fromCharCode(parseInt(hex.join(''), 16)); }
+    / . { return { error: true, value: text() }; }
+  ) {
+    return seq;
+  }
+
+CHAR = "'" ch:(EscapeSequence / [\x20-\x7E]) "'"{
+  if (typeof ch === "object" && ch.error) {
+    return {
+      type: "Char",
+      value: ch.value,
+      hasError: true,
+      literal: text(),
+      location: location()
+    };
+  }
   return {
-    type:"Char",
-    value:ch? ch[1]: '',
+    type: "Char",
+    value: ch,
+    hasError: false,
     location: location()
-  }
+  };
 }
-STRING = "\"" str:(!["\n\r"] .)* "\"" {
-  return{ 
+STRING = "\"" str:(EscapeSequence / !["\n\r"] .)* "\"" {
+  const hasError = str.some(v => typeof v === "object" && v.error);
+  return {
     type: "String",
-    value: str? str.map(v=>v[1]).join('') : '',
+    value: str
+      ? str.map(v => (typeof v === "object" && v.error ? v.value : (v instanceof Array? v[1] : v))).join("")
+      : "",
+    hasError,
+    literal: text(),
     location: location()
-  }
+  };
 }
 VALUENULL = "null" {
   return {
@@ -1124,13 +1166,47 @@ VALUENULL = "null" {
     location: location()
   }
 }
-FLOAT = ([0-9]+"."[0-9]* / "."[0-9]+)([eE][+-]?[0-9]+)? {
-  return {
-    type:"Float",
-    value:parseFloat(text()),
-    location: location()
-  };
-}
+FLOAT =
+  INFINITY {
+    return {
+      type: "Float",
+      value: Number.POSITIVE_INFINITY,
+      literal: text(),
+      isSingle: true,
+      location: location()
+    }
+  }
+  /
+  NEG_INFINITY {
+    return {
+      type: "Float",
+      value: Number.NEGATIVE_INFINITY,
+      literal: text(),
+      isSingle: true,
+      location: location()
+    }
+  }
+  /
+  NAN {
+    return {
+      type: "Float",
+      value: Number.NaN,
+      literal: text(),
+      isSingle: true,
+      location: location()
+    }
+  }
+  /
+  ([0-9]+"."[0-9]* / "."[0-9]+)([eE][+-]?[0-9]+)?[fFdD]? {
+    let isSingle = text().endsWith("f") || text().endsWith("F");
+    return {
+      type:"Float",
+      value: parseFloat(text()),
+      literal: text(),
+      isSingle,
+      location: location()
+    };
+  }
 
 // 注释与空白
 Comment = LineComment / BlockComment

@@ -3,13 +3,25 @@ module "simple";
 // 也可以写作 module "sample";
 // 可以在任意地方引入和使用模块
 // import是普通函数 不应特殊处理
-var math = import("math");
+var math = import("math\ntest\xff");
 var math1 = import('1');
 var math2 = import(1.0);
 var math3 = import(0xff);
 var math4 = import(0777);
 var math5 = import(123);
-var result = 1 + (5 - 1) * 4; 
+var result = 1 + (5 - 1) * 4;
+
+var myInt = 0xFFFFFFFFFFFFFFFF;
+var myFloat = 1.0f;
+var myDouble = 1.0d;
+var inf = Infinity;
+var nan = NaN;
+var ninf = NegativeInfinity;
+
+var ret = '\n';
+var xxx = '\x21';
+var zzz = '\'';
+var zzy = '\"';
 
 // 也可以以这样的方式引入
 var {matrix, pi, e, ln} = import("math");

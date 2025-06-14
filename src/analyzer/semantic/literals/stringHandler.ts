@@ -6,10 +6,12 @@ import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeAssignContext} from "../../static/type/typeAssignContext";
 import {TypeReference} from "../../static/type/typeReference";
 import {PredefinedType} from "../../static/type/predefined/predefinedType";
+import {ZrInternalError} from "../../../errors/zrInternalError";
 
 export type StringType = {
     type: Keywords.StringLiteral,
     value: string,
+    hasError: boolean
 }
 
 export class StringHandler extends Handler {
@@ -17,9 +19,15 @@ export class StringHandler extends Handler {
 
     public _handle(node: STRING) {
         super._handle(node);
+        let strValue = node.value;
+        if (node.hasError) {
+            strValue = "";
+            new ZrInternalError(`String literal error: ${node.literal}`, this.context).report();
+        }
         this.value = {
             type: Keywords.StringLiteral,
-            value: node.value
+            value: strValue,
+            hasError: node.hasError
         };
     }
 

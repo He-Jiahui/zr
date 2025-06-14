@@ -50,7 +50,7 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     }
     collectDeclarations(childrenSymbols, currentScope) {
         this.context.pushHandler(this);
-        this._currentScope = currentScope !== null && currentScope !== void 0 ? currentScope : this._currentScope;
+        this._currentScope = currentScope ?? this._currentScope;
         const declarationSymbols = this._collectDeclarations(childrenSymbols, currentScope);
         this.context.popHandler();
         return declarationSymbols;
@@ -174,7 +174,6 @@ class ClassDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         const members = node.members;
         this.membersHandler.length = 0;
@@ -206,7 +205,7 @@ class ClassDeclarationHandler extends handler_1.Handler {
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler === null || handler === void 0 ? void 0 : handler.value;
+            const value = handler?.value;
             if (!value) {
                 continue;
             }
@@ -235,10 +234,10 @@ class ClassDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Class,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            inherits: this.inheritsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            decorators: this.decoratorsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value,
+            name: this.nameHandler?.value,
+            inherits: this.inheritsHandler.map(handler => handler?.value),
+            decorators: this.decoratorsHandler.map(handler => handler?.value),
+            generic: this.genericHandler?.value,
             fields,
             methods,
             metaFunctions,
@@ -362,7 +361,6 @@ class FieldHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         if (node.typeInfo) {
             const typeInfoHandler = handler_1.Handler.handle(node.typeInfo, this.context);
@@ -390,10 +388,10 @@ class FieldHandler extends handler_1.Handler {
             type: keywords_1.Keywords.ClassField,
             access: node.access,
             static: !!node.static,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
-            init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value,
-            decorators: this.decoratorsHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            name: this.nameHandler?.value,
+            typeInfo: this.typeInfoHandler?.value,
+            init: this.initHandler?.value,
+            decorators: this.decoratorsHandlers.map(handler => handler?.value)
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -463,7 +461,6 @@ class MetaFunctionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -509,12 +506,12 @@ class MetaFunctionHandler extends handler_1.Handler {
             type: keywords_1.Keywords.ClassMetaFunction,
             access: node.access,
             static: !!node.static,
-            meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
-            super: this.superHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
-            returnType: (_d = this.returnTypeHandler) === null || _d === void 0 ? void 0 : _d.value
+            meta: this.metaHandler?.value,
+            super: this.superHandlers.map(handler => handler?.value),
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            body: this.bodyHandler?.value,
+            returnType: this.returnTypeHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -592,7 +589,6 @@ class MethodHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d, _e;
         super._handle(node);
         const access = node.access;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
@@ -637,13 +633,13 @@ class MethodHandler extends handler_1.Handler {
             type: keywords_1.Keywords.ClassMethod,
             access: access,
             static: !!node.static,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value,
-            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value,
-            decorators: this.decoratorHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
+            name: this.nameHandler?.value,
+            returnType: this.returnTypeHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            generic: this.genericHandler?.value,
+            decorators: this.decoratorHandlers.map(handler => handler?.value),
+            body: this.bodyHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -722,7 +718,6 @@ class PropertyHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d;
         super._handle(node);
         const access = node.access;
         const modifier = node.modifier;
@@ -759,12 +754,12 @@ class PropertyHandler extends handler_1.Handler {
             type: keywords_1.Keywords.ClassProperty,
             access: access,
             static: !!node.static,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            param: (_b = this.paramHandler) === null || _b === void 0 ? void 0 : _b.value,
+            name: this.nameHandler?.value,
+            param: this.paramHandler?.value,
             propertyType: kind,
-            targetType: (_c = this.targetTypeHandler) === null || _c === void 0 ? void 0 : _c.value,
-            decorators: this.decoratorHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            body: (_d = this.bodyHandler) === null || _d === void 0 ? void 0 : _d.value
+            targetType: this.targetTypeHandler?.value,
+            decorators: this.decoratorHandlers.map(handler => handler?.value),
+            body: this.bodyHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -878,7 +873,6 @@ class EnumDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
@@ -897,9 +891,9 @@ class EnumDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Enum,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            members: this.membersHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            baseType: (_b = this.baseTypeHandler) === null || _b === void 0 ? void 0 : _b.value
+            name: this.nameHandler?.value,
+            members: this.membersHandler.map(handler => handler?.value),
+            baseType: this.baseTypeHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -965,7 +959,6 @@ class EnumMemberHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
@@ -977,8 +970,8 @@ class EnumMemberHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.EnumMember,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value
+            name: this.nameHandler?.value,
+            value: this.valueHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1032,7 +1025,6 @@ class FunctionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d, _e;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         if (node.generic) {
@@ -1077,13 +1069,13 @@ class FunctionHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Function,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value,
-            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value,
-            decorators: this.decoratorHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
+            name: this.nameHandler?.value,
+            returnType: this.returnTypeHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            generic: this.genericHandler?.value,
+            decorators: this.decoratorHandlers.map(handler => handler?.value),
+            body: this.bodyHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1216,7 +1208,6 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         const access = node.access;
@@ -1228,9 +1219,9 @@ class InterfaceFieldDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.InterfaceFieldDeclaration,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            name: this.nameHandler?.value,
             access: access,
-            targetType: (_b = this.targetTypeHandler) === null || _b === void 0 ? void 0 : _b.value
+            targetType: this.targetTypeHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1299,7 +1290,6 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         const members = node.members;
@@ -1324,7 +1314,7 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler === null || handler === void 0 ? void 0 : handler.value;
+            const value = handler?.value;
             if (!value) {
                 continue;
             }
@@ -1353,13 +1343,13 @@ class InterfaceDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Interface,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            name: this.nameHandler?.value,
             metas,
             fields,
             methods,
             properties,
-            inherits: this.inheritsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value
+            inherits: this.inheritsHandler.map(handler => handler?.value),
+            generic: this.genericHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1465,7 +1455,6 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -1496,10 +1485,10 @@ class InterfaceMetaSignatureHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.InterfaceMetaSignature,
             access: node.access,
-            meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
-            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value
+            meta: this.metaHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            returnType: this.returnTypeHandler?.value,
+            args: this.argsHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1567,7 +1556,6 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d;
         super._handle(node);
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
@@ -1598,12 +1586,12 @@ class InterfaceMethodSignatureHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.InterfaceMethodSignature,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
+            name: this.nameHandler?.value,
             access: access,
-            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value,
-            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value
+            returnType: this.returnTypeHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            generic: this.genericHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1675,7 +1663,6 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         const name = node.name;
         const nameHandler = handler_1.Handler.handle(name, this.context);
@@ -1689,9 +1676,9 @@ class InterfacePropertySignatureHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.InterfacePropertySignature,
-            name: nameHandler === null || nameHandler === void 0 ? void 0 : nameHandler.value,
+            name: nameHandler?.value,
             access: access,
-            typeInfo: (_a = this.typeInfoHandler) === null || _a === void 0 ? void 0 : _a.value,
+            typeInfo: this.typeInfoHandler?.value,
             propertyType: propertyType
         };
     }
@@ -1800,11 +1787,10 @@ class MetaHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         this.value = {
             type: keywords_1.Keywords.Meta,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value
+            name: this.nameHandler?.value
         };
     }
 }
@@ -1841,7 +1827,6 @@ class FieldHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         if (node.typeInfo) {
@@ -1862,9 +1847,9 @@ class FieldHandler extends handler_1.Handler {
             type: keywords_1.Keywords.StructField,
             access: node.access,
             static: !!node.static,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
-            init: (_c = this.initHandler) === null || _c === void 0 ? void 0 : _c.value
+            name: this.nameHandler?.value,
+            typeInfo: this.typeInfoHandler?.value,
+            init: this.initHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -1931,7 +1916,6 @@ class MetaFunctionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d;
         super._handle(node);
         if (node.meta) {
             const metaHandler = handler_1.Handler.handle(node.meta, this.context);
@@ -1970,11 +1954,11 @@ class MetaFunctionHandler extends handler_1.Handler {
             type: keywords_1.Keywords.StructMetaFunction,
             access: node.access,
             static: !!node.static,
-            meta: (_a = this.metaHandler) === null || _a === void 0 ? void 0 : _a.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value,
-            returnType: (_d = this.returnTypeHandler) === null || _d === void 0 ? void 0 : _d.value
+            meta: this.metaHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            body: this.bodyHandler?.value,
+            returnType: this.returnTypeHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -2052,7 +2036,6 @@ class MethodHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c, _d, _e;
         super._handle(node);
         const access = node.access;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
@@ -2097,13 +2080,13 @@ class MethodHandler extends handler_1.Handler {
             type: keywords_1.Keywords.StructMethod,
             access: access,
             static: !!node.static,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            returnType: (_b = this.returnTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_c = this.argsHandler) === null || _c === void 0 ? void 0 : _c.value,
-            generic: (_d = this.genericHandler) === null || _d === void 0 ? void 0 : _d.value,
-            decorators: this.decoratorHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            body: (_e = this.bodyHandler) === null || _e === void 0 ? void 0 : _e.value
+            name: this.nameHandler?.value,
+            returnType: this.returnTypeHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            generic: this.genericHandler?.value,
+            decorators: this.decoratorHandlers.map(handler => handler?.value),
+            body: this.bodyHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -2177,7 +2160,6 @@ class StructDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         const members = node.members;
@@ -2198,7 +2180,7 @@ class StructDeclarationHandler extends handler_1.Handler {
         for (const member of members) {
             const handler = handler_1.Handler.handle(member, this.context);
             this.membersHandler.push(handler);
-            const value = handler === null || handler === void 0 ? void 0 : handler.value;
+            const value = handler?.value;
             if (!value) {
                 continue;
             }
@@ -2222,8 +2204,8 @@ class StructDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Struct,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            generic: (_b = this.genericHandler) === null || _b === void 0 ? void 0 : _b.value,
+            name: this.nameHandler?.value,
+            generic: this.genericHandler?.value,
             inherits: this.inheritsHandler.map(handler => handler.value),
             fields,
             methods,
@@ -2320,7 +2302,6 @@ class TestHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         const parameters = node.params;
@@ -2346,10 +2327,10 @@ class TestHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Test,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            parameters: this.parameterHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_b = this.argsHandler) === null || _b === void 0 ? void 0 : _b.value,
-            body: (_c = this.bodyHandler) === null || _c === void 0 ? void 0 : _c.value
+            name: this.nameHandler?.value,
+            parameters: this.parameterHandlers.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            body: this.bodyHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -2503,7 +2484,6 @@ class VariableHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         this.patternHandler = handler_1.Handler.handle(node.pattern, this.context);
         this.valueHandler = handler_1.Handler.handle(node.value, this.context);
         if (node.typeInfo) {
@@ -2514,9 +2494,9 @@ class VariableHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.VariableDeclaration,
-            pattern: (_a = this.patternHandler) === null || _a === void 0 ? void 0 : _a.value,
-            value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value,
-            typeInfo: (_c = this.typeHandler) === null || _c === void 0 ? void 0 : _c.value
+            pattern: this.patternHandler?.value,
+            value: this.valueHandler?.value,
+            typeInfo: this.typeHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -2605,7 +2585,7 @@ class ArrayLiteralHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.ArrayLiteralExpression,
-            elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            elements: this.elementsHandler.map(handler => handler?.value)
         };
     }
 }
@@ -2639,14 +2619,13 @@ class AssignmentHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
             type: keywords_1.Keywords.AssignmentExpression,
-            left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
-            right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }
@@ -2681,14 +2660,13 @@ class BinaryHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
             type: keywords_1.Keywords.BinaryExpression,
-            left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
-            right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }
@@ -2725,16 +2703,15 @@ class ConditionalHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         this.conditionHandler = handler_1.Handler.handle(node.test, this.context);
         this.consequentHandler = handler_1.Handler.handle(node.consequent, this.context);
         this.alternateHandler = handler_1.Handler.handle(node.alternate, this.context);
         this.value = {
             type: keywords_1.Keywords.ConditionalExpression,
-            condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
-            consequent: (_b = this.consequentHandler) === null || _b === void 0 ? void 0 : _b.value,
-            alternate: (_c = this.alternateHandler) === null || _c === void 0 ? void 0 : _c.value
+            condition: this.conditionHandler?.value,
+            consequent: this.consequentHandler?.value,
+            alternate: this.alternateHandler?.value
         };
     }
 }
@@ -2766,12 +2743,11 @@ class DecoratorExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
         this.value = {
             type: keywords_1.Keywords.DecoratorExpression,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -2809,7 +2785,6 @@ class ForLoopExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         if (node.init !== ";") {
             this.initHandler = handler_1.Handler.handle(node.init, this.context);
@@ -2833,9 +2808,9 @@ class ForLoopExpressionHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.ForLoopExpression,
             isStatement: node.isStatement,
-            init: (_a = this.initHandler) === null || _a === void 0 ? void 0 : _a.value,
-            condition: (_b = this.conditionHandler) === null || _b === void 0 ? void 0 : _b.value,
-            step: (_c = this.stepHandler) === null || _c === void 0 ? void 0 : _c.value,
+            init: this.initHandler?.value,
+            condition: this.conditionHandler?.value,
+            step: this.stepHandler?.value,
             block: this.blockHandler.value
         };
     }
@@ -2859,7 +2834,6 @@ class ForeachLoopExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.patternHandler = handler_1.Handler.handle(node.pattern, this.context);
         if (node.typeInfo) {
@@ -2871,7 +2845,7 @@ class ForeachLoopExpressionHandler extends handler_1.Handler {
             type: keywords_1.Keywords.ForeachLoopExpression,
             isStatement: node.isStatement,
             pattern: this.patternHandler.value,
-            typeInfo: (_a = this.typeHandler) === null || _a === void 0 ? void 0 : _a.value,
+            typeInfo: this.typeHandler?.value,
             expr: this.exprHandler.value,
             block: this.blockHandler.value
         };
@@ -2915,7 +2889,7 @@ class FunctionCallHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.FunctionCall,
-            args: this.argsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            args: this.argsHandler.map(handler => handler?.value)
         };
     }
 }
@@ -2951,7 +2925,6 @@ class IfExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         this.conditionHandler = handler_1.Handler.handle(node.condition, this.context);
         this.thenHandler = handler_1.Handler.handle(node.then, this.context);
@@ -2964,9 +2937,9 @@ class IfExpressionHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.IfExpression,
             isStatement: node.isStatement,
-            condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
-            then: (_b = this.thenHandler) === null || _b === void 0 ? void 0 : _b.value,
-            else: (_c = this.elseHandler) === null || _c === void 0 ? void 0 : _c.value
+            condition: this.conditionHandler?.value,
+            then: this.thenHandler?.value,
+            else: this.elseHandler?.value
         };
     }
 }
@@ -3034,7 +3007,6 @@ class LambdaHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.paramsHandler.length = 0;
         for (const param of node.params) {
@@ -3050,9 +3022,9 @@ class LambdaHandler extends handler_1.Handler {
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
             type: keywords_1.Keywords.LambdaExpression,
-            params: this.paramsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            args: (_a = this.argsHandler) === null || _a === void 0 ? void 0 : _a.value,
-            blocks: (_b = this.blockHandler) === null || _b === void 0 ? void 0 : _b.value
+            params: this.paramsHandler.map(handler => handler?.value),
+            args: this.argsHandler?.value,
+            blocks: this.blockHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -3114,12 +3086,11 @@ class ValueLiteralHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.valueHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
             type: keywords_1.Keywords.ValueLiteralExpression,
-            value: (_a = this.valueHandler) === null || _a === void 0 ? void 0 : _a.value
+            value: this.valueHandler?.value
         };
     }
 }
@@ -3131,12 +3102,11 @@ class IdentifierLiteralHandler extends handler_1.Handler {
         this.identifierHandler = null;
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.identifierHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
             type: keywords_1.Keywords.IdentifierLiteralExpression,
-            value: (_a = this.identifierHandler) === null || _a === void 0 ? void 0 : _a.value
+            value: this.identifierHandler?.value
         };
     }
 }
@@ -3170,14 +3140,13 @@ class LogicalHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.leftHandler = handler_1.Handler.handle(node.left, this.context);
         this.rightHandler = handler_1.Handler.handle(node.right, this.context);
         this.value = {
             type: keywords_1.Keywords.LogicalExpression,
-            left: (_a = this.leftHandler) === null || _a === void 0 ? void 0 : _a.value,
-            right: (_b = this.rightHandler) === null || _b === void 0 ? void 0 : _b.value,
+            left: this.leftHandler?.value,
+            right: this.rightHandler?.value,
             op: node.op
         };
     }
@@ -3210,7 +3179,6 @@ class MemberAccessHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         const computed = node.computed;
         if (computed) {
@@ -3221,7 +3189,7 @@ class MemberAccessHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.MemberExpression,
-            property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
+            property: this.propertyHandler?.value,
             computed
         };
     }
@@ -3257,7 +3225,7 @@ class ObjectLiteralHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.ObjectLiteralExpression,
-            properties: this.propertiesHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            properties: this.propertiesHandler.map(handler => handler?.value)
         };
     }
 }
@@ -3276,14 +3244,13 @@ class KeyValuePairHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.keyHandler = handler_1.Handler.handle(node.key, this.context);
         this.valueHandler = handler_1.Handler.handle(node.value, this.context);
         this.value = {
             type: keywords_1.Keywords.KeyValuePairExpression,
-            key: (_a = this.keyHandler) === null || _a === void 0 ? void 0 : _a.value,
-            value: (_b = this.valueHandler) === null || _b === void 0 ? void 0 : _b.value
+            key: this.keyHandler?.value,
+            value: this.valueHandler?.value
         };
     }
 }
@@ -3317,7 +3284,6 @@ class PrimaryHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.memberHandlers.length = 0;
         this.propertyHandler = handler_1.Handler.handle(node.property, this.context);
@@ -3329,8 +3295,8 @@ class PrimaryHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.PrimaryExpression,
-            property: (_a = this.propertyHandler) === null || _a === void 0 ? void 0 : _a.value,
-            members: this.memberHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            property: this.propertyHandler?.value,
+            members: this.memberHandlers.map(handler => handler?.value)
         };
     }
 }
@@ -3366,7 +3332,6 @@ class SwitchExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.caseHandlers.length = 0;
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
@@ -3383,9 +3348,9 @@ class SwitchExpressionHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.SwitchExpression,
             isStatement: node.isStatement,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value,
-            cases: this.caseHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            default: (_b = this.defaultHandler) === null || _b === void 0 ? void 0 : _b.value
+            expr: this.exprHandler?.value,
+            cases: this.caseHandlers.map(handler => handler?.value),
+            default: this.defaultHandler?.value
         };
     }
 }
@@ -3416,12 +3381,11 @@ class SwitchDefaultHandler extends handler_1.Handler {
         this.blockHandler = null;
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
             type: keywords_1.Keywords.SwitchDefault,
-            block: (_a = this.blockHandler) === null || _a === void 0 ? void 0 : _a.value
+            block: this.blockHandler?.value
         };
     }
 }
@@ -3478,14 +3442,13 @@ class UnaryHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.operatorHandler = handler_1.Handler.handle(node.op, this.context);
         this.argumentHandler = handler_1.Handler.handle(node.argument, this.context);
         this.value = {
             type: keywords_1.Keywords.UnaryExpression,
-            operator: (_a = this.operatorHandler) === null || _a === void 0 ? void 0 : _a.value,
-            arguments: (_b = this.argumentHandler) === null || _b === void 0 ? void 0 : _b.value
+            operator: this.operatorHandler?.value,
+            arguments: this.argumentHandler?.value
         };
     }
 }
@@ -3517,12 +3480,11 @@ class UnpackLiteralHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.elementHandler = handler_1.Handler.handle(node.element, this.context);
         this.value = {
             type: keywords_1.Keywords.UnpackLiteralExpression,
-            element: (_a = this.elementHandler) === null || _a === void 0 ? void 0 : _a.value
+            element: this.elementHandler?.value
         };
     }
 }
@@ -3556,15 +3518,14 @@ class WhileLoopExpressionHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.conditionHandler = handler_1.Handler.handle(node.cond, this.context);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.value = {
             type: keywords_1.Keywords.WhileLoopExpression,
             isStatement: node.isStatement,
-            condition: (_a = this.conditionHandler) === null || _a === void 0 ? void 0 : _a.value,
-            block: (_b = this.blockHandler) === null || _b === void 0 ? void 0 : _b.value
+            condition: this.conditionHandler?.value,
+            block: this.blockHandler?.value
         };
     }
 }
@@ -3646,12 +3607,19 @@ const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssign
 const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferContext */ "./src/analyzer/static/type/typeInferContext.ts");
 const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
 const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class CharHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
+        let charValue = node.value;
+        if (node.hasError) {
+            charValue = "";
+            new zrInternalError_1.ZrInternalError(`Character literal error: ${node.literal}`, this.context).report();
+        }
         this.value = {
             type: keywords_1.Keywords.CharLiteral,
-            value: node.value
+            value: charValue,
+            hasError: node.hasError
         };
     }
     _inferType(upperTypeInferContext) {
@@ -3685,18 +3653,34 @@ const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/pr
 class FloatHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
+        this.floatType = node.isSingle ? keywords_1.TypeKeywords.Float : keywords_1.TypeKeywords.Double;
         this.value = {
             type: keywords_1.Keywords.FloatLiteral,
-            value: node.value
+            value: node.value,
+            isSingle: node.isSingle,
+            literal: node.literal,
+            buffer: this.toFloatBuffer(node.value, node.isSingle)
         };
     }
     _inferType(upperTypeInferContext) {
         // todo maybe float64
-        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Float);
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(this.floatType);
     }
     _assignType(childrenContexts) {
         // todo maybe float64
-        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Float)), this);
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(this.floatType)), this);
+    }
+    toFloatBuffer(value, isSingle) {
+        const byteLength = isSingle ? 4 : 8;
+        const buffer = new ArrayBuffer(byteLength);
+        const view = new DataView(buffer);
+        if (isSingle) {
+            view.setFloat32(0, value, true); // 小端写入
+        }
+        else {
+            view.setFloat64(0, value, true);
+        }
+        return Buffer.from(buffer);
     }
 }
 exports.FloatHandler = FloatHandler;
@@ -3739,21 +3723,180 @@ const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferCo
 const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
 const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
 const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class IntegerHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
+        const bigIntValue = this.parseBigInt(node.literal);
+        const integerType = this.determineIntegerType(bigIntValue);
+        if (!integerType) {
+            new zrInternalError_1.ZrInternalError(`integerOverflow: ${node.literal} is not a valid safe integer`, this.context).report();
+        }
+        const integerBuffer = this.getIntegerBuffer(bigIntValue, integerType);
+        if (integerType) {
+            if (integerType.isUnsigned) {
+                switch (integerType.bitSize) {
+                    case 8:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.UInt8;
+                        }
+                        break;
+                    case 16:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.UInt16;
+                        }
+                        break;
+                    case 32:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.UInt32;
+                        }
+                        break;
+                    case 64:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.UInt64;
+                        }
+                        break;
+                }
+            }
+            else {
+                switch (integerType.bitSize) {
+                    case 8:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.Int8;
+                        }
+                        break;
+                    case 16:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.Int16;
+                        }
+                        break;
+                    case 32:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.Int32;
+                        }
+                        break;
+                    case 64:
+                        {
+                            this.integerType = keywords_1.TypeKeywords.Int64;
+                        }
+                        break;
+                }
+            }
+        }
+        else {
+            this.integerType = keywords_1.TypeKeywords.UInt64;
+        }
         this.value = {
             type: keywords_1.Keywords.IntegerLiteral,
-            value: node.value
+            value: bigIntValue,
+            literal: node.literal,
+            buffer: integerBuffer,
+            typeInfo: integerType
         };
     }
     _inferType(upperTypeInferContext) {
         // todo maybe another int
-        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Integer);
+        return typeInferContext_1.TypeInferContext.createPredefinedTypeContext(this.integerType);
     }
     _assignType(childrenContexts) {
         // todo maybe another int
-        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(keywords_1.TypeKeywords.Integer)), this);
+        return typeAssignContext_1.TypeAssignContext.create(typeReference_1.TypeReference.createReference(predefinedType_1.PredefinedType.getPredefinedType(this.integerType)), this);
+    }
+    parseBigInt(literal) {
+        let bigIntValue;
+        literal = literal.toLowerCase();
+        if (literal.startsWith("0x")) {
+            bigIntValue = BigInt(literal); // 十六进制直接解析
+        }
+        else if (literal.startsWith("0o")) {
+            bigIntValue = BigInt(literal); // 八进制直接解析
+        }
+        else if (literal.startsWith("0") && literal.length > 1) {
+            // 兼容旧版八进制（0开头）
+            bigIntValue = BigInt("0o" + literal.slice(1)); // 转为标准八进制格式
+        }
+        else {
+            bigIntValue = BigInt(literal); // 十进制
+        }
+        return bigIntValue;
+    }
+    determineIntegerType(num) {
+        const isNegative = num < 0n;
+        // 定义类型范围常量
+        const ranges = {
+            int8: { min: -0x80n, max: 0x7fn },
+            int16: { min: -0x8000n, max: 0x7ffn },
+            int32: { min: -0x80000000n, max: 0x7fffffffn },
+            int64: { min: -0x8000000000000000n, max: 0x7fffffffffffffffn },
+            uint8: { max: 0xffn },
+            uint16: { max: 0xffffn },
+            uint32: { max: 0xffffffffn },
+            uint64: { max: 0xffffffffffffffffn }
+        };
+        // 有符号数值处理
+        if (isNegative) {
+            if (num >= ranges.int8.min && num <= ranges.int8.max) {
+                return { isUnsigned: false, bitSize: 8 };
+            }
+            if (num >= ranges.int16.min && num <= ranges.int16.max) {
+                return { isUnsigned: false, bitSize: 16 };
+            }
+            if (num >= ranges.int32.min && num <= ranges.int32.max) {
+                return { isUnsigned: false, bitSize: 32 };
+            }
+            if (num >= ranges.int64.min && num <= ranges.int64.max) {
+                return { isUnsigned: false, bitSize: 64 };
+            }
+            return null; // 超出int64范围
+        }
+        // 无符号数值处理
+        if (num <= ranges.uint8.max) {
+            return {
+                isUnsigned: num > ranges.int8.max,
+                bitSize: 8
+            };
+        }
+        if (num <= ranges.uint16.max) {
+            return {
+                isUnsigned: num > ranges.int16.max,
+                bitSize: 16
+            };
+        }
+        if (num <= ranges.uint32.max) {
+            return {
+                isUnsigned: num > ranges.int32.max,
+                bitSize: 32
+            };
+        }
+        if (num <= ranges.uint64.max) {
+            return {
+                isUnsigned: num > ranges.int64.max,
+                bitSize: 64
+            };
+        }
+        return null; // 超出uint64范围
+    }
+    getIntegerBuffer(num, typeInfo) {
+        if (!typeInfo)
+            return null; // 超出 int64/uint64 范围
+        const { bitSize } = typeInfo;
+        const byteLength = bitSize / 8;
+        const buffer = Buffer.alloc(byteLength);
+        const isNegative = num < 0n;
+        let value = isNegative ? -num : num;
+        for (let i = 0; i < byteLength; i++) {
+            buffer[i] = Number(value & 0xffn);
+            value >>= 8n;
+        }
+        if (isNegative) {
+            let carry = 1;
+            for (let i = 0; i < byteLength; i++) {
+                const inv = (~buffer[i]) & 0xff;
+                buffer[i] = carry ? inv + 1 : inv;
+                carry = carry & (inv === 0xff ? 1 : 0);
+            }
+        }
+        return buffer;
     }
 }
 exports.IntegerHandler = IntegerHandler;
@@ -3816,12 +3959,19 @@ const typeInferContext_1 = __webpack_require__(/*! ../../static/type/typeInferCo
 const typeAssignContext_1 = __webpack_require__(/*! ../../static/type/typeAssignContext */ "./src/analyzer/static/type/typeAssignContext.ts");
 const typeReference_1 = __webpack_require__(/*! ../../static/type/typeReference */ "./src/analyzer/static/type/typeReference.ts");
 const predefinedType_1 = __webpack_require__(/*! ../../static/type/predefined/predefinedType */ "./src/analyzer/static/type/predefined/predefinedType.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class StringHandler extends handler_1.Handler {
     _handle(node) {
         super._handle(node);
+        let strValue = node.value;
+        if (node.hasError) {
+            strValue = "";
+            new zrInternalError_1.ZrInternalError(`String literal error: ${node.literal}`, this.context).report();
+        }
         this.value = {
             type: keywords_1.Keywords.StringLiteral,
-            value: node.value
+            value: strValue,
+            hasError: node.hasError
         };
     }
     _inferType(upperTypeInferContext) {
@@ -3873,13 +4023,12 @@ class ModuleDeclarationHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
         this.value = {
             type: keywords_1.Keywords.ModuleDeclaration,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value
+            name: this.nameHandler?.value
         };
     }
 }
@@ -3914,7 +4063,6 @@ class ScriptHandler extends handler_1.Handler {
         ];
     }
     _handle(start) {
-        var _a;
         super._handle(start);
         const moduleDeclaration = start.moduleName;
         if (start.moduleName) {
@@ -3930,18 +4078,17 @@ class ScriptHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Script,
-            module: (_a = this.moduleHandler) === null || _a === void 0 ? void 0 : _a.value,
-            statements: this.statementHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            module: this.moduleHandler?.value,
+            statements: this.statementHandlers.map(handler => handler?.value)
         };
     }
     _createSymbolAndScope(parentScope) {
-        var _a;
         let moduleName = "module";
-        const moduleNameContainer = (_a = this.value.module) === null || _a === void 0 ? void 0 : _a.name;
-        if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === keywords_1.Keywords.Identifier) {
+        const moduleNameContainer = this.value.module?.name;
+        if (moduleNameContainer?.type === keywords_1.Keywords.Identifier) {
             moduleName = moduleNameContainer.name;
         }
-        else if ((moduleNameContainer === null || moduleNameContainer === void 0 ? void 0 : moduleNameContainer.type) === keywords_1.Keywords.StringLiteral) {
+        else if (moduleNameContainer?.type === keywords_1.Keywords.StringLiteral) {
             moduleName = moduleNameContainer.value;
         }
         else {
@@ -4041,7 +4188,7 @@ class BlockHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.Block,
             isStatement: node.isStatement,
-            body: this.bodyHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            body: this.bodyHandler.map(handler => handler?.value)
         };
     }
     _signByParentHandler(sign) {
@@ -4095,7 +4242,6 @@ class BreakContinueHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         if (node.expr) {
             this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
@@ -4106,7 +4252,7 @@ class BreakContinueHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.BreakContinueStatement,
             isContinue: !node.isBreak,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -4155,7 +4301,6 @@ class OutHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         if (node.expr) {
             this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
@@ -4165,7 +4310,7 @@ class OutHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.OutStatement,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -4197,7 +4342,6 @@ class ReturnStatementHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         if (node.expr) {
             this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
@@ -4207,7 +4351,7 @@ class ReturnStatementHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.ReturnStatement,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -4239,7 +4383,6 @@ class ThrowHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         if (node.expr) {
             this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
@@ -4249,7 +4392,7 @@ class ThrowHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.ThrowStatement,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -4287,7 +4430,6 @@ class TryCatchFinallyStatementHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.blockHandler = handler_1.Handler.handle(node.block, this.context);
         this.blockHandler.signByParentHandler(keywords_1.SpecialSymbols.Try);
@@ -4314,9 +4456,9 @@ class TryCatchFinallyStatementHandler extends handler_1.Handler {
         this.value = {
             type: keywords_1.Keywords.TryCatchFinallyStatement,
             block: this.blockHandler.value,
-            catchPattern: this.catchPatternHandlers.map(handler => handler === null || handler === void 0 ? void 0 : handler.value),
-            catchBlock: (_a = this.catchBlockHandler) === null || _a === void 0 ? void 0 : _a.value,
-            finallyBlock: (_b = this.finallyBlockHandler) === null || _b === void 0 ? void 0 : _b.value
+            catchPattern: this.catchPatternHandlers.map(handler => handler?.value),
+            catchBlock: this.catchBlockHandler?.value,
+            finallyBlock: this.finallyBlockHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -4390,12 +4532,11 @@ class ExpressionStatementHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         this.exprHandler = handler_1.Handler.handle(node.expr, this.context);
         this.value = {
             type: keywords_1.Keywords.ExpressionStatement,
-            expr: (_a = this.exprHandler) === null || _a === void 0 ? void 0 : _a.value
+            expr: this.exprHandler?.value
         };
     }
 }
@@ -4476,7 +4617,7 @@ class GenericDeclarationHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.GenericDeclaration,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value)
         };
     }
 }
@@ -4509,7 +4650,6 @@ class GenericImplementHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a;
         super._handle(node);
         const typeArguments = node.params;
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
@@ -4520,8 +4660,8 @@ class GenericImplementHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Generic,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            typeArguments: this.typeArgumentsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            name: this.nameHandler?.value,
+            typeArguments: this.typeArgumentsHandler.map(handler => handler?.value)
         };
     }
 }
@@ -4576,7 +4716,6 @@ class ParameterHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b, _c;
         super._handle(node);
         const name = node.name;
         this.nameHandler = handler_1.Handler.handle(name, this.context);
@@ -4595,9 +4734,9 @@ class ParameterHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Parameter,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            typeInfo: (_b = this.typeInfoHandler) === null || _b === void 0 ? void 0 : _b.value,
-            defaultValue: (_c = this.defaultValueHandler) === null || _c === void 0 ? void 0 : _c.value
+            name: this.nameHandler?.value,
+            typeInfo: this.typeInfoHandler?.value,
+            defaultValue: this.defaultValueHandler?.value
         };
     }
     _createSymbolAndScope(parentScope) {
@@ -4647,7 +4786,7 @@ class TupleImplementHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Tuple,
-            elements: this.elementsHandler.map(handler => handler === null || handler === void 0 ? void 0 : handler.value)
+            elements: this.elementsHandler.map(handler => handler?.value)
         };
     }
 }
@@ -4686,7 +4825,6 @@ class TypeHandler extends handler_1.Handler {
         ];
     }
     _handle(node) {
-        var _a, _b;
         super._handle(node);
         this.nameHandler = handler_1.Handler.handle(node.name, this.context);
         if (node.subType) {
@@ -4697,13 +4835,12 @@ class TypeHandler extends handler_1.Handler {
         }
         this.value = {
             type: keywords_1.Keywords.Type,
-            name: (_a = this.nameHandler) === null || _a === void 0 ? void 0 : _a.value,
-            subType: (_b = this.subTypeHandler) === null || _b === void 0 ? void 0 : _b.value,
+            name: this.nameHandler?.value,
+            subType: this.subTypeHandler?.value,
             dimensions: node.dimensions
         };
     }
     _inferType(upperTypeInferContext) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         const typeName = this.value.name;
         let createdContext = null;
         let foundSymbol = null;
@@ -4711,12 +4848,12 @@ class TypeHandler extends handler_1.Handler {
             case keywords_1.Keywords.Identifier:
                 {
                     const identifierName = typeName.name;
-                    const upperType = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.upperType;
-                    const inTypeChain = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.inTypeChain;
+                    const upperType = upperTypeInferContext?.upperType;
+                    const inTypeChain = upperTypeInferContext?.inTypeChain;
                     if (upperType) {
-                        const parentSymbol = (_b = (_a = upperType.userDeclaredType()) === null || _a === void 0 ? void 0 : _a.relatedSymbol) !== null && _b !== void 0 ? _b : null;
-                        foundSymbol = (_d = (_c = parentSymbol === null || parentSymbol === void 0 ? void 0 : parentSymbol.childScope) === null || _c === void 0 ? void 0 : _c.getSymbol(identifierName)) !== null && _d !== void 0 ? _d : null;
-                        const symbolType = (_e = foundSymbol === null || foundSymbol === void 0 ? void 0 : foundSymbol.generatedType) !== null && _e !== void 0 ? _e : null;
+                        const parentSymbol = upperType.userDeclaredType()?.relatedSymbol ?? null;
+                        foundSymbol = parentSymbol?.childScope?.getSymbol(identifierName) ?? null;
+                        const symbolType = foundSymbol?.generatedType ?? null;
                         upperTypeInferContext.generateDotType(symbolType);
                         createdContext = upperTypeInferContext;
                     }
@@ -4739,12 +4876,12 @@ class TypeHandler extends handler_1.Handler {
             case keywords_1.Keywords.Generic:
                 {
                     const identifierName = typeName.name.name;
-                    const upperType = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.upperType;
-                    const inTypeChain = upperTypeInferContext === null || upperTypeInferContext === void 0 ? void 0 : upperTypeInferContext.inTypeChain;
+                    const upperType = upperTypeInferContext?.upperType;
+                    const inTypeChain = upperTypeInferContext?.inTypeChain;
                     if (upperType) {
-                        const parentSymbol = (_g = (_f = upperType.userDeclaredType()) === null || _f === void 0 ? void 0 : _f.relatedSymbol) !== null && _g !== void 0 ? _g : null;
-                        foundSymbol = (_j = (_h = parentSymbol === null || parentSymbol === void 0 ? void 0 : parentSymbol.childScope) === null || _h === void 0 ? void 0 : _h.getSymbol(identifierName)) !== null && _j !== void 0 ? _j : null;
-                        const symbolType = (_k = foundSymbol === null || foundSymbol === void 0 ? void 0 : foundSymbol.generatedType) !== null && _k !== void 0 ? _k : null;
+                        const parentSymbol = upperType.userDeclaredType()?.relatedSymbol ?? null;
+                        foundSymbol = parentSymbol?.childScope?.getSymbol(identifierName) ?? null;
+                        const symbolType = foundSymbol?.generatedType ?? null;
                         upperTypeInferContext.generateDotType(symbolType);
                         createdContext = upperTypeInferContext;
                     }
@@ -4778,7 +4915,7 @@ class TypeHandler extends handler_1.Handler {
                 }
                 break;
         }
-        this._typeReference = (_l = createdContext === null || createdContext === void 0 ? void 0 : createdContext.upperType) !== null && _l !== void 0 ? _l : null;
+        this._typeReference = createdContext?.upperType ?? null;
         if (this.value.dimensions > 0) {
             // convert it as array
             createdContext = typeInferContext_1.TypeInferContext.createPredefinedTypeContext(keywords_1.TypeKeywords.Array);
@@ -4909,7 +5046,6 @@ class ClassScope extends scope_1.Scope {
     }
     addProperty(property) {
         return (0, symbol_1.checkSymbolOrSymbolArray)(property, (property) => {
-            var _a, _b;
             const definedProperty = this.properties.getSymbol(property.name);
             if (definedProperty) {
                 // check type of defined property
@@ -4929,8 +5065,8 @@ class ClassScope extends scope_1.Scope {
                 definedProperty.propertyType = access_1.PropertyType.GET_SET;
                 const definedPropertyScope = definedProperty.childScope;
                 const propertyScope = property.childScope;
-                definedPropertyScope.getterSymbol = (_a = propertyScope.getterSymbol) !== null && _a !== void 0 ? _a : definedPropertyScope.getterSymbol;
-                definedPropertyScope.setterSymbol = (_b = propertyScope.setterSymbol) !== null && _b !== void 0 ? _b : definedPropertyScope.setterSymbol;
+                definedPropertyScope.getterSymbol = propertyScope.getterSymbol ?? definedPropertyScope.getterSymbol;
+                definedPropertyScope.setterSymbol = propertyScope.setterSymbol ?? definedPropertyScope.setterSymbol;
                 return true;
             }
             const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
@@ -5047,7 +5183,7 @@ class FunctionScope extends scope_1.Scope {
             this.body = body[0];
         }
         else {
-            this.body = body !== null && body !== void 0 ? body : null;
+            this.body = body ?? null;
         }
     }
     _getSymbol(_symbol) {
@@ -5120,7 +5256,6 @@ class InterfaceScope extends scope_1.Scope {
     }
     addProperty(property) {
         return (0, symbol_1.checkSymbolOrSymbolArray)(property, (property) => {
-            var _a, _b;
             const definedProperty = this.properties.getSymbol(property.name);
             if (definedProperty) {
                 // check type of defined property
@@ -5140,8 +5275,8 @@ class InterfaceScope extends scope_1.Scope {
                 definedProperty.propertyType = access_1.PropertyType.GET_SET;
                 const definedPropertyScope = definedProperty.childScope;
                 const propertyScope = property.childScope;
-                definedPropertyScope.getterSymbol = (_a = propertyScope.getterSymbol) !== null && _a !== void 0 ? _a : definedPropertyScope.getterSymbol;
-                definedPropertyScope.setterSymbol = (_b = propertyScope.setterSymbol) !== null && _b !== void 0 ? _b : definedPropertyScope.setterSymbol;
+                definedPropertyScope.getterSymbol = propertyScope.getterSymbol ?? definedPropertyScope.getterSymbol;
+                definedPropertyScope.setterSymbol = propertyScope.setterSymbol ?? definedPropertyScope.setterSymbol;
                 return true;
             }
             const success = this.checkSymbolUnique(property) && this.properties.addSymbol(property);
@@ -5273,7 +5408,7 @@ class PropertyScope extends scope_1.Scope {
             this.getterSymbol = getter[0];
         }
         else {
-            this.getterSymbol = getter !== null && getter !== void 0 ? getter : null;
+            this.getterSymbol = getter ?? null;
         }
     }
     setSetter(setter) {
@@ -5281,12 +5416,11 @@ class PropertyScope extends scope_1.Scope {
             this.setterSymbol = setter[0];
         }
         else {
-            this.setterSymbol = setter !== null && setter !== void 0 ? setter : null;
+            this.setterSymbol = setter ?? null;
         }
     }
     _getSymbol(_symbol) {
-        var _a;
-        return (_a = (_symbol === "getter" ? this.getterSymbol : this.setterSymbol)) !== null && _a !== void 0 ? _a : null;
+        return (_symbol === "getter" ? this.getterSymbol : this.setterSymbol) ?? null;
     }
 }
 exports.PropertyScope = PropertyScope;
@@ -5505,7 +5639,7 @@ class TestScope extends scope_1.Scope {
             this.body = body[0];
         }
         else {
-            this.body = body !== null && body !== void 0 ? body : null;
+            this.body = body ?? null;
         }
     }
     _getSymbol(_symbol) {
@@ -5549,7 +5683,7 @@ class TryScope extends scope_1.Scope {
             this.body = body[0];
         }
         else {
-            this.body = body !== null && body !== void 0 ? body : null;
+            this.body = body ?? null;
         }
     }
     setCatchBody(body) {
@@ -5557,7 +5691,7 @@ class TryScope extends scope_1.Scope {
             this.catchBody = body[0];
         }
         else {
-            this.catchBody = body !== null && body !== void 0 ? body : null;
+            this.catchBody = body ?? null;
         }
     }
     setFinallyBody(body) {
@@ -5565,7 +5699,7 @@ class TryScope extends scope_1.Scope {
             this.finallyBody = body[0];
         }
         else {
-            this.finallyBody = body !== null && body !== void 0 ? body : null;
+            this.finallyBody = body ?? null;
         }
     }
     _getSymbol(_symbol) {
@@ -5978,7 +6112,7 @@ class Symbol extends scriptContext_1.ScriptContextAccessibleObject {
             new zrInternalError_1.ZrInternalError(`Symbol ${symbolType} is not registered`, context).report(); // TODO: throw
             return null;
         }
-        symbol.location = location !== null && location !== void 0 ? location : handler.location;
+        symbol.location = location ?? handler.location;
         symbol.ownerScope = parentScope;
         context.linkSymbolAndHandler(symbol, handler);
         const symbolCreatedType = metaType_1.MetaType.createType(symbol.type, symbol);
@@ -6055,9 +6189,8 @@ class SymbolTable {
     }
     // not for function symbol table
     getSymbol(name) {
-        var _a;
         // TODO: if this symbol table is not for function
-        return (_a = this.symbolTable.find(s => s.name === name)) !== null && _a !== void 0 ? _a : null;
+        return this.symbolTable.find(s => s.name === name) ?? null;
     }
     // for function symbol table
     getSymbols(name) {
@@ -6659,8 +6792,7 @@ class PredefinedType extends typeDefinition_1.TypeDefinition {
         PredefinedType.typeDefinitionMap.set(typeName, type);
     }
     static getPredefinedType(typeName) {
-        var _a;
-        return (_a = PredefinedType.typeDefinitionMap.get(typeName)) !== null && _a !== void 0 ? _a : null;
+        return PredefinedType.typeDefinitionMap.get(typeName) ?? null;
     }
 }
 exports.PredefinedType = PredefinedType;
@@ -6725,19 +6857,18 @@ class TypeAssignContext extends scriptContext_1.ScriptContextAccessibleObject {
         return assignContext;
     }
     static mergeType(left, right, handler) {
-        var _a, _b;
         const context = handler.context;
         if ((!left || !left.typeReference) && (!right || !right.typeReference)) {
             return TypeAssignContext.create(null, handler);
         }
         if (!left || !left.typeReference) {
-            const assignContext = TypeAssignContext.create((_a = right === null || right === void 0 ? void 0 : right.typeReference) !== null && _a !== void 0 ? _a : null, handler);
+            const assignContext = TypeAssignContext.create(right?.typeReference ?? null, handler);
             assignContext.leftContext = left;
             assignContext.rightContext = right;
             return assignContext;
         }
         if (!right || !right.typeReference) {
-            const assignContext = TypeAssignContext.create((_b = left === null || left === void 0 ? void 0 : left.typeReference) !== null && _b !== void 0 ? _b : null, handler);
+            const assignContext = TypeAssignContext.create(left?.typeReference ?? null, handler);
             assignContext.leftContext = left;
             assignContext.rightContext = right;
             return assignContext;
@@ -6798,8 +6929,7 @@ class TypeDefinition extends scriptContext_1.ScriptContextAccessibleObject {
         return this._typeName;
     }
     get _typeName() {
-        var _a;
-        return (_a = this.name) !== null && _a !== void 0 ? _a : "unknown";
+        return this.name ?? "unknown";
     }
     _canBeAssignedBy(targetType) {
         return false;
@@ -6835,7 +6965,7 @@ const predefinedType_1 = __webpack_require__(/*! ./predefined/predefinedType */ 
 class TypeInferContext {
     static createTypeInferContext(upperSymbol) {
         const context = new TypeInferContext();
-        if (upperSymbol === null || upperSymbol === void 0 ? void 0 : upperSymbol.generatedType) {
+        if (upperSymbol?.generatedType) {
             context.upperType = typeReference_1.TypeReference.createReference(upperSymbol.generatedType);
         }
         return context;
@@ -6907,8 +7037,7 @@ class TypeReference {
         this.genericTypeArguments = [];
     }
     get name() {
-        var _a;
-        return (_a = this.targetType) === null || _a === void 0 ? void 0 : _a.typeName;
+        return this.targetType?.typeName;
     }
     ;
     static createReference(targetType, upperTypeInfo) {
@@ -6958,12 +7087,11 @@ class ZrHandlerDispatcher {
         const result = predicate(handler, upperResult);
         for (const child of children) {
             // broadcast to children the parent or upper result
-            this._runTaskTopDownImpl(child, result !== null && result !== void 0 ? result : upperResult, predicate);
+            this._runTaskTopDownImpl(child, result ?? upperResult, predicate);
         }
         return result;
     }
     _runTaskBottomUpImpl(handler, predicate) {
-        var _a;
         const children = handler.children;
         const bottomUpResult = [];
         for (const child of children) {
@@ -6976,15 +7104,14 @@ class ZrHandlerDispatcher {
             }
         }
         // feedback to parent the children's result or lower result
-        return (_a = predicate(handler, bottomUpResult)) !== null && _a !== void 0 ? _a : bottomUpResult;
+        return predicate(handler, bottomUpResult) ?? bottomUpResult;
     }
     _runTaskAroundImpl(handler, upperResult, topDownPredicate, bottomUpPredicate) {
-        var _a;
         const children = handler.children;
         const thisResult = topDownPredicate(handler, upperResult);
         const bottomUpResult = [];
         for (const child of children) {
-            const result = this._runTaskAroundImpl(child, thisResult !== null && thisResult !== void 0 ? thisResult : upperResult, topDownPredicate, bottomUpPredicate);
+            const result = this._runTaskAroundImpl(child, thisResult ?? upperResult, topDownPredicate, bottomUpPredicate);
             if (result instanceof Array) {
                 bottomUpResult.push(...result);
             }
@@ -6992,7 +7119,7 @@ class ZrHandlerDispatcher {
                 bottomUpResult.push(result);
             }
         }
-        return (_a = bottomUpPredicate(handler, bottomUpResult, thisResult)) !== null && _a !== void 0 ? _a : bottomUpResult;
+        return bottomUpPredicate(handler, bottomUpResult, thisResult) ?? bottomUpResult;
     }
 }
 exports.ZrHandlerDispatcher = ZrHandlerDispatcher;
@@ -7023,11 +7150,9 @@ class ZrSemanticAnalyzer {
         this.handlerDispatcher = new zrHandlerDispatcher_1.ZrHandlerDispatcher(this.scriptHandler);
         // create symbol and scope
         this.topSymbol = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
-            var _a, _b, _c;
-            return (_c = handler.createSymbolAndScope((_b = (_a = upperResult === null || upperResult === void 0 ? void 0 : upperResult.childScope) !== null && _a !== void 0 ? _a : upperResult === null || upperResult === void 0 ? void 0 : upperResult.ownerScope) !== null && _b !== void 0 ? _b : null)) !== null && _c !== void 0 ? _c : null;
+            return handler.createSymbolAndScope(upperResult?.childScope ?? upperResult?.ownerScope ?? null) ?? null;
         }, (handler, lowerResult, selfTopDownResult) => {
-            var _a, _b;
-            return (_b = handler.collectDeclarations(lowerResult, (_a = selfTopDownResult === null || selfTopDownResult === void 0 ? void 0 : selfTopDownResult.childScope) !== null && _a !== void 0 ? _a : null)) !== null && _b !== void 0 ? _b : selfTopDownResult;
+            return handler.collectDeclarations(lowerResult, selfTopDownResult?.childScope ?? null) ?? selfTopDownResult;
         });
         const typeInferResult = this.handlerDispatcher.runTaskAround((handler, upperResult) => {
             return handler.inferType(upperResult);
@@ -7124,24 +7249,19 @@ class ScriptContext {
         this._symbolTypeMap.set(symbol, type);
     }
     getHandlerFromValue(value) {
-        var _a;
-        return (_a = this._valueHandlerMap.get(value)) !== null && _a !== void 0 ? _a : null;
+        return this._valueHandlerMap.get(value) ?? null;
     }
     getHandlerFromSymbol(symbol) {
-        var _a;
-        return (_a = this._symbolHandlerMap.get(symbol)) !== null && _a !== void 0 ? _a : null;
+        return this._symbolHandlerMap.get(symbol) ?? null;
     }
     getSymbolFromHandler(handler) {
-        var _a;
-        return (_a = this._handlerSymbolMap.get(handler.value)) !== null && _a !== void 0 ? _a : null;
+        return this._handlerSymbolMap.get(handler.value) ?? null;
     }
     getTypeFromSymbol(symbol) {
-        var _a;
-        return (_a = this._symbolTypeMap.get(symbol)) !== null && _a !== void 0 ? _a : null;
+        return this._symbolTypeMap.get(symbol) ?? null;
     }
     getSymbolFromType(type) {
-        var _a;
-        return (_a = this._typeSymbolMap.get(type)) !== null && _a !== void 0 ? _a : null;
+        return this._typeSymbolMap.get(type) ?? null;
     }
 }
 exports.ScriptContext = ScriptContext;
@@ -7249,14 +7369,13 @@ class ZrError extends Error {
         return false;
     }
     report() {
-        var _a, _b, _c, _d, _e, _f;
         if (this.location) {
             this.message = i("commonError", {
                 errCode: this.errCode.toFixed(),
                 message: this.message,
                 file: this.fileName,
-                line: (_c = (_b = (_a = this.location) === null || _a === void 0 ? void 0 : _a.start) === null || _b === void 0 ? void 0 : _b.line) === null || _c === void 0 ? void 0 : _c.toFixed(),
-                column: (_f = (_e = (_d = this.location) === null || _d === void 0 ? void 0 : _d.start) === null || _e === void 0 ? void 0 : _e.column) === null || _f === void 0 ? void 0 : _f.toFixed()
+                line: this.location?.start?.line?.toFixed(),
+                column: this.location?.start?.column?.toFixed()
             });
         }
         else {
@@ -7341,7 +7460,7 @@ exports.ZrSemanticError = void 0;
 const zrError_1 = __webpack_require__(/*! ./zrError */ "./src/errors/zrError.ts");
 class ZrSemanticError extends zrError_1.ZrError {
     constructor(errCode, context) {
-        super(errCode, context === null || context === void 0 ? void 0 : context.fileName, context === null || context === void 0 ? void 0 : context.location);
+        super(errCode, context?.fileName, context?.location);
         this.errCode = errCode;
     }
 }
@@ -7397,15 +7516,6 @@ exports.ZrSyntaxError = ZrSyntaxError;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7416,13 +7526,11 @@ class ZrFileReader {
     constructor(context) {
         this.context = context;
     }
-    read() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const filePath = this.context.filePath;
-            const encoding = this.context.encoding;
-            const scriptText = yield fs_1.default.promises.readFile(filePath, { encoding });
-            this.context.scriptText = scriptText;
-        });
+    async read() {
+        const filePath = this.context.filePath;
+        const encoding = this.context.encoding;
+        const scriptText = await fs_1.default.promises.readFile(filePath, { encoding });
+        this.context.scriptText = scriptText;
     }
 }
 exports.ZrFileReader = ZrFileReader;
@@ -7775,64 +7883,77 @@ const peggyParser = // Generated by Peggy 3.0.2.
         var peg$c26 = "try";
         var peg$c27 = "catch";
         var peg$c28 = "finally";
-        var peg$c29 = "...";
-        var peg$c30 = "?";
-        var peg$c31 = ":";
-        var peg$c32 = ";";
-        var peg$c33 = ",";
-        var peg$c34 = ".";
-        var peg$c35 = "~";
-        var peg$c36 = "@";
-        var peg$c37 = "#";
-        var peg$c38 = "$";
-        var peg$c39 = "(";
-        var peg$c40 = ")";
-        var peg$c41 = "{";
-        var peg$c42 = "}";
-        var peg$c43 = "[";
-        var peg$c44 = "]";
-        var peg$c45 = "=";
-        var peg$c46 = "+=";
-        var peg$c47 = "-=";
-        var peg$c48 = "*=";
-        var peg$c49 = "/=";
-        var peg$c50 = "%=";
-        var peg$c51 = "==";
-        var peg$c52 = "!=";
-        var peg$c53 = "!";
-        var peg$c54 = "<";
-        var peg$c55 = "<=";
-        var peg$c56 = ">";
-        var peg$c57 = ">=";
-        var peg$c58 = "+";
-        var peg$c59 = "-";
-        var peg$c60 = "*";
-        var peg$c61 = "/";
-        var peg$c62 = "%";
-        var peg$c63 = "&&";
-        var peg$c64 = "||";
-        var peg$c65 = "=>";
-        var peg$c66 = "true";
-        var peg$c67 = "false";
-        var peg$c68 = "0x";
-        var peg$c69 = "0";
-        var peg$c70 = "'";
-        var peg$c71 = "\"";
-        var peg$c72 = "null";
-        var peg$c73 = "//";
-        var peg$c74 = "/*";
-        var peg$c75 = "*/";
+        var peg$c29 = "Infinity";
+        var peg$c30 = "NegativeInfinity";
+        var peg$c31 = "NaN";
+        var peg$c32 = "...";
+        var peg$c33 = "?";
+        var peg$c34 = ":";
+        var peg$c35 = ";";
+        var peg$c36 = ",";
+        var peg$c37 = ".";
+        var peg$c38 = "~";
+        var peg$c39 = "@";
+        var peg$c40 = "#";
+        var peg$c41 = "$";
+        var peg$c42 = "(";
+        var peg$c43 = ")";
+        var peg$c44 = "{";
+        var peg$c45 = "}";
+        var peg$c46 = "[";
+        var peg$c47 = "]";
+        var peg$c48 = "=";
+        var peg$c49 = "+=";
+        var peg$c50 = "-=";
+        var peg$c51 = "*=";
+        var peg$c52 = "/=";
+        var peg$c53 = "%=";
+        var peg$c54 = "==";
+        var peg$c55 = "!=";
+        var peg$c56 = "!";
+        var peg$c57 = "<";
+        var peg$c58 = "<=";
+        var peg$c59 = ">";
+        var peg$c60 = ">=";
+        var peg$c61 = "+";
+        var peg$c62 = "-";
+        var peg$c63 = "*";
+        var peg$c64 = "/";
+        var peg$c65 = "%";
+        var peg$c66 = "&&";
+        var peg$c67 = "||";
+        var peg$c68 = "=>";
+        var peg$c69 = "true";
+        var peg$c70 = "false";
+        var peg$c71 = "0x";
+        var peg$c72 = "0";
+        var peg$c73 = "\\";
+        var peg$c74 = "n";
+        var peg$c75 = "t";
+        var peg$c76 = "r";
+        var peg$c77 = "b";
+        var peg$c78 = "f";
+        var peg$c79 = "\"";
+        var peg$c80 = "'";
+        var peg$c81 = "u";
+        var peg$c82 = "x";
+        var peg$c83 = "null";
+        var peg$c84 = "//";
+        var peg$c85 = "/*";
+        var peg$c86 = "*/";
         var peg$r0 = /^[A-Za-z_]/;
         var peg$r1 = /^[A-Za-z0-9_]/;
         var peg$r2 = /^[1-9]/;
         var peg$r3 = /^[0-9]/;
         var peg$r4 = /^[0-9a-fA-F]/;
         var peg$r5 = /^[0-7]/;
-        var peg$r6 = /^["\n\r"]/;
-        var peg$r7 = /^[eE]/;
-        var peg$r8 = /^[+\-]/;
-        var peg$r9 = /^[\n\r]/;
-        var peg$r10 = /^[ \t\n\r]/;
+        var peg$r6 = /^[ -~]/;
+        var peg$r7 = /^["\n\r"]/;
+        var peg$r8 = /^[eE]/;
+        var peg$r9 = /^[+\-]/;
+        var peg$r10 = /^[fFdD]/;
+        var peg$r11 = /^[\n\r]/;
+        var peg$r12 = /^[ \t\n\r]/;
         var peg$e0 = peg$classExpectation([["A", "Z"], ["a", "z"], "_"], false, false);
         var peg$e1 = peg$classExpectation([["A", "Z"], ["a", "z"], ["0", "9"], "_"], false, false);
         var peg$e2 = peg$literalExpectation("module", false);
@@ -7864,63 +7985,76 @@ const peggyParser = // Generated by Peggy 3.0.2.
         var peg$e28 = peg$literalExpectation("try", false);
         var peg$e29 = peg$literalExpectation("catch", false);
         var peg$e30 = peg$literalExpectation("finally", false);
-        var peg$e31 = peg$literalExpectation("...", false);
-        var peg$e32 = peg$literalExpectation("?", false);
-        var peg$e33 = peg$literalExpectation(":", false);
-        var peg$e34 = peg$literalExpectation(";", false);
-        var peg$e35 = peg$literalExpectation(",", false);
-        var peg$e36 = peg$literalExpectation(".", false);
-        var peg$e37 = peg$literalExpectation("~", false);
-        var peg$e38 = peg$literalExpectation("@", false);
-        var peg$e39 = peg$literalExpectation("#", false);
-        var peg$e40 = peg$literalExpectation("$", false);
-        var peg$e41 = peg$literalExpectation("(", false);
-        var peg$e42 = peg$literalExpectation(")", false);
-        var peg$e43 = peg$literalExpectation("{", false);
-        var peg$e44 = peg$literalExpectation("}", false);
-        var peg$e45 = peg$literalExpectation("[", false);
-        var peg$e46 = peg$literalExpectation("]", false);
-        var peg$e47 = peg$literalExpectation("=", false);
-        var peg$e48 = peg$literalExpectation("+=", false);
-        var peg$e49 = peg$literalExpectation("-=", false);
-        var peg$e50 = peg$literalExpectation("*=", false);
-        var peg$e51 = peg$literalExpectation("/=", false);
-        var peg$e52 = peg$literalExpectation("%=", false);
-        var peg$e53 = peg$literalExpectation("==", false);
-        var peg$e54 = peg$literalExpectation("!=", false);
-        var peg$e55 = peg$literalExpectation("!", false);
-        var peg$e56 = peg$literalExpectation("<", false);
-        var peg$e57 = peg$literalExpectation("<=", false);
-        var peg$e58 = peg$literalExpectation(">", false);
-        var peg$e59 = peg$literalExpectation(">=", false);
-        var peg$e60 = peg$literalExpectation("+", false);
-        var peg$e61 = peg$literalExpectation("-", false);
-        var peg$e62 = peg$literalExpectation("*", false);
-        var peg$e63 = peg$literalExpectation("/", false);
-        var peg$e64 = peg$literalExpectation("%", false);
-        var peg$e65 = peg$literalExpectation("&&", false);
-        var peg$e66 = peg$literalExpectation("||", false);
-        var peg$e67 = peg$literalExpectation("=>", false);
-        var peg$e68 = peg$literalExpectation("true", false);
-        var peg$e69 = peg$literalExpectation("false", false);
-        var peg$e70 = peg$classExpectation([["1", "9"]], false, false);
-        var peg$e71 = peg$classExpectation([["0", "9"]], false, false);
-        var peg$e72 = peg$literalExpectation("0x", false);
-        var peg$e73 = peg$classExpectation([["0", "9"], ["a", "f"], ["A", "F"]], false, false);
-        var peg$e74 = peg$literalExpectation("0", false);
-        var peg$e75 = peg$classExpectation([["0", "7"]], false, false);
-        var peg$e76 = peg$literalExpectation("'", false);
-        var peg$e77 = peg$classExpectation(["\"", "\n", "\r", "\""], false, false);
-        var peg$e78 = peg$anyExpectation();
-        var peg$e79 = peg$literalExpectation("\"", false);
-        var peg$e80 = peg$literalExpectation("null", false);
-        var peg$e81 = peg$classExpectation(["e", "E"], false, false);
-        var peg$e82 = peg$classExpectation(["+", "-"], false, false);
-        var peg$e83 = peg$literalExpectation("//", false);
-        var peg$e84 = peg$classExpectation(["\n", "\r"], false, false);
-        var peg$e85 = peg$literalExpectation("/*", false);
-        var peg$e86 = peg$literalExpectation("*/", false);
-        var peg$e87 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false);
+        var peg$e31 = peg$literalExpectation("Infinity", false);
+        var peg$e32 = peg$literalExpectation("NegativeInfinity", false);
+        var peg$e33 = peg$literalExpectation("NaN", false);
+        var peg$e34 = peg$literalExpectation("...", false);
+        var peg$e35 = peg$literalExpectation("?", false);
+        var peg$e36 = peg$literalExpectation(":", false);
+        var peg$e37 = peg$literalExpectation(";", false);
+        var peg$e38 = peg$literalExpectation(",", false);
+        var peg$e39 = peg$literalExpectation(".", false);
+        var peg$e40 = peg$literalExpectation("~", false);
+        var peg$e41 = peg$literalExpectation("@", false);
+        var peg$e42 = peg$literalExpectation("#", false);
+        var peg$e43 = peg$literalExpectation("$", false);
+        var peg$e44 = peg$literalExpectation("(", false);
+        var peg$e45 = peg$literalExpectation(")", false);
+        var peg$e46 = peg$literalExpectation("{", false);
+        var peg$e47 = peg$literalExpectation("}", false);
+        var peg$e48 = peg$literalExpectation("[", false);
+        var peg$e49 = peg$literalExpectation("]", false);
+        var peg$e50 = peg$literalExpectation("=", false);
+        var peg$e51 = peg$literalExpectation("+=", false);
+        var peg$e52 = peg$literalExpectation("-=", false);
+        var peg$e53 = peg$literalExpectation("*=", false);
+        var peg$e54 = peg$literalExpectation("/=", false);
+        var peg$e55 = peg$literalExpectation("%=", false);
+        var peg$e56 = peg$literalExpectation("==", false);
+        var peg$e57 = peg$literalExpectation("!=", false);
+        var peg$e58 = peg$literalExpectation("!", false);
+        var peg$e59 = peg$literalExpectation("<", false);
+        var peg$e60 = peg$literalExpectation("<=", false);
+        var peg$e61 = peg$literalExpectation(">", false);
+        var peg$e62 = peg$literalExpectation(">=", false);
+        var peg$e63 = peg$literalExpectation("+", false);
+        var peg$e64 = peg$literalExpectation("-", false);
+        var peg$e65 = peg$literalExpectation("*", false);
+        var peg$e66 = peg$literalExpectation("/", false);
+        var peg$e67 = peg$literalExpectation("%", false);
+        var peg$e68 = peg$literalExpectation("&&", false);
+        var peg$e69 = peg$literalExpectation("||", false);
+        var peg$e70 = peg$literalExpectation("=>", false);
+        var peg$e71 = peg$literalExpectation("true", false);
+        var peg$e72 = peg$literalExpectation("false", false);
+        var peg$e73 = peg$classExpectation([["1", "9"]], false, false);
+        var peg$e74 = peg$classExpectation([["0", "9"]], false, false);
+        var peg$e75 = peg$literalExpectation("0x", false);
+        var peg$e76 = peg$classExpectation([["0", "9"], ["a", "f"], ["A", "F"]], false, false);
+        var peg$e77 = peg$literalExpectation("0", false);
+        var peg$e78 = peg$classExpectation([["0", "7"]], false, false);
+        var peg$e79 = peg$literalExpectation("\\", false);
+        var peg$e80 = peg$literalExpectation("n", false);
+        var peg$e81 = peg$literalExpectation("t", false);
+        var peg$e82 = peg$literalExpectation("r", false);
+        var peg$e83 = peg$literalExpectation("b", false);
+        var peg$e84 = peg$literalExpectation("f", false);
+        var peg$e85 = peg$literalExpectation("\"", false);
+        var peg$e86 = peg$literalExpectation("'", false);
+        var peg$e87 = peg$literalExpectation("u", false);
+        var peg$e88 = peg$literalExpectation("x", false);
+        var peg$e89 = peg$anyExpectation();
+        var peg$e90 = peg$classExpectation([[" ", "~"]], false, false);
+        var peg$e91 = peg$classExpectation(["\"", "\n", "\r", "\""], false, false);
+        var peg$e92 = peg$literalExpectation("null", false);
+        var peg$e93 = peg$classExpectation(["e", "E"], false, false);
+        var peg$e94 = peg$classExpectation(["+", "-"], false, false);
+        var peg$e95 = peg$classExpectation(["f", "F", "d", "D"], false, false);
+        var peg$e96 = peg$literalExpectation("//", false);
+        var peg$e97 = peg$classExpectation(["\n", "\r"], false, false);
+        var peg$e98 = peg$literalExpectation("/*", false);
+        var peg$e99 = peg$literalExpectation("*/", false);
+        var peg$e100 = peg$classExpectation([" ", "\t", "\n", "\r"], false, false);
         // @ts-ignore
         var peg$f0 = function (moduleName, statements) {
             // @ts-ignore
@@ -9214,6 +9348,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 value: parseInt(text(), 10),
                 // @ts-ignore
+                literal: text(),
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
@@ -9224,6 +9360,8 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 type: "Integer",
                 // @ts-ignore
                 value: parseInt(text(), 16),
+                // @ts-ignore
+                literal: text(),
                 // @ts-ignore
                 location: location()
             };
@@ -9236,32 +9374,98 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 value: parseInt(text(), 8),
                 // @ts-ignore
+                literal: text(),
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f99 = function (ch) {
+        var peg$f99 = function () {
+            return "\n";
+        }; // @ts-ignore
+        var peg$f100 = function () {
+            return "\t";
+        }; // @ts-ignore
+        var peg$f101 = function () {
+            return "\r";
+        }; // @ts-ignore
+        var peg$f102 = function () {
+            return "\b";
+        }; // @ts-ignore
+        var peg$f103 = function () {
+            return "\f";
+        }; // @ts-ignore
+        var peg$f104 = function () {
+            return "\"";
+        }; // @ts-ignore
+        var peg$f105 = function () {
+            return "'";
+        }; // @ts-ignore
+        var peg$f106 = function () {
+            return "\\";
+        }; // @ts-ignore
+        var peg$f107 = function (hex) {
+            return String.fromCharCode(parseInt(hex.join(''), 16));
+        }; // @ts-ignore
+        var peg$f108 = function (hex) {
+            return String.fromCharCode(parseInt(hex.join(''), 16));
+        }; // @ts-ignore
+        var peg$f109 = function () {
+            return { error: true, value: text() };
+        }; // @ts-ignore
+        var peg$f110 = function (seq) {
+            // @ts-ignore
+            return seq;
+        }; // @ts-ignore
+        var peg$f111 = function (ch) {
+            // @ts-ignore
+            if (typeof ch === "object" && ch.error) {
+                // @ts-ignore
+                return {
+                    // @ts-ignore
+                    type: "Char",
+                    // @ts-ignore
+                    value: ch.value,
+                    // @ts-ignore
+                    hasError: true,
+                    // @ts-ignore
+                    literal: text(),
+                    // @ts-ignore
+                    location: location()
+                };
+            }
             // @ts-ignore
             return {
                 // @ts-ignore
                 type: "Char",
                 // @ts-ignore
-                value: ch ? ch[1] : '',
+                value: ch,
+                // @ts-ignore
+                hasError: false,
                 // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f100 = function (str) {
+        var peg$f112 = function (str) {
+            // @ts-ignore
+            const hasError = str.some(v => typeof v === "object" && v.error);
             // @ts-ignore
             return {
                 // @ts-ignore
                 type: "String",
                 // @ts-ignore
-                value: str ? str.map(v => v[1]).join('') : '',
+                value: str
+                    // @ts-ignore
+                    ? str.map(v => (typeof v === "object" && v.error ? v.value : (v instanceof Array ? v[1] : v))).join("")
+                    : "",
+                // @ts-ignore
+                hasError,
+                // @ts-ignore
+                literal: text(),
                 // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f101 = function () {
+        var peg$f113 = function () {
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -9270,7 +9474,54 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f102 = function () {
+        var peg$f114 = function () {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "Float",
+                // @ts-ignore
+                value: Number.POSITIVE_INFINITY,
+                // @ts-ignore
+                literal: text(),
+                // @ts-ignore
+                isSingle: true,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f115 = function () {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "Float",
+                // @ts-ignore
+                value: Number.NEGATIVE_INFINITY,
+                // @ts-ignore
+                literal: text(),
+                // @ts-ignore
+                isSingle: true,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f116 = function () {
+            // @ts-ignore
+            return {
+                // @ts-ignore
+                type: "Float",
+                // @ts-ignore
+                value: Number.NaN,
+                // @ts-ignore
+                literal: text(),
+                // @ts-ignore
+                isSingle: true,
+                // @ts-ignore
+                location: location()
+            };
+        }; // @ts-ignore
+        var peg$f117 = function () {
+            // @ts-ignore
+            let isSingle = text().endsWith("f") || text().endsWith("F");
             // @ts-ignore
             return {
                 // @ts-ignore
@@ -9278,10 +9529,14 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 value: parseFloat(text()),
                 // @ts-ignore
+                literal: text(),
+                // @ts-ignore
+                isSingle,
+                // @ts-ignore
                 location: location()
             };
         }; // @ts-ignore
-        var peg$f103 = function () {
+        var peg$f118 = function () {
             // @ts-ignore
             return undefined;
         };
@@ -19345,15 +19600,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePARAMS() {
+        function peg$parseINFINITY() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 3) === peg$c29) {
+            if (input.substr(peg$currPos, 8) === peg$c29) {
                 // @ts-ignore
                 s0 = peg$c29;
                 // @ts-ignore
-                peg$currPos += 3;
+                peg$currPos += 8;
                 // @ts-ignore
             }
             else {
@@ -19368,15 +19623,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseQUESTIONMARK() {
+        function peg$parseNEG_INFINITY() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 63) {
+            if (input.substr(peg$currPos, 16) === peg$c30) {
                 // @ts-ignore
                 s0 = peg$c30;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 16;
                 // @ts-ignore
             }
             else {
@@ -19391,15 +19646,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseCOLON() {
+        function peg$parseNAN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 58) {
+            if (input.substr(peg$currPos, 3) === peg$c31) {
                 // @ts-ignore
                 s0 = peg$c31;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 3;
                 // @ts-ignore
             }
             else {
@@ -19414,15 +19669,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSEMICOLON() {
+        function peg$parsePARAMS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 59) {
+            if (input.substr(peg$currPos, 3) === peg$c32) {
                 // @ts-ignore
                 s0 = peg$c32;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 3;
                 // @ts-ignore
             }
             else {
@@ -19437,11 +19692,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseCOMMA() {
+        function peg$parseQUESTIONMARK() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 44) {
+            if (input.charCodeAt(peg$currPos) === 63) {
                 // @ts-ignore
                 s0 = peg$c33;
                 // @ts-ignore
@@ -19460,11 +19715,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOT() {
+        function peg$parseCOLON() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 46) {
+            if (input.charCodeAt(peg$currPos) === 58) {
                 // @ts-ignore
                 s0 = peg$c34;
                 // @ts-ignore
@@ -19483,11 +19738,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseTILDE() {
+        function peg$parseSEMICOLON() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 126) {
+            if (input.charCodeAt(peg$currPos) === 59) {
                 // @ts-ignore
                 s0 = peg$c35;
                 // @ts-ignore
@@ -19506,11 +19761,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseAT() {
+        function peg$parseCOMMA() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 64) {
+            if (input.charCodeAt(peg$currPos) === 44) {
                 // @ts-ignore
                 s0 = peg$c36;
                 // @ts-ignore
@@ -19529,11 +19784,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSHARP() {
+        function peg$parseDOT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 35) {
+            if (input.charCodeAt(peg$currPos) === 46) {
                 // @ts-ignore
                 s0 = peg$c37;
                 // @ts-ignore
@@ -19552,11 +19807,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOLLAR() {
+        function peg$parseTILDE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 36) {
+            if (input.charCodeAt(peg$currPos) === 126) {
                 // @ts-ignore
                 s0 = peg$c38;
                 // @ts-ignore
@@ -19575,11 +19830,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLPAREN() {
+        function peg$parseAT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 40) {
+            if (input.charCodeAt(peg$currPos) === 64) {
                 // @ts-ignore
                 s0 = peg$c39;
                 // @ts-ignore
@@ -19598,11 +19853,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRPAREN() {
+        function peg$parseSHARP() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 41) {
+            if (input.charCodeAt(peg$currPos) === 35) {
                 // @ts-ignore
                 s0 = peg$c40;
                 // @ts-ignore
@@ -19621,11 +19876,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLBRACE() {
+        function peg$parseDOLLAR() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 123) {
+            if (input.charCodeAt(peg$currPos) === 36) {
                 // @ts-ignore
                 s0 = peg$c41;
                 // @ts-ignore
@@ -19644,11 +19899,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRBRACE() {
+        function peg$parseLPAREN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 125) {
+            if (input.charCodeAt(peg$currPos) === 40) {
                 // @ts-ignore
                 s0 = peg$c42;
                 // @ts-ignore
@@ -19667,11 +19922,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLBRACKET() {
+        function peg$parseRPAREN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 91) {
+            if (input.charCodeAt(peg$currPos) === 41) {
                 // @ts-ignore
                 s0 = peg$c43;
                 // @ts-ignore
@@ -19690,11 +19945,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRBRACKET() {
+        function peg$parseLBRACE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 93) {
+            if (input.charCodeAt(peg$currPos) === 123) {
                 // @ts-ignore
                 s0 = peg$c44;
                 // @ts-ignore
@@ -19713,11 +19968,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseEQUALS() {
+        function peg$parseRBRACE() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 61) {
+            if (input.charCodeAt(peg$currPos) === 125) {
                 // @ts-ignore
                 s0 = peg$c45;
                 // @ts-ignore
@@ -19736,15 +19991,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePLUS_EQUALS() {
+        function peg$parseLBRACKET() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c46) {
+            if (input.charCodeAt(peg$currPos) === 91) {
                 // @ts-ignore
                 s0 = peg$c46;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -19759,15 +20014,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseMINUS_EQUALS() {
+        function peg$parseRBRACKET() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c47) {
+            if (input.charCodeAt(peg$currPos) === 93) {
                 // @ts-ignore
                 s0 = peg$c47;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -19782,15 +20037,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSTAR_EQUALS() {
+        function peg$parseEQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c48) {
+            if (input.charCodeAt(peg$currPos) === 61) {
                 // @ts-ignore
                 s0 = peg$c48;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -19805,7 +20060,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSLASH_EQUALS() {
+        function peg$parsePLUS_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -19828,7 +20083,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePERCENT_EQUALS() {
+        function peg$parseMINUS_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -19851,7 +20106,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseDOUBLE_EQUALS() {
+        function peg$parseSTAR_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -19874,7 +20129,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseBANG_EQUALS() {
+        function peg$parseSLASH_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -19897,15 +20152,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseBANG() {
+        function peg$parsePERCENT_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 33) {
+            if (input.substr(peg$currPos, 2) === peg$c53) {
                 // @ts-ignore
                 s0 = peg$c53;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -19920,15 +20175,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLESS_THAN() {
+        function peg$parseDOUBLE_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 60) {
+            if (input.substr(peg$currPos, 2) === peg$c54) {
                 // @ts-ignore
                 s0 = peg$c54;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -19943,7 +20198,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseLESS_THAN_EQUALS() {
+        function peg$parseBANG_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
@@ -19966,11 +20221,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseGREATER_THAN() {
+        function peg$parseBANG() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 62) {
+            if (input.charCodeAt(peg$currPos) === 33) {
                 // @ts-ignore
                 s0 = peg$c56;
                 // @ts-ignore
@@ -19989,15 +20244,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseGREATER_THAN_EQUALS() {
+        function peg$parseLESS_THAN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c57) {
+            if (input.charCodeAt(peg$currPos) === 60) {
                 // @ts-ignore
                 s0 = peg$c57;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -20012,15 +20267,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePLUS() {
+        function peg$parseLESS_THAN_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 43) {
+            if (input.substr(peg$currPos, 2) === peg$c58) {
                 // @ts-ignore
                 s0 = peg$c58;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -20035,11 +20290,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseMINUS() {
+        function peg$parseGREATER_THAN() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 45) {
+            if (input.charCodeAt(peg$currPos) === 62) {
                 // @ts-ignore
                 s0 = peg$c59;
                 // @ts-ignore
@@ -20058,15 +20313,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSTAR() {
+        function peg$parseGREATER_THAN_EQUALS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 42) {
+            if (input.substr(peg$currPos, 2) === peg$c60) {
                 // @ts-ignore
                 s0 = peg$c60;
                 // @ts-ignore
-                peg$currPos++;
+                peg$currPos += 2;
                 // @ts-ignore
             }
             else {
@@ -20081,11 +20336,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseSLASH() {
+        function peg$parsePLUS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 47) {
+            if (input.charCodeAt(peg$currPos) === 43) {
                 // @ts-ignore
                 s0 = peg$c61;
                 // @ts-ignore
@@ -20104,11 +20359,11 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePERCENT() {
+        function peg$parseMINUS() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 37) {
+            if (input.charCodeAt(peg$currPos) === 45) {
                 // @ts-ignore
                 s0 = peg$c62;
                 // @ts-ignore
@@ -20127,15 +20382,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseAMPERSAND_AMPERSAND() {
+        function peg$parseSTAR() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c63) {
+            if (input.charCodeAt(peg$currPos) === 42) {
                 // @ts-ignore
                 s0 = peg$c63;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -20150,15 +20405,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parsePIPE_PIPE() {
+        function peg$parseSLASH() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c64) {
+            if (input.charCodeAt(peg$currPos) === 47) {
                 // @ts-ignore
                 s0 = peg$c64;
                 // @ts-ignore
-                peg$currPos += 2;
+                peg$currPos++;
                 // @ts-ignore
             }
             else {
@@ -20173,13 +20428,36 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseRIGHT_ARROW() {
+        function peg$parsePERCENT() {
             // @ts-ignore
             var s0;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c65) {
+            if (input.charCodeAt(peg$currPos) === 37) {
                 // @ts-ignore
                 s0 = peg$c65;
+                // @ts-ignore
+                peg$currPos++;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e67);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseAMPERSAND_AMPERSAND() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c66) {
+                // @ts-ignore
+                s0 = peg$c66;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -20189,7 +20467,53 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s0 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e67);
+                    peg$fail(peg$e68);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parsePIPE_PIPE() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c67) {
+                // @ts-ignore
+                s0 = peg$c67;
+                // @ts-ignore
+                peg$currPos += 2;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e69);
+                }
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseRIGHT_ARROW() {
+            // @ts-ignore
+            var s0;
+            // @ts-ignore
+            if (input.substr(peg$currPos, 2) === peg$c68) {
+                // @ts-ignore
+                s0 = peg$c68;
+                // @ts-ignore
+                peg$currPos += 2;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s0 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e70);
                 }
             }
             // @ts-ignore
@@ -20246,9 +20570,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 4) === peg$c66) {
+            if (input.substr(peg$currPos, 4) === peg$c69) {
                 // @ts-ignore
-                s1 = peg$c66;
+                s1 = peg$c69;
                 // @ts-ignore
                 peg$currPos += 4;
                 // @ts-ignore
@@ -20258,15 +20582,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e68);
+                    peg$fail(peg$e71);
                 }
             }
             // @ts-ignore
             if (s1 === peg$FAILED) {
                 // @ts-ignore
-                if (input.substr(peg$currPos, 5) === peg$c67) {
+                if (input.substr(peg$currPos, 5) === peg$c70) {
                     // @ts-ignore
-                    s1 = peg$c67;
+                    s1 = peg$c70;
                     // @ts-ignore
                     peg$currPos += 5;
                     // @ts-ignore
@@ -20276,7 +20600,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s1 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e69);
+                        peg$fail(peg$e72);
                     }
                 }
             }
@@ -20311,7 +20635,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e70);
+                    peg$fail(peg$e73);
                 }
             }
             // @ts-ignore
@@ -20331,7 +20655,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e71);
+                        peg$fail(peg$e74);
                     }
                 }
                 // @ts-ignore
@@ -20351,7 +20675,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e71);
+                            peg$fail(peg$e74);
                         }
                     }
                 }
@@ -20377,9 +20701,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c68) {
+            if (input.substr(peg$currPos, 2) === peg$c71) {
                 // @ts-ignore
-                s1 = peg$c68;
+                s1 = peg$c71;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -20389,7 +20713,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e72);
+                    peg$fail(peg$e75);
                 }
             }
             // @ts-ignore
@@ -20409,7 +20733,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e73);
+                        peg$fail(peg$e76);
                     }
                 }
                 // @ts-ignore
@@ -20431,7 +20755,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s3 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e73);
+                                peg$fail(peg$e76);
                             }
                         }
                     }
@@ -20475,7 +20799,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (input.charCodeAt(peg$currPos) === 48) {
                 // @ts-ignore
-                s1 = peg$c69;
+                s1 = peg$c72;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -20485,7 +20809,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e74);
+                    peg$fail(peg$e77);
                 }
             }
             // @ts-ignore
@@ -20505,7 +20829,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e75);
+                        peg$fail(peg$e78);
                     }
                 }
                 // @ts-ignore
@@ -20525,7 +20849,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e75);
+                            peg$fail(peg$e78);
                         }
                     }
                 }
@@ -20545,15 +20869,15 @@ const peggyParser = // Generated by Peggy 3.0.2.
             return s0;
         }
         // @ts-ignore
-        function peg$parseCHAR() {
+        function peg$parseEscapeSequence() {
             // @ts-ignore
-            var s0, s1, s2, s3, s4;
+            var s0, s1, s2, s3, s4, s5, s6, s7, s8;
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.charCodeAt(peg$currPos) === 39) {
+            if (input.charCodeAt(peg$currPos) === 92) {
                 // @ts-ignore
-                s1 = peg$c70;
+                s1 = peg$c73;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -20563,7 +20887,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e76);
+                    peg$fail(peg$e79);
                 }
             }
             // @ts-ignore
@@ -20571,85 +20895,38 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 s2 = peg$currPos;
                 // @ts-ignore
-                s3 = peg$currPos;
-                // @ts-ignore
-                peg$silentFails++;
-                // @ts-ignore
-                if (peg$r6.test(input.charAt(peg$currPos))) {
+                if (input.charCodeAt(peg$currPos) === 110) {
                     // @ts-ignore
-                    s4 = input.charAt(peg$currPos);
+                    s3 = peg$c74;
                     // @ts-ignore
                     peg$currPos++;
                     // @ts-ignore
                 }
                 else {
                     // @ts-ignore
-                    s4 = peg$FAILED;
+                    s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e77);
+                        peg$fail(peg$e80);
                     }
-                }
-                // @ts-ignore
-                peg$silentFails--;
-                // @ts-ignore
-                if (s4 === peg$FAILED) {
-                    // @ts-ignore
-                    s3 = undefined;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s3;
-                    // @ts-ignore
-                    s3 = peg$FAILED;
                 }
                 // @ts-ignore
                 if (s3 !== peg$FAILED) {
                     // @ts-ignore
-                    if (input.length > peg$currPos) {
-                        // @ts-ignore
-                        s4 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s4 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e78);
-                        }
-                    }
+                    peg$savedPos = s2;
                     // @ts-ignore
-                    if (s4 !== peg$FAILED) {
-                        // @ts-ignore
-                        s3 = [s3, s4];
-                        // @ts-ignore
-                        s2 = s3;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        peg$currPos = s2;
-                        // @ts-ignore
-                        s2 = peg$FAILED;
-                    }
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s2;
-                    // @ts-ignore
-                    s2 = peg$FAILED;
+                    s3 = peg$f99();
                 }
                 // @ts-ignore
-                if (s2 !== peg$FAILED) {
+                s2 = s3;
+                // @ts-ignore
+                if (s2 === peg$FAILED) {
                     // @ts-ignore
-                    if (input.charCodeAt(peg$currPos) === 39) {
+                    s2 = peg$currPos;
+                    // @ts-ignore
+                    if (input.charCodeAt(peg$currPos) === 116) {
                         // @ts-ignore
-                        s3 = peg$c70;
+                        s3 = peg$c75;
                         // @ts-ignore
                         peg$currPos++;
                         // @ts-ignore
@@ -20659,7 +20936,573 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s3 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e76);
+                            peg$fail(peg$e81);
+                        }
+                    }
+                    // @ts-ignore
+                    if (s3 !== peg$FAILED) {
+                        // @ts-ignore
+                        peg$savedPos = s2;
+                        // @ts-ignore
+                        s3 = peg$f100();
+                    }
+                    // @ts-ignore
+                    s2 = s3;
+                    // @ts-ignore
+                    if (s2 === peg$FAILED) {
+                        // @ts-ignore
+                        s2 = peg$currPos;
+                        // @ts-ignore
+                        if (input.charCodeAt(peg$currPos) === 114) {
+                            // @ts-ignore
+                            s3 = peg$c76;
+                            // @ts-ignore
+                            peg$currPos++;
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            s3 = peg$FAILED;
+                            // @ts-ignore
+                            if (peg$silentFails === 0) {
+                                peg$fail(peg$e82);
+                            }
+                        }
+                        // @ts-ignore
+                        if (s3 !== peg$FAILED) {
+                            // @ts-ignore
+                            peg$savedPos = s2;
+                            // @ts-ignore
+                            s3 = peg$f101();
+                        }
+                        // @ts-ignore
+                        s2 = s3;
+                        // @ts-ignore
+                        if (s2 === peg$FAILED) {
+                            // @ts-ignore
+                            s2 = peg$currPos;
+                            // @ts-ignore
+                            if (input.charCodeAt(peg$currPos) === 98) {
+                                // @ts-ignore
+                                s3 = peg$c77;
+                                // @ts-ignore
+                                peg$currPos++;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                s3 = peg$FAILED;
+                                // @ts-ignore
+                                if (peg$silentFails === 0) {
+                                    peg$fail(peg$e83);
+                                }
+                            }
+                            // @ts-ignore
+                            if (s3 !== peg$FAILED) {
+                                // @ts-ignore
+                                peg$savedPos = s2;
+                                // @ts-ignore
+                                s3 = peg$f102();
+                            }
+                            // @ts-ignore
+                            s2 = s3;
+                            // @ts-ignore
+                            if (s2 === peg$FAILED) {
+                                // @ts-ignore
+                                s2 = peg$currPos;
+                                // @ts-ignore
+                                if (input.charCodeAt(peg$currPos) === 102) {
+                                    // @ts-ignore
+                                    s3 = peg$c78;
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s3 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e84);
+                                    }
+                                }
+                                // @ts-ignore
+                                if (s3 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    peg$savedPos = s2;
+                                    // @ts-ignore
+                                    s3 = peg$f103();
+                                }
+                                // @ts-ignore
+                                s2 = s3;
+                                // @ts-ignore
+                                if (s2 === peg$FAILED) {
+                                    // @ts-ignore
+                                    s2 = peg$currPos;
+                                    // @ts-ignore
+                                    if (input.charCodeAt(peg$currPos) === 34) {
+                                        // @ts-ignore
+                                        s3 = peg$c79;
+                                        // @ts-ignore
+                                        peg$currPos++;
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        s3 = peg$FAILED;
+                                        // @ts-ignore
+                                        if (peg$silentFails === 0) {
+                                            peg$fail(peg$e85);
+                                        }
+                                    }
+                                    // @ts-ignore
+                                    if (s3 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        peg$savedPos = s2;
+                                        // @ts-ignore
+                                        s3 = peg$f104();
+                                    }
+                                    // @ts-ignore
+                                    s2 = s3;
+                                    // @ts-ignore
+                                    if (s2 === peg$FAILED) {
+                                        // @ts-ignore
+                                        s2 = peg$currPos;
+                                        // @ts-ignore
+                                        if (input.charCodeAt(peg$currPos) === 39) {
+                                            // @ts-ignore
+                                            s3 = peg$c80;
+                                            // @ts-ignore
+                                            peg$currPos++;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            s3 = peg$FAILED;
+                                            // @ts-ignore
+                                            if (peg$silentFails === 0) {
+                                                peg$fail(peg$e86);
+                                            }
+                                        }
+                                        // @ts-ignore
+                                        if (s3 !== peg$FAILED) {
+                                            // @ts-ignore
+                                            peg$savedPos = s2;
+                                            // @ts-ignore
+                                            s3 = peg$f105();
+                                        }
+                                        // @ts-ignore
+                                        s2 = s3;
+                                        // @ts-ignore
+                                        if (s2 === peg$FAILED) {
+                                            // @ts-ignore
+                                            s2 = peg$currPos;
+                                            // @ts-ignore
+                                            if (input.charCodeAt(peg$currPos) === 92) {
+                                                // @ts-ignore
+                                                s3 = peg$c73;
+                                                // @ts-ignore
+                                                peg$currPos++;
+                                                // @ts-ignore
+                                            }
+                                            else {
+                                                // @ts-ignore
+                                                s3 = peg$FAILED;
+                                                // @ts-ignore
+                                                if (peg$silentFails === 0) {
+                                                    peg$fail(peg$e79);
+                                                }
+                                            }
+                                            // @ts-ignore
+                                            if (s3 !== peg$FAILED) {
+                                                // @ts-ignore
+                                                peg$savedPos = s2;
+                                                // @ts-ignore
+                                                s3 = peg$f106();
+                                            }
+                                            // @ts-ignore
+                                            s2 = s3;
+                                            // @ts-ignore
+                                            if (s2 === peg$FAILED) {
+                                                // @ts-ignore
+                                                s2 = peg$currPos;
+                                                // @ts-ignore
+                                                if (input.charCodeAt(peg$currPos) === 117) {
+                                                    // @ts-ignore
+                                                    s3 = peg$c81;
+                                                    // @ts-ignore
+                                                    peg$currPos++;
+                                                    // @ts-ignore
+                                                }
+                                                else {
+                                                    // @ts-ignore
+                                                    s3 = peg$FAILED;
+                                                    // @ts-ignore
+                                                    if (peg$silentFails === 0) {
+                                                        peg$fail(peg$e87);
+                                                    }
+                                                }
+                                                // @ts-ignore
+                                                if (s3 !== peg$FAILED) {
+                                                    // @ts-ignore
+                                                    s4 = peg$currPos;
+                                                    // @ts-ignore
+                                                    if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                        // @ts-ignore
+                                                        s5 = input.charAt(peg$currPos);
+                                                        // @ts-ignore
+                                                        peg$currPos++;
+                                                        // @ts-ignore
+                                                    }
+                                                    else {
+                                                        // @ts-ignore
+                                                        s5 = peg$FAILED;
+                                                        // @ts-ignore
+                                                        if (peg$silentFails === 0) {
+                                                            peg$fail(peg$e76);
+                                                        }
+                                                    }
+                                                    // @ts-ignore
+                                                    if (s5 !== peg$FAILED) {
+                                                        // @ts-ignore
+                                                        if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                            // @ts-ignore
+                                                            s6 = input.charAt(peg$currPos);
+                                                            // @ts-ignore
+                                                            peg$currPos++;
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            s6 = peg$FAILED;
+                                                            // @ts-ignore
+                                                            if (peg$silentFails === 0) {
+                                                                peg$fail(peg$e76);
+                                                            }
+                                                        }
+                                                        // @ts-ignore
+                                                        if (s6 !== peg$FAILED) {
+                                                            // @ts-ignore
+                                                            if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                                // @ts-ignore
+                                                                s7 = input.charAt(peg$currPos);
+                                                                // @ts-ignore
+                                                                peg$currPos++;
+                                                                // @ts-ignore
+                                                            }
+                                                            else {
+                                                                // @ts-ignore
+                                                                s7 = peg$FAILED;
+                                                                // @ts-ignore
+                                                                if (peg$silentFails === 0) {
+                                                                    peg$fail(peg$e76);
+                                                                }
+                                                            }
+                                                            // @ts-ignore
+                                                            if (s7 !== peg$FAILED) {
+                                                                // @ts-ignore
+                                                                if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                                    // @ts-ignore
+                                                                    s8 = input.charAt(peg$currPos);
+                                                                    // @ts-ignore
+                                                                    peg$currPos++;
+                                                                    // @ts-ignore
+                                                                }
+                                                                else {
+                                                                    // @ts-ignore
+                                                                    s8 = peg$FAILED;
+                                                                    // @ts-ignore
+                                                                    if (peg$silentFails === 0) {
+                                                                        peg$fail(peg$e76);
+                                                                    }
+                                                                }
+                                                                // @ts-ignore
+                                                                if (s8 !== peg$FAILED) {
+                                                                    // @ts-ignore
+                                                                    s5 = [s5, s6, s7, s8];
+                                                                    // @ts-ignore
+                                                                    s4 = s5;
+                                                                    // @ts-ignore
+                                                                }
+                                                                else {
+                                                                    // @ts-ignore
+                                                                    peg$currPos = s4;
+                                                                    // @ts-ignore
+                                                                    s4 = peg$FAILED;
+                                                                }
+                                                                // @ts-ignore
+                                                            }
+                                                            else {
+                                                                // @ts-ignore
+                                                                peg$currPos = s4;
+                                                                // @ts-ignore
+                                                                s4 = peg$FAILED;
+                                                            }
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            peg$currPos = s4;
+                                                            // @ts-ignore
+                                                            s4 = peg$FAILED;
+                                                        }
+                                                        // @ts-ignore
+                                                    }
+                                                    else {
+                                                        // @ts-ignore
+                                                        peg$currPos = s4;
+                                                        // @ts-ignore
+                                                        s4 = peg$FAILED;
+                                                    }
+                                                    // @ts-ignore
+                                                    if (s4 !== peg$FAILED) {
+                                                        // @ts-ignore
+                                                        peg$savedPos = s2;
+                                                        // @ts-ignore
+                                                        s2 = peg$f107(s4);
+                                                        // @ts-ignore
+                                                    }
+                                                    else {
+                                                        // @ts-ignore
+                                                        peg$currPos = s2;
+                                                        // @ts-ignore
+                                                        s2 = peg$FAILED;
+                                                    }
+                                                    // @ts-ignore
+                                                }
+                                                else {
+                                                    // @ts-ignore
+                                                    peg$currPos = s2;
+                                                    // @ts-ignore
+                                                    s2 = peg$FAILED;
+                                                }
+                                                // @ts-ignore
+                                                if (s2 === peg$FAILED) {
+                                                    // @ts-ignore
+                                                    s2 = peg$currPos;
+                                                    // @ts-ignore
+                                                    if (input.charCodeAt(peg$currPos) === 120) {
+                                                        // @ts-ignore
+                                                        s3 = peg$c82;
+                                                        // @ts-ignore
+                                                        peg$currPos++;
+                                                        // @ts-ignore
+                                                    }
+                                                    else {
+                                                        // @ts-ignore
+                                                        s3 = peg$FAILED;
+                                                        // @ts-ignore
+                                                        if (peg$silentFails === 0) {
+                                                            peg$fail(peg$e88);
+                                                        }
+                                                    }
+                                                    // @ts-ignore
+                                                    if (s3 !== peg$FAILED) {
+                                                        // @ts-ignore
+                                                        s4 = peg$currPos;
+                                                        // @ts-ignore
+                                                        if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                            // @ts-ignore
+                                                            s5 = input.charAt(peg$currPos);
+                                                            // @ts-ignore
+                                                            peg$currPos++;
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            s5 = peg$FAILED;
+                                                            // @ts-ignore
+                                                            if (peg$silentFails === 0) {
+                                                                peg$fail(peg$e76);
+                                                            }
+                                                        }
+                                                        // @ts-ignore
+                                                        if (s5 !== peg$FAILED) {
+                                                            // @ts-ignore
+                                                            if (peg$r4.test(input.charAt(peg$currPos))) {
+                                                                // @ts-ignore
+                                                                s6 = input.charAt(peg$currPos);
+                                                                // @ts-ignore
+                                                                peg$currPos++;
+                                                                // @ts-ignore
+                                                            }
+                                                            else {
+                                                                // @ts-ignore
+                                                                s6 = peg$FAILED;
+                                                                // @ts-ignore
+                                                                if (peg$silentFails === 0) {
+                                                                    peg$fail(peg$e76);
+                                                                }
+                                                            }
+                                                            // @ts-ignore
+                                                            if (s6 !== peg$FAILED) {
+                                                                // @ts-ignore
+                                                                s5 = [s5, s6];
+                                                                // @ts-ignore
+                                                                s4 = s5;
+                                                                // @ts-ignore
+                                                            }
+                                                            else {
+                                                                // @ts-ignore
+                                                                peg$currPos = s4;
+                                                                // @ts-ignore
+                                                                s4 = peg$FAILED;
+                                                            }
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            peg$currPos = s4;
+                                                            // @ts-ignore
+                                                            s4 = peg$FAILED;
+                                                        }
+                                                        // @ts-ignore
+                                                        if (s4 !== peg$FAILED) {
+                                                            // @ts-ignore
+                                                            peg$savedPos = s2;
+                                                            // @ts-ignore
+                                                            s2 = peg$f108(s4);
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            peg$currPos = s2;
+                                                            // @ts-ignore
+                                                            s2 = peg$FAILED;
+                                                        }
+                                                        // @ts-ignore
+                                                    }
+                                                    else {
+                                                        // @ts-ignore
+                                                        peg$currPos = s2;
+                                                        // @ts-ignore
+                                                        s2 = peg$FAILED;
+                                                    }
+                                                    // @ts-ignore
+                                                    if (s2 === peg$FAILED) {
+                                                        // @ts-ignore
+                                                        s2 = peg$currPos;
+                                                        // @ts-ignore
+                                                        if (input.length > peg$currPos) {
+                                                            // @ts-ignore
+                                                            s3 = input.charAt(peg$currPos);
+                                                            // @ts-ignore
+                                                            peg$currPos++;
+                                                            // @ts-ignore
+                                                        }
+                                                        else {
+                                                            // @ts-ignore
+                                                            s3 = peg$FAILED;
+                                                            // @ts-ignore
+                                                            if (peg$silentFails === 0) {
+                                                                peg$fail(peg$e89);
+                                                            }
+                                                        }
+                                                        // @ts-ignore
+                                                        if (s3 !== peg$FAILED) {
+                                                            // @ts-ignore
+                                                            peg$savedPos = s2;
+                                                            // @ts-ignore
+                                                            s3 = peg$f109();
+                                                        }
+                                                        // @ts-ignore
+                                                        s2 = s3;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // @ts-ignore
+                if (s2 !== peg$FAILED) {
+                    // @ts-ignore
+                    peg$savedPos = s0;
+                    // @ts-ignore
+                    s0 = peg$f110(s2);
+                    // @ts-ignore
+                }
+                else {
+                    // @ts-ignore
+                    peg$currPos = s0;
+                    // @ts-ignore
+                    s0 = peg$FAILED;
+                }
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                peg$currPos = s0;
+                // @ts-ignore
+                s0 = peg$FAILED;
+            }
+            // @ts-ignore
+            return s0;
+        }
+        // @ts-ignore
+        function peg$parseCHAR() {
+            // @ts-ignore
+            var s0, s1, s2, s3;
+            // @ts-ignore
+            s0 = peg$currPos;
+            // @ts-ignore
+            if (input.charCodeAt(peg$currPos) === 39) {
+                // @ts-ignore
+                s1 = peg$c80;
+                // @ts-ignore
+                peg$currPos++;
+                // @ts-ignore
+            }
+            else {
+                // @ts-ignore
+                s1 = peg$FAILED;
+                // @ts-ignore
+                if (peg$silentFails === 0) {
+                    peg$fail(peg$e86);
+                }
+            }
+            // @ts-ignore
+            if (s1 !== peg$FAILED) {
+                // @ts-ignore
+                s2 = peg$parseEscapeSequence();
+                // @ts-ignore
+                if (s2 === peg$FAILED) {
+                    // @ts-ignore
+                    if (peg$r6.test(input.charAt(peg$currPos))) {
+                        // @ts-ignore
+                        s2 = input.charAt(peg$currPos);
+                        // @ts-ignore
+                        peg$currPos++;
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        s2 = peg$FAILED;
+                        // @ts-ignore
+                        if (peg$silentFails === 0) {
+                            peg$fail(peg$e90);
+                        }
+                    }
+                }
+                // @ts-ignore
+                if (s2 !== peg$FAILED) {
+                    // @ts-ignore
+                    if (input.charCodeAt(peg$currPos) === 39) {
+                        // @ts-ignore
+                        s3 = peg$c80;
+                        // @ts-ignore
+                        peg$currPos++;
+                        // @ts-ignore
+                    }
+                    else {
+                        // @ts-ignore
+                        s3 = peg$FAILED;
+                        // @ts-ignore
+                        if (peg$silentFails === 0) {
+                            peg$fail(peg$e86);
                         }
                     }
                     // @ts-ignore
@@ -20667,7 +21510,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         // @ts-ignore
                         peg$savedPos = s0;
                         // @ts-ignore
-                        s0 = peg$f99(s2);
+                        s0 = peg$f111(s2);
                         // @ts-ignore
                     }
                     else {
@@ -20704,7 +21547,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             if (input.charCodeAt(peg$currPos) === 34) {
                 // @ts-ignore
-                s1 = peg$c71;
+                s1 = peg$c79;
                 // @ts-ignore
                 peg$currPos++;
                 // @ts-ignore
@@ -20714,7 +21557,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e79);
+                    peg$fail(peg$e85);
                 }
             }
             // @ts-ignore
@@ -20722,85 +21565,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 s2 = [];
                 // @ts-ignore
-                s3 = peg$currPos;
+                s3 = peg$parseEscapeSequence();
                 // @ts-ignore
-                s4 = peg$currPos;
-                // @ts-ignore
-                peg$silentFails++;
-                // @ts-ignore
-                if (peg$r6.test(input.charAt(peg$currPos))) {
-                    // @ts-ignore
-                    s5 = input.charAt(peg$currPos);
-                    // @ts-ignore
-                    peg$currPos++;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    s5 = peg$FAILED;
-                    // @ts-ignore
-                    if (peg$silentFails === 0) {
-                        peg$fail(peg$e77);
-                    }
-                }
-                // @ts-ignore
-                peg$silentFails--;
-                // @ts-ignore
-                if (s5 === peg$FAILED) {
-                    // @ts-ignore
-                    s4 = undefined;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s4;
-                    // @ts-ignore
-                    s4 = peg$FAILED;
-                }
-                // @ts-ignore
-                if (s4 !== peg$FAILED) {
-                    // @ts-ignore
-                    if (input.length > peg$currPos) {
-                        // @ts-ignore
-                        s5 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s5 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e78);
-                        }
-                    }
-                    // @ts-ignore
-                    if (s5 !== peg$FAILED) {
-                        // @ts-ignore
-                        s4 = [s4, s5];
-                        // @ts-ignore
-                        s3 = s4;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        peg$currPos = s3;
-                        // @ts-ignore
-                        s3 = peg$FAILED;
-                    }
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s3;
-                    // @ts-ignore
-                    s3 = peg$FAILED;
-                }
-                // @ts-ignore
-                while (s3 !== peg$FAILED) {
-                    // @ts-ignore
-                    s2.push(s3);
+                if (s3 === peg$FAILED) {
                     // @ts-ignore
                     s3 = peg$currPos;
                     // @ts-ignore
@@ -20808,7 +21575,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$silentFails++;
                     // @ts-ignore
-                    if (peg$r6.test(input.charAt(peg$currPos))) {
+                    if (peg$r7.test(input.charAt(peg$currPos))) {
                         // @ts-ignore
                         s5 = input.charAt(peg$currPos);
                         // @ts-ignore
@@ -20820,7 +21587,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e77);
+                            peg$fail(peg$e91);
                         }
                     }
                     // @ts-ignore
@@ -20852,7 +21619,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e78);
+                                peg$fail(peg$e89);
                             }
                         }
                         // @ts-ignore
@@ -20879,9 +21646,95 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     }
                 }
                 // @ts-ignore
+                while (s3 !== peg$FAILED) {
+                    // @ts-ignore
+                    s2.push(s3);
+                    // @ts-ignore
+                    s3 = peg$parseEscapeSequence();
+                    // @ts-ignore
+                    if (s3 === peg$FAILED) {
+                        // @ts-ignore
+                        s3 = peg$currPos;
+                        // @ts-ignore
+                        s4 = peg$currPos;
+                        // @ts-ignore
+                        peg$silentFails++;
+                        // @ts-ignore
+                        if (peg$r7.test(input.charAt(peg$currPos))) {
+                            // @ts-ignore
+                            s5 = input.charAt(peg$currPos);
+                            // @ts-ignore
+                            peg$currPos++;
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            s5 = peg$FAILED;
+                            // @ts-ignore
+                            if (peg$silentFails === 0) {
+                                peg$fail(peg$e91);
+                            }
+                        }
+                        // @ts-ignore
+                        peg$silentFails--;
+                        // @ts-ignore
+                        if (s5 === peg$FAILED) {
+                            // @ts-ignore
+                            s4 = undefined;
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s4;
+                            // @ts-ignore
+                            s4 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s4 !== peg$FAILED) {
+                            // @ts-ignore
+                            if (input.length > peg$currPos) {
+                                // @ts-ignore
+                                s5 = input.charAt(peg$currPos);
+                                // @ts-ignore
+                                peg$currPos++;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                s5 = peg$FAILED;
+                                // @ts-ignore
+                                if (peg$silentFails === 0) {
+                                    peg$fail(peg$e89);
+                                }
+                            }
+                            // @ts-ignore
+                            if (s5 !== peg$FAILED) {
+                                // @ts-ignore
+                                s4 = [s4, s5];
+                                // @ts-ignore
+                                s3 = s4;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s3;
+                                // @ts-ignore
+                                s3 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s3;
+                            // @ts-ignore
+                            s3 = peg$FAILED;
+                        }
+                    }
+                }
+                // @ts-ignore
                 if (input.charCodeAt(peg$currPos) === 34) {
                     // @ts-ignore
-                    s3 = peg$c71;
+                    s3 = peg$c79;
                     // @ts-ignore
                     peg$currPos++;
                     // @ts-ignore
@@ -20891,7 +21744,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e79);
+                        peg$fail(peg$e85);
                     }
                 }
                 // @ts-ignore
@@ -20899,7 +21752,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$savedPos = s0;
                     // @ts-ignore
-                    s0 = peg$f100(s2);
+                    s0 = peg$f112(s2);
                     // @ts-ignore
                 }
                 else {
@@ -20926,9 +21779,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 4) === peg$c72) {
+            if (input.substr(peg$currPos, 4) === peg$c83) {
                 // @ts-ignore
-                s1 = peg$c72;
+                s1 = peg$c83;
                 // @ts-ignore
                 peg$currPos += 4;
                 // @ts-ignore
@@ -20938,7 +21791,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e80);
+                    peg$fail(peg$e92);
                 }
             }
             // @ts-ignore
@@ -20946,7 +21799,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$savedPos = s0;
                 // @ts-ignore
-                s1 = peg$f101();
+                s1 = peg$f113();
             }
             // @ts-ignore
             s0 = s1;
@@ -20960,353 +21813,422 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            s1 = peg$currPos;
+            s1 = peg$parseINFINITY();
             // @ts-ignore
-            s2 = [];
-            // @ts-ignore
-            if (peg$r3.test(input.charAt(peg$currPos))) {
+            if (s1 !== peg$FAILED) {
                 // @ts-ignore
-                s3 = input.charAt(peg$currPos);
+                peg$savedPos = s0;
                 // @ts-ignore
-                peg$currPos++;
-                // @ts-ignore
-            }
-            else {
-                // @ts-ignore
-                s3 = peg$FAILED;
-                // @ts-ignore
-                if (peg$silentFails === 0) {
-                    peg$fail(peg$e71);
-                }
+                s1 = peg$f114();
             }
             // @ts-ignore
-            if (s3 !== peg$FAILED) {
-                // @ts-ignore
-                while (s3 !== peg$FAILED) {
-                    // @ts-ignore
-                    s2.push(s3);
-                    // @ts-ignore
-                    if (peg$r3.test(input.charAt(peg$currPos))) {
-                        // @ts-ignore
-                        s3 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s3 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e71);
-                        }
-                    }
-                }
-                // @ts-ignore
-            }
-            else {
-                // @ts-ignore
-                s2 = peg$FAILED;
-            }
+            s0 = s1;
             // @ts-ignore
-            if (s2 !== peg$FAILED) {
+            if (s0 === peg$FAILED) {
                 // @ts-ignore
-                if (input.charCodeAt(peg$currPos) === 46) {
+                s0 = peg$currPos;
+                // @ts-ignore
+                s1 = peg$parseNEG_INFINITY();
+                // @ts-ignore
+                if (s1 !== peg$FAILED) {
                     // @ts-ignore
-                    s3 = peg$c34;
+                    peg$savedPos = s0;
                     // @ts-ignore
-                    peg$currPos++;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    s3 = peg$FAILED;
-                    // @ts-ignore
-                    if (peg$silentFails === 0) {
-                        peg$fail(peg$e36);
-                    }
+                    s1 = peg$f115();
                 }
                 // @ts-ignore
-                if (s3 !== peg$FAILED) {
+                s0 = s1;
+                // @ts-ignore
+                if (s0 === peg$FAILED) {
                     // @ts-ignore
-                    s4 = [];
+                    s0 = peg$currPos;
                     // @ts-ignore
-                    if (peg$r3.test(input.charAt(peg$currPos))) {
+                    s1 = peg$parseNAN();
+                    // @ts-ignore
+                    if (s1 !== peg$FAILED) {
                         // @ts-ignore
-                        s5 = input.charAt(peg$currPos);
+                        peg$savedPos = s0;
                         // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s5 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e71);
-                        }
+                        s1 = peg$f116();
                     }
                     // @ts-ignore
-                    while (s5 !== peg$FAILED) {
+                    s0 = s1;
+                    // @ts-ignore
+                    if (s0 === peg$FAILED) {
                         // @ts-ignore
-                        s4.push(s5);
+                        s0 = peg$currPos;
+                        // @ts-ignore
+                        s1 = peg$currPos;
+                        // @ts-ignore
+                        s2 = [];
                         // @ts-ignore
                         if (peg$r3.test(input.charAt(peg$currPos))) {
                             // @ts-ignore
-                            s5 = input.charAt(peg$currPos);
+                            s3 = input.charAt(peg$currPos);
                             // @ts-ignore
                             peg$currPos++;
                             // @ts-ignore
                         }
                         else {
                             // @ts-ignore
-                            s5 = peg$FAILED;
+                            s3 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e71);
+                                peg$fail(peg$e74);
                             }
                         }
-                    }
-                    // @ts-ignore
-                    s2 = [s2, s3, s4];
-                    // @ts-ignore
-                    s1 = s2;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s1;
-                    // @ts-ignore
-                    s1 = peg$FAILED;
-                }
-                // @ts-ignore
-            }
-            else {
-                // @ts-ignore
-                peg$currPos = s1;
-                // @ts-ignore
-                s1 = peg$FAILED;
-            }
-            // @ts-ignore
-            if (s1 === peg$FAILED) {
-                // @ts-ignore
-                s1 = peg$currPos;
-                // @ts-ignore
-                if (input.charCodeAt(peg$currPos) === 46) {
-                    // @ts-ignore
-                    s2 = peg$c34;
-                    // @ts-ignore
-                    peg$currPos++;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    s2 = peg$FAILED;
-                    // @ts-ignore
-                    if (peg$silentFails === 0) {
-                        peg$fail(peg$e36);
-                    }
-                }
-                // @ts-ignore
-                if (s2 !== peg$FAILED) {
-                    // @ts-ignore
-                    s3 = [];
-                    // @ts-ignore
-                    if (peg$r3.test(input.charAt(peg$currPos))) {
                         // @ts-ignore
-                        s4 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s4 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e71);
-                        }
-                    }
-                    // @ts-ignore
-                    if (s4 !== peg$FAILED) {
-                        // @ts-ignore
-                        while (s4 !== peg$FAILED) {
+                        if (s3 !== peg$FAILED) {
                             // @ts-ignore
-                            s3.push(s4);
-                            // @ts-ignore
-                            if (peg$r3.test(input.charAt(peg$currPos))) {
+                            while (s3 !== peg$FAILED) {
                                 // @ts-ignore
-                                s4 = input.charAt(peg$currPos);
+                                s2.push(s3);
+                                // @ts-ignore
+                                if (peg$r3.test(input.charAt(peg$currPos))) {
+                                    // @ts-ignore
+                                    s3 = input.charAt(peg$currPos);
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s3 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e74);
+                                    }
+                                }
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            s2 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s2 !== peg$FAILED) {
+                            // @ts-ignore
+                            if (input.charCodeAt(peg$currPos) === 46) {
+                                // @ts-ignore
+                                s3 = peg$c37;
                                 // @ts-ignore
                                 peg$currPos++;
                                 // @ts-ignore
                             }
                             else {
                                 // @ts-ignore
-                                s4 = peg$FAILED;
+                                s3 = peg$FAILED;
                                 // @ts-ignore
                                 if (peg$silentFails === 0) {
-                                    peg$fail(peg$e71);
+                                    peg$fail(peg$e39);
                                 }
                             }
-                        }
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s3 = peg$FAILED;
-                    }
-                    // @ts-ignore
-                    if (s3 !== peg$FAILED) {
-                        // @ts-ignore
-                        s2 = [s2, s3];
-                        // @ts-ignore
-                        s1 = s2;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        peg$currPos = s1;
-                        // @ts-ignore
-                        s1 = peg$FAILED;
-                    }
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s1;
-                    // @ts-ignore
-                    s1 = peg$FAILED;
-                }
-            }
-            // @ts-ignore
-            if (s1 !== peg$FAILED) {
-                // @ts-ignore
-                s2 = peg$currPos;
-                // @ts-ignore
-                if (peg$r7.test(input.charAt(peg$currPos))) {
-                    // @ts-ignore
-                    s3 = input.charAt(peg$currPos);
-                    // @ts-ignore
-                    peg$currPos++;
-                    // @ts-ignore
-                }
-                else {
-                    // @ts-ignore
-                    s3 = peg$FAILED;
-                    // @ts-ignore
-                    if (peg$silentFails === 0) {
-                        peg$fail(peg$e81);
-                    }
-                }
-                // @ts-ignore
-                if (s3 !== peg$FAILED) {
-                    // @ts-ignore
-                    if (peg$r8.test(input.charAt(peg$currPos))) {
-                        // @ts-ignore
-                        s4 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s4 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e82);
-                        }
-                    }
-                    // @ts-ignore
-                    if (s4 === peg$FAILED) {
-                        // @ts-ignore
-                        s4 = null;
-                    }
-                    // @ts-ignore
-                    s5 = [];
-                    // @ts-ignore
-                    if (peg$r3.test(input.charAt(peg$currPos))) {
-                        // @ts-ignore
-                        s6 = input.charAt(peg$currPos);
-                        // @ts-ignore
-                        peg$currPos++;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        s6 = peg$FAILED;
-                        // @ts-ignore
-                        if (peg$silentFails === 0) {
-                            peg$fail(peg$e71);
-                        }
-                    }
-                    // @ts-ignore
-                    if (s6 !== peg$FAILED) {
-                        // @ts-ignore
-                        while (s6 !== peg$FAILED) {
                             // @ts-ignore
-                            s5.push(s6);
-                            // @ts-ignore
-                            if (peg$r3.test(input.charAt(peg$currPos))) {
+                            if (s3 !== peg$FAILED) {
                                 // @ts-ignore
-                                s6 = input.charAt(peg$currPos);
+                                s4 = [];
+                                // @ts-ignore
+                                if (peg$r3.test(input.charAt(peg$currPos))) {
+                                    // @ts-ignore
+                                    s5 = input.charAt(peg$currPos);
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s5 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e74);
+                                    }
+                                }
+                                // @ts-ignore
+                                while (s5 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    s4.push(s5);
+                                    // @ts-ignore
+                                    if (peg$r3.test(input.charAt(peg$currPos))) {
+                                        // @ts-ignore
+                                        s5 = input.charAt(peg$currPos);
+                                        // @ts-ignore
+                                        peg$currPos++;
+                                        // @ts-ignore
+                                    }
+                                    else {
+                                        // @ts-ignore
+                                        s5 = peg$FAILED;
+                                        // @ts-ignore
+                                        if (peg$silentFails === 0) {
+                                            peg$fail(peg$e74);
+                                        }
+                                    }
+                                }
+                                // @ts-ignore
+                                s2 = [s2, s3, s4];
+                                // @ts-ignore
+                                s1 = s2;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s1;
+                                // @ts-ignore
+                                s1 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s1;
+                            // @ts-ignore
+                            s1 = peg$FAILED;
+                        }
+                        // @ts-ignore
+                        if (s1 === peg$FAILED) {
+                            // @ts-ignore
+                            s1 = peg$currPos;
+                            // @ts-ignore
+                            if (input.charCodeAt(peg$currPos) === 46) {
+                                // @ts-ignore
+                                s2 = peg$c37;
                                 // @ts-ignore
                                 peg$currPos++;
                                 // @ts-ignore
                             }
                             else {
                                 // @ts-ignore
-                                s6 = peg$FAILED;
+                                s2 = peg$FAILED;
                                 // @ts-ignore
                                 if (peg$silentFails === 0) {
-                                    peg$fail(peg$e71);
+                                    peg$fail(peg$e39);
                                 }
+                            }
+                            // @ts-ignore
+                            if (s2 !== peg$FAILED) {
+                                // @ts-ignore
+                                s3 = [];
+                                // @ts-ignore
+                                if (peg$r3.test(input.charAt(peg$currPos))) {
+                                    // @ts-ignore
+                                    s4 = input.charAt(peg$currPos);
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s4 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e74);
+                                    }
+                                }
+                                // @ts-ignore
+                                if (s4 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    while (s4 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        s3.push(s4);
+                                        // @ts-ignore
+                                        if (peg$r3.test(input.charAt(peg$currPos))) {
+                                            // @ts-ignore
+                                            s4 = input.charAt(peg$currPos);
+                                            // @ts-ignore
+                                            peg$currPos++;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            s4 = peg$FAILED;
+                                            // @ts-ignore
+                                            if (peg$silentFails === 0) {
+                                                peg$fail(peg$e74);
+                                            }
+                                        }
+                                    }
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s3 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                                if (s3 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    s2 = [s2, s3];
+                                    // @ts-ignore
+                                    s1 = s2;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    peg$currPos = s1;
+                                    // @ts-ignore
+                                    s1 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s1;
+                                // @ts-ignore
+                                s1 = peg$FAILED;
                             }
                         }
                         // @ts-ignore
+                        if (s1 !== peg$FAILED) {
+                            // @ts-ignore
+                            s2 = peg$currPos;
+                            // @ts-ignore
+                            if (peg$r8.test(input.charAt(peg$currPos))) {
+                                // @ts-ignore
+                                s3 = input.charAt(peg$currPos);
+                                // @ts-ignore
+                                peg$currPos++;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                s3 = peg$FAILED;
+                                // @ts-ignore
+                                if (peg$silentFails === 0) {
+                                    peg$fail(peg$e93);
+                                }
+                            }
+                            // @ts-ignore
+                            if (s3 !== peg$FAILED) {
+                                // @ts-ignore
+                                if (peg$r9.test(input.charAt(peg$currPos))) {
+                                    // @ts-ignore
+                                    s4 = input.charAt(peg$currPos);
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s4 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e94);
+                                    }
+                                }
+                                // @ts-ignore
+                                if (s4 === peg$FAILED) {
+                                    // @ts-ignore
+                                    s4 = null;
+                                }
+                                // @ts-ignore
+                                s5 = [];
+                                // @ts-ignore
+                                if (peg$r3.test(input.charAt(peg$currPos))) {
+                                    // @ts-ignore
+                                    s6 = input.charAt(peg$currPos);
+                                    // @ts-ignore
+                                    peg$currPos++;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s6 = peg$FAILED;
+                                    // @ts-ignore
+                                    if (peg$silentFails === 0) {
+                                        peg$fail(peg$e74);
+                                    }
+                                }
+                                // @ts-ignore
+                                if (s6 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    while (s6 !== peg$FAILED) {
+                                        // @ts-ignore
+                                        s5.push(s6);
+                                        // @ts-ignore
+                                        if (peg$r3.test(input.charAt(peg$currPos))) {
+                                            // @ts-ignore
+                                            s6 = input.charAt(peg$currPos);
+                                            // @ts-ignore
+                                            peg$currPos++;
+                                            // @ts-ignore
+                                        }
+                                        else {
+                                            // @ts-ignore
+                                            s6 = peg$FAILED;
+                                            // @ts-ignore
+                                            if (peg$silentFails === 0) {
+                                                peg$fail(peg$e74);
+                                            }
+                                        }
+                                    }
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    s5 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                                if (s5 !== peg$FAILED) {
+                                    // @ts-ignore
+                                    s3 = [s3, s4, s5];
+                                    // @ts-ignore
+                                    s2 = s3;
+                                    // @ts-ignore
+                                }
+                                else {
+                                    // @ts-ignore
+                                    peg$currPos = s2;
+                                    // @ts-ignore
+                                    s2 = peg$FAILED;
+                                }
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                peg$currPos = s2;
+                                // @ts-ignore
+                                s2 = peg$FAILED;
+                            }
+                            // @ts-ignore
+                            if (s2 === peg$FAILED) {
+                                // @ts-ignore
+                                s2 = null;
+                            }
+                            // @ts-ignore
+                            if (peg$r10.test(input.charAt(peg$currPos))) {
+                                // @ts-ignore
+                                s3 = input.charAt(peg$currPos);
+                                // @ts-ignore
+                                peg$currPos++;
+                                // @ts-ignore
+                            }
+                            else {
+                                // @ts-ignore
+                                s3 = peg$FAILED;
+                                // @ts-ignore
+                                if (peg$silentFails === 0) {
+                                    peg$fail(peg$e95);
+                                }
+                            }
+                            // @ts-ignore
+                            if (s3 === peg$FAILED) {
+                                // @ts-ignore
+                                s3 = null;
+                            }
+                            // @ts-ignore
+                            peg$savedPos = s0;
+                            // @ts-ignore
+                            s0 = peg$f117();
+                            // @ts-ignore
+                        }
+                        else {
+                            // @ts-ignore
+                            peg$currPos = s0;
+                            // @ts-ignore
+                            s0 = peg$FAILED;
+                        }
                     }
-                    else {
-                        // @ts-ignore
-                        s5 = peg$FAILED;
-                    }
-                    // @ts-ignore
-                    if (s5 !== peg$FAILED) {
-                        // @ts-ignore
-                        s3 = [s3, s4, s5];
-                        // @ts-ignore
-                        s2 = s3;
-                        // @ts-ignore
-                    }
-                    else {
-                        // @ts-ignore
-                        peg$currPos = s2;
-                        // @ts-ignore
-                        s2 = peg$FAILED;
-                    }
-                    // @ts-ignore
                 }
-                else {
-                    // @ts-ignore
-                    peg$currPos = s2;
-                    // @ts-ignore
-                    s2 = peg$FAILED;
-                }
-                // @ts-ignore
-                if (s2 === peg$FAILED) {
-                    // @ts-ignore
-                    s2 = null;
-                }
-                // @ts-ignore
-                peg$savedPos = s0;
-                // @ts-ignore
-                s0 = peg$f102();
-                // @ts-ignore
-            }
-            else {
-                // @ts-ignore
-                peg$currPos = s0;
-                // @ts-ignore
-                s0 = peg$FAILED;
             }
             // @ts-ignore
             return s0;
@@ -21332,9 +22254,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c73) {
+            if (input.substr(peg$currPos, 2) === peg$c84) {
                 // @ts-ignore
-                s1 = peg$c73;
+                s1 = peg$c84;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -21344,7 +22266,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e83);
+                    peg$fail(peg$e96);
                 }
             }
             // @ts-ignore
@@ -21358,7 +22280,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$silentFails++;
                 // @ts-ignore
-                if (peg$r9.test(input.charAt(peg$currPos))) {
+                if (peg$r11.test(input.charAt(peg$currPos))) {
                     // @ts-ignore
                     s5 = input.charAt(peg$currPos);
                     // @ts-ignore
@@ -21370,7 +22292,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s5 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e84);
+                        peg$fail(peg$e97);
                     }
                 }
                 // @ts-ignore
@@ -21402,7 +22324,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e78);
+                            peg$fail(peg$e89);
                         }
                     }
                     // @ts-ignore
@@ -21438,7 +22360,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$silentFails++;
                     // @ts-ignore
-                    if (peg$r9.test(input.charAt(peg$currPos))) {
+                    if (peg$r11.test(input.charAt(peg$currPos))) {
                         // @ts-ignore
                         s5 = input.charAt(peg$currPos);
                         // @ts-ignore
@@ -21450,7 +22372,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e84);
+                            peg$fail(peg$e97);
                         }
                     }
                     // @ts-ignore
@@ -21482,7 +22404,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e78);
+                                peg$fail(peg$e89);
                             }
                         }
                         // @ts-ignore
@@ -21530,9 +22452,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = peg$currPos;
             // @ts-ignore
-            if (input.substr(peg$currPos, 2) === peg$c74) {
+            if (input.substr(peg$currPos, 2) === peg$c85) {
                 // @ts-ignore
-                s1 = peg$c74;
+                s1 = peg$c85;
                 // @ts-ignore
                 peg$currPos += 2;
                 // @ts-ignore
@@ -21542,7 +22464,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e85);
+                    peg$fail(peg$e98);
                 }
             }
             // @ts-ignore
@@ -21556,9 +22478,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 // @ts-ignore
                 peg$silentFails++;
                 // @ts-ignore
-                if (input.substr(peg$currPos, 2) === peg$c75) {
+                if (input.substr(peg$currPos, 2) === peg$c86) {
                     // @ts-ignore
-                    s5 = peg$c75;
+                    s5 = peg$c86;
                     // @ts-ignore
                     peg$currPos += 2;
                     // @ts-ignore
@@ -21568,7 +22490,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s5 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e86);
+                        peg$fail(peg$e99);
                     }
                 }
                 // @ts-ignore
@@ -21600,7 +22522,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e78);
+                            peg$fail(peg$e89);
                         }
                     }
                     // @ts-ignore
@@ -21636,9 +22558,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     peg$silentFails++;
                     // @ts-ignore
-                    if (input.substr(peg$currPos, 2) === peg$c75) {
+                    if (input.substr(peg$currPos, 2) === peg$c86) {
                         // @ts-ignore
-                        s5 = peg$c75;
+                        s5 = peg$c86;
                         // @ts-ignore
                         peg$currPos += 2;
                         // @ts-ignore
@@ -21648,7 +22570,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s5 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e86);
+                            peg$fail(peg$e99);
                         }
                     }
                     // @ts-ignore
@@ -21680,7 +22602,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                             s5 = peg$FAILED;
                             // @ts-ignore
                             if (peg$silentFails === 0) {
-                                peg$fail(peg$e78);
+                                peg$fail(peg$e89);
                             }
                         }
                         // @ts-ignore
@@ -21707,9 +22629,9 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     }
                 }
                 // @ts-ignore
-                if (input.substr(peg$currPos, 2) === peg$c75) {
+                if (input.substr(peg$currPos, 2) === peg$c86) {
                     // @ts-ignore
-                    s3 = peg$c75;
+                    s3 = peg$c86;
                     // @ts-ignore
                     peg$currPos += 2;
                     // @ts-ignore
@@ -21719,7 +22641,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     s3 = peg$FAILED;
                     // @ts-ignore
                     if (peg$silentFails === 0) {
-                        peg$fail(peg$e86);
+                        peg$fail(peg$e99);
                     }
                 }
                 // @ts-ignore
@@ -21754,7 +22676,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             s0 = [];
             // @ts-ignore
-            if (peg$r10.test(input.charAt(peg$currPos))) {
+            if (peg$r12.test(input.charAt(peg$currPos))) {
                 // @ts-ignore
                 s1 = input.charAt(peg$currPos);
                 // @ts-ignore
@@ -21766,7 +22688,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                 s1 = peg$FAILED;
                 // @ts-ignore
                 if (peg$silentFails === 0) {
-                    peg$fail(peg$e87);
+                    peg$fail(peg$e100);
                 }
             }
             // @ts-ignore
@@ -21776,7 +22698,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                     // @ts-ignore
                     s0.push(s1);
                     // @ts-ignore
-                    if (peg$r10.test(input.charAt(peg$currPos))) {
+                    if (peg$r12.test(input.charAt(peg$currPos))) {
                         // @ts-ignore
                         s1 = input.charAt(peg$currPos);
                         // @ts-ignore
@@ -21788,7 +22710,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
                         s1 = peg$FAILED;
                         // @ts-ignore
                         if (peg$silentFails === 0) {
-                            peg$fail(peg$e87);
+                            peg$fail(peg$e100);
                         }
                     }
                 }
@@ -21831,7 +22753,7 @@ const peggyParser = // Generated by Peggy 3.0.2.
             // @ts-ignore
             peg$savedPos = s0;
             // @ts-ignore
-            s1 = peg$f103();
+            s1 = peg$f118();
             // @ts-ignore
             s0 = s1;
             // @ts-ignore
@@ -22281,18 +23203,9 @@ __webpack_require__(/*! ./prettyPrint */ "./src/utils/prettyPrint.ts");
 /*!***************************!*\
   !*** ./src/zrCompiler.ts ***!
   \***************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZrCompiler = void 0;
 const zrSemanticAnalyzer_1 = __webpack_require__(/*! ./analyzer/zrSemanticAnalyzer */ "./src/analyzer/zrSemanticAnalyzer.ts");
@@ -22310,13 +23223,11 @@ class ZrCompiler {
         this.parser = new zrParser_1.ZrParser(context);
         this.analyzer = new zrSemanticAnalyzer_1.ZrSemanticAnalyzer(context);
     }
-    compile() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.fileResolver.resolve();
-            yield this.fileReader.read();
-            this.parser.parse();
-            this.analyzer.analyze();
-        });
+    async compile() {
+        this.fileResolver.resolve();
+        await this.fileReader.read();
+        this.parser.parse();
+        this.analyzer.analyze();
     }
 }
 exports.ZrCompiler = ZrCompiler;

@@ -6,10 +6,12 @@ import {TMaybeArray, TNullable} from "../../utils/zrCompilerTypes";
 import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeReference} from "../../static/type/typeReference";
 import {PredefinedType} from "../../static/type/predefined/predefinedType";
+import {ZrInternalError} from "../../../errors/zrInternalError";
 
 export type CharType = {
     type: Keywords.CharLiteral,
-    value: string
+    value: string,
+    hasError: boolean
 }
 
 export class CharHandler extends Handler {
@@ -17,9 +19,15 @@ export class CharHandler extends Handler {
 
     public _handle(node: CHAR) {
         super._handle(node);
+        let charValue = node.value;
+        if (node.hasError) {
+            charValue = "";
+            new ZrInternalError(`Character literal error: ${node.literal}`, this.context).report();
+        }
         this.value = {
             type: Keywords.CharLiteral,
-            value: node.value
+            value: charValue,
+            hasError: node.hasError
         };
     }
 

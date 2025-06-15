@@ -17,6 +17,26 @@ export class IntType extends PredefinedType {
         return `${this.unsigned ? "u" : ""}${TypeKeywords.Integer}${this.size}`;
     }
 
+
+    public compareTo(otherType: IntType): 0 | 1 | -1 {
+        if (this.size > otherType.size) {
+            return 1;
+        }
+        if (this.size < otherType.size) {
+            return -1;
+        }
+        if (this.unsigned && !otherType.unsigned) {
+            return 1;
+        }
+        if (this.unsigned && otherType.unsigned) {
+            return 0;
+        }
+        if (!this.unsigned && !otherType.unsigned) {
+            return 0;
+        }
+
+        return -1;
+    }
 }
 
 const intTypes = {

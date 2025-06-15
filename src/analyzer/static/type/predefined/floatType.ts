@@ -13,6 +13,16 @@ export class FloatType extends PredefinedType {
     protected get _typeName(): string {
         return `${TypeKeywords.Float}${this.size}`;
     }
+
+    public compareTo(otherType: FloatType): 0 | 1 | -1 {
+        if (this.size > otherType.size) {
+            return 1;
+        }
+        if (this.size === otherType.size) {
+            return 0;
+        }
+        return -1;
+    }
 }
 
 const floatTypes = {

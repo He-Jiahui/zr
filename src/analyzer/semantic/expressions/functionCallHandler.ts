@@ -1,6 +1,9 @@
 import {Handler} from "../common/handler";
 import {Keywords} from "../../../types/keywords";
 import type {ExpressionType} from "./types";
+import {TMaybeArray, TNullable} from "../../utils/zrCompilerTypes";
+import {TypeInferContext} from "../../static/type/typeInferContext";
+import {TypeAssignContext} from "../../static/type/typeAssignContext";
 
 export type FunctionCallType = {
     type: Keywords.FunctionCall,
@@ -30,6 +33,14 @@ export class FunctionCallHandler extends Handler {
             type: Keywords.FunctionCall,
             args: this.argsHandler.map(handler => handler?.value)
         };
+    }
+
+    protected _inferType(upperTypeInferContext: TNullable<TypeInferContext>): TNullable<TypeInferContext> {
+        return super._inferType(upperTypeInferContext);
+    }
+
+    protected _assignType(childrenContexts: TypeAssignContext[]): TNullable<TMaybeArray<TypeAssignContext>> {
+        return super._assignType(childrenContexts);
     }
 }
 

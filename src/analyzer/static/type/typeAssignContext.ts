@@ -7,6 +7,9 @@ import {PredefinedType} from "./predefined/predefinedType";
 import {ClassMetaType} from "./meta/classMetaType";
 import {InterfaceMetaType} from "./meta/interfaceMetaType";
 import {InterfaceSymbol} from "../symbol/interfaceSymbol";
+import {IntType} from "./predefined/intType";
+import {FloatType} from "./predefined/floatType";
+import {StringType} from "./predefined/stringType";
 
 export class TypeAssignContext extends ScriptContextAccessibleObject<ScriptContext> {
     typeReference: TNullable<TypeReference> = null;
@@ -67,11 +70,30 @@ export class TypeAssignContext extends ScriptContextAccessibleObject<ScriptConte
         //
 
         // basic type conversion
-        // todo
+        // lower int/float type to higher
+        if (lType instanceof IntType && rType instanceof IntType) {
+            return TypeAssignContext.create(lType.compareTo(rType) >= 0 ? left.typeReference : right.typeReference, handler);
+        }
+        if (lType instanceof FloatType && rType instanceof FloatType) {
+            return TypeAssignContext.create(lType.compareTo(rType) >= 0 ? left.typeReference : right.typeReference, handler);
+        }
+        // int to float
+        if (lType instanceof FloatType && rType instanceof IntType) {
+            return TypeAssignContext.create(left.typeReference, handler);
+        }
+        if (rType instanceof FloatType && lType instanceof IntType) {
+            return TypeAssignContext.create(right.typeReference, handler);
+        }
+        // everything to string
+        if (lType instanceof StringType) {
+            return TypeAssignContext.create(left.typeReference, handler);
+        }
+        if (rType instanceof StringType) {
+            return TypeAssignContext.create(right.typeReference, handler);
+        }
 
 
         // if we cannot convert, return null
         return TypeAssignContext.create(null, handler);
-
     }
 }

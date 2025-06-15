@@ -628,7 +628,7 @@ LogicalOrExpression
   }
 
 LogicalAndExpression
-  = left:EqualityExpression parts:(_ AMPERSAND_AMPERSAND _ right:EqualityExpression)* { 
+  = left:BinaryOrExpression parts:(_ AMPERSAND_AMPERSAND _ right:BinaryOrExpression)* { 
     return parts.reduce((acc, [,,,right]) => ({ 
       type: "Logical", 
       op: "&&", 
@@ -636,6 +636,39 @@ LogicalAndExpression
       right,
       location: location()
     }), left) 
+  }
+
+BinaryOrExpression
+  = left:BinaryXorExpression parts:(_ op:BinaryOrOperator _ right:BinaryXorExpression)* { 
+    return parts.reduce((acc, [,op,,right]) => ({ 
+      type: "Binary", 
+      op, 
+      left: acc, 
+      right,
+      location: location()
+    }), left) 
+  }
+
+BinaryXorExpression
+  = left:BinaryAndExpression parts:(_ op:BinaryXorOperator _ right:BinaryAndExpression)* {
+    return parts.reduce((acc, [,op,,right]) => ({
+      type: "Binary",
+      op,
+      left: acc,
+      right,
+      location: location()
+    }), left)
+  }
+
+BinaryAndExpression
+  = left:EqualityExpression parts:(_ op:BinaryAndOperator _ right:EqualityExpression)* {
+    return parts.reduce((acc, [,op,,right]) => ({
+      type: "Binary",
+      op,
+      left: acc,
+      right,
+      location: location()
+    }), left)
   }
 
 EqualityExpression
@@ -650,7 +683,7 @@ EqualityExpression
   }
 
 RelationalExpression
-  = left:AdditiveExpression parts:(_ op:RelationalOperator _ right:AdditiveExpression)* { 
+  = left:ShiftExpression parts:(_ op:RelationalOperator _ right:ShiftExpression)* { 
     return parts.reduce((acc, [,op,,right]) => ({ 
       type: "Binary", 
       op, 
@@ -658,6 +691,17 @@ RelationalExpression
       right,
       location: location()
     }), left) 
+  }
+
+ShiftExpression
+  = left:AdditiveExpression parts:(_ op:ShiftOperator _ right:AdditiveExpression)* {
+    return parts.reduce((acc, [,op,,right]) => ({
+      type: "Binary",
+      op,
+      left: acc,
+      right,
+      location: location()
+    }), left)
   }
 
 AdditiveExpression
@@ -835,11 +879,20 @@ SwitchExpression
 AssignmentOperator
   = EQUALS / PLUS_EQUALS / MINUS_EQUALS / STAR_EQUALS / SLASH_EQUALS / PERCENT_EQUALS
 
+BinaryOrOperator = OR
+
+BinaryXorOperator = XOR
+
+BinaryAndOperator = AND
+
 EqualityOperator
   = DOUBLE_EQUALS / BANG_EQUALS
 
 RelationalOperator
   = LESS_THAN_EQUALS / GREATER_THAN_EQUALS / LESS_THAN / GREATER_THAN 
+
+ShiftOperator
+  = LEFT_SHIFT / RIGHT_SHIFT
 
 AdditiveOperator
   = PLUS / MINUS
@@ -1053,6 +1106,11 @@ MINUS_EQUALS = "-="
 STAR_EQUALS = "*="
 SLASH_EQUALS = "/="
 PERCENT_EQUALS = "%="
+SHIFT_LEFT_EQUALS = "<<="
+SHIFT_RIGHT_EQUALS = ">>="
+BINARY_AND_EQUALS = "&="
+BINARY_OR_EQUALS = "|="
+BINARY_XOR_EQUALS = "^="
 DOUBLE_EQUALS = "=="
 BANG_EQUALS = "!="
 BANG = "!"
@@ -1068,6 +1126,11 @@ PERCENT = "%"
 AMPERSAND_AMPERSAND = "&&"
 PIPE_PIPE = "||"
 RIGHT_ARROW = "=>"
+LEFT_SHIFT = "<<"
+RIGHT_SHIFT = ">>"
+OR = "|"
+XOR = "^"
+AND = "&"
 
 
 // 字面量

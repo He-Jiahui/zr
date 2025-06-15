@@ -22,6 +22,8 @@ var ret = '\n';
 var xxx = '\x21';
 var zzz = '\'';
 var zzy = '\"';
+var test_exp = 5;
+test_exp += -5 * 4 + 1 << 2 == 4 & 1 && 2 | 3 ^ 5 % 1 || 2 ? 3 << 3 : 5;
 
 // 也可以以这样的方式引入
 var {matrix, pi, e, ln} = import("math");

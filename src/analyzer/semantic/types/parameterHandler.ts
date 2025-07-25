@@ -23,6 +23,8 @@ export class ParameterHandler extends Handler {
     private typeInfoHandler: TNullable<Handler> = null;
     private defaultValueHandler: TNullable<Handler> = null;
 
+    private invariant: string = "";
+
     protected get _children() {
         return [
             this.nameHandler,
@@ -54,11 +56,17 @@ export class ParameterHandler extends Handler {
         };
     }
 
+    protected _signByParentHandler(sign: string) {
+        super._signByParentHandler(sign);
+        this.invariant = sign;
+    }
+
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<Symbol> {
         const name = this.value.name.name;
         const symbol = this.declareSymbol<ParameterSymbol>(name, Keywords.Parameter, parentScope);
         if (symbol) {
             symbol.typePlaceholder = TypePlaceholder.create(this.value.typeInfo, this);
+            symbol.invariant = this.invariant;
         }
         return symbol;
     }

@@ -15,6 +15,7 @@ import {VariableSymbol} from "../static/symbol/variableSymbol";
 import {TestSymbol} from "../static/symbol/testSymbol";
 import {Keywords} from "../../types/keywords";
 import type {TopLevelStatementType} from "./statements/types";
+import {IntermediateSymbol} from "../static/symbol/intermediateSymbol";
 
 export type ScriptType = {
     type: Keywords.Script,
@@ -103,6 +104,10 @@ export class ScriptHandler extends Handler {
                     break;
                 case Keywords.Variable: {
                     scope.addVariable(child as VariableSymbol);
+                }
+                    break;
+                case Keywords.Intermediate: {
+                    scope.addIntermediate(child as IntermediateSymbol);
                 }
                     break;
                 default:

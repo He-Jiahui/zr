@@ -5,6 +5,7 @@ import {TypePlaceholder} from "../type/typePlaceholder";
 
 export class VariableSymbol extends Symbol {
     public readonly type: string = Keywords.Variable;
+    public invariant: string = "";
 
     public typePlaceholder: TypePlaceholder;
 

@@ -8,11 +8,13 @@ import type {VariableSymbol} from "../symbol/variableSymbol";
 import {Scope} from "./scope";
 import {TestSymbol} from "../symbol/testSymbol";
 import {Keywords, ScopeKeywords} from "../../../types/keywords";
+import {IntermediateSymbol} from "../symbol/intermediateSymbol";
 
 export class ModuleScope extends Scope {
     public readonly type: string = ScopeKeywords.ModuleScope;
 
     protected readonly functions: SymbolTable<FunctionSymbol> = new SymbolTable();
+    protected readonly intermediate: SymbolTable<IntermediateSymbol> = new SymbolTable();
     protected readonly variables: SymbolTable<VariableSymbol> = new SymbolTable();
     protected readonly classes: SymbolTable<ClassSymbol> = new SymbolTable();
     protected readonly interfaces: SymbolTable<InterfaceSymbol> = new SymbolTable();
@@ -20,10 +22,15 @@ export class ModuleScope extends Scope {
     protected readonly enums: SymbolTable<EnumSymbol> = new SymbolTable();
     protected readonly tests: SymbolTable<TestSymbol> = new SymbolTable();
 
-    protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.variables, this.classes, this.interfaces, this.structs, this.enums, this.tests];
+    protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.intermediate, this.variables, this.classes, this.interfaces, this.structs, this.enums, this.tests];
 
     public addFunction($function: TSymbolOrSymbolArray<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
+        return success;
+    }
+
+    public addIntermediate(intermediate: TSymbolOrSymbolArray<IntermediateSymbol>): boolean {
+        const success = this.checkSymbolUnique(intermediate) && this.intermediate.addSymbol(intermediate);
         return success;
     }
 

@@ -20,7 +20,8 @@ TopLevelStatement
   / FunctionDeclaration
   / TestDeclaration
   / ExpressionStatement
-  
+  / IntermediateStatement
+
 
 
 
@@ -576,6 +577,65 @@ ForeachLoop
       location: location()
     }
   }
+
+// ====================== 字节码 定义 ======================
+IntermediateStatement
+  = INTERMEDIATE _ declaration:IntermediateDeclaration  _ LBRACE _ instructions:IntermediateInstruction* _ RBRACE {
+    return {
+      type: "IntermediateStatement",
+      declaration,
+      instructions: instructions.filter(i => i !== null), // 过滤空白和注释
+      location: location()
+    }
+  }
+
+IntermediateDeclaration
+  = name:IDENTIFIER _ LPAREN _ params:ParameterList? _ args:(COMMA _ PARAMS _ Parameter _)? _ RPAREN _ returnPart:(COLON _ Type)? _ 
+  closures:(LESS_THAN _ ParameterList? _ GREATER_THAN)? _ 
+  constants:(LBRACKET _ IntermediateConstant* _ RBRACKET)? _ 
+  locals:(LPAREN _ ParameterList? _ RPAREN)? _ {
+    return {
+      type: "IntermediateDeclaration",
+      name,
+      params: params || [],
+      args: args? args[4] : null,
+      returnPart: returnPart? returnPart[2] : null,
+      closures: closures ? closures[2] : [],
+      constants: constants ? constants[2] : [],
+      locals: locals ? locals[2] : [],
+      location: location()
+    }
+  }
+
+IntermediateConstant
+  = _ name:IDENTIFIER _ EQUALS _ value:Literal _ SEMICOLON _ {
+    return {
+      type: "IntermediateConstant",
+      name,
+      value,
+      location: location()
+    }
+  }
+
+IntermediateInstruction
+  = _ name:IDENTIFIER _ values:(IntermediateInstructionParameter _)* _ SEMICOLON {
+    return {
+      type: "IntermediateInstruction",
+      name,
+      values: values.map(v => v[0]), // 提取标识符
+      location: location()
+    }
+  }
+
+IntermediateInstructionParameter
+  = value:( IDENTIFIER / DECIMAL / HEXADECIMAL / OCTAL ) {
+    return {
+      type: "IntermediateInstructionParameter",
+      value,
+      location: location()
+    }
+  }
+
 // ====================== Block 定义 ======================
 Block
   = LBRACE _ statements:Statement* _ RBRACE { 
@@ -586,7 +646,7 @@ Block
         location: location()
       } 
     }
-// ====================== 修复后的表达式系统 ======================
+// ====================== 表达式系统 ======================
 Expression
   = _ exp:AssignmentExpression _ {
     return exp; 
@@ -1055,6 +1115,7 @@ CLASS = "class"
 INTERFACE = "interface"
 ENUM = "enum"
 TEST = "test"
+INTERMEDIATE = "intermediate"
 
 VAR = "var"
 PUB = "pub"

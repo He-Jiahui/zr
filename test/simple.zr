@@ -245,3 +245,32 @@ class Student:Person, Man{
 }
 // 声明外动作加载脚本时立刻执行
 new Student();
+
+intermediate TestIntermediate(i:int, j:int):int
+<
+    c1: int,
+    c2: int,
+    c3: int
+>
+[
+    num = 1;
+    str = "test";
+    num2 = 2;
+]
+(
+    var1: int,
+    var2: int
+)
+{
+    get_constant num;
+    set_stack var1; // load num
+    get_constant num2;
+    set_stack var2; // load num2
+    add_int var1 var2; // num + num2
+    set_stack var1; // var1 = num + num2
+    add_int i j; // i + j
+    set_stack var2; // var2 = i + j
+    add_int var1 var2; // var1 + var2
+    set_stack 1;
+    function_return 0 1;
+}

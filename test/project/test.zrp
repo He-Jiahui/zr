@@ -1,0 +1,24 @@
+{
+    "name": "Test Project",
+    "version": "1.0.0",
+    "description": "This is a test project configuration file.",
+    "author": "He Jiahui",
+    "email": "he.jiahui@example.com",
+    "url": "https://example.com/test-project",
+    "license": "MIT",
+    "copyright": "2023 He Jiahui",
+    "binary": "bin",
+    "source": "src",
+    "entry": "simple",
+    "redirects": {
+        "src": "source",
+        "bin": "binary",
+        "lib": "libraries"
+    },
+    "includes": [
+        "config.zrp",
+        "settings.zrp"
+    ],
+    "dependency": "dependency.json",
+    "local": "local.json"
+}

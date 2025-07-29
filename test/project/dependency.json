@@ -1,0 +1,8 @@
+[
+  {
+    "package": "@zr/math",
+    "version": "1.0.0",
+    "root": "src/third_party/zr/math",
+    "url": "https://example.com/zr/math"
+  }
+]

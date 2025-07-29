@@ -5610,6 +5610,7 @@ exports.IntermediateScope = void 0;
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
+const function_1 = __webpack_require__(/*! ../../../generator/writable/function */ "./src/generator/writable/function.ts");
 class IntermediateScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
@@ -5641,6 +5642,18 @@ class IntermediateScope extends scope_1.Scope {
         const success = this.checkSymbolUnique(closureSymbol) && this.closures.addSymbol(closureSymbol);
         return success;
     }
+    _toWritable() {
+        const writable = new function_1.ZrIntermediateFunction();
+        const owner = this.ownerSymbol;
+        writable.name = owner.name || "";
+        writable.startLine = owner.location.start.line;
+        writable.endLine = owner.location.end.line;
+        writable.parameterLength = this.parameters.getAllSymbols().length;
+        // todo:
+        writable.hasVarArgs = 0;
+        // todo
+        return writable;
+    }
 }
 exports.IntermediateScope = IntermediateScope;
 scope_1.Scope.registerScope(keywords_1.Keywords.Intermediate, IntermediateScope);
@@ -5660,6 +5673,7 @@ exports.ModuleScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
+const module_1 = __webpack_require__(/*! ../../../generator/writable/module */ "./src/generator/writable/module.ts");
 class ModuleScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
@@ -5709,6 +5723,22 @@ class ModuleScope extends scope_1.Scope {
     _getSymbol(name) {
         const symbol = this.variables.getSymbol(name) || this.functions.getSymbol(name) || this.classes.getSymbol(name) || this.interfaces.getSymbol(name) || this.structs.getSymbol(name) || this.enums.getSymbol(name);
         return symbol;
+    }
+    _toWritable() {
+        const module = new module_1.ZrIntermediateModule();
+        const owner = this.ownerSymbol;
+        module.name = owner.name || "";
+        // todo: only intermediate supports now
+        for (const intermediate of this.intermediate.getAllSymbols()) {
+            const scope = intermediate.childScope;
+            if (scope) {
+                const declareData = new module_1.ZrIntermediateDeclare();
+                declareData.type = module_1.ZrIntermediateDeclareType.Function;
+                declareData.data = scope.toWritable();
+                module.declares.push(declareData);
+            }
+        }
+        return module;
     }
 }
 exports.ModuleScope = ModuleScope;
@@ -5818,6 +5848,9 @@ class Scope {
         }
         return predefinedType_1.PredefinedType.getPredefinedType(typeName);
     }
+    toWritable() {
+        return this._toWritable();
+    }
     checkSymbolUnique(symbol) {
         if (!symbol) {
             return false;
@@ -5860,6 +5893,9 @@ class Scope {
         return null;
     }
     _getType(type) {
+        return null;
+    }
+    _toWritable() {
         return null;
     }
 }
@@ -7537,9 +7573,12 @@ exports.ZrHandlerDispatcher = ZrHandlerDispatcher;
 /*!********************************************!*\
   !*** ./src/analyzer/zrSemanticAnalyzer.ts ***!
   \********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZrSemanticAnalyzer = void 0;
 __webpack_require__(/*! ./semantic/index */ "./src/analyzer/semantic/index.ts");
@@ -7547,6 +7586,9 @@ __webpack_require__(/*! ./static/index */ "./src/analyzer/static/index.ts");
 const handler_1 = __webpack_require__(/*! ./semantic/common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const zrHandlerDispatcher_1 = __webpack_require__(/*! ./utils/zrHandlerDispatcher */ "./src/analyzer/utils/zrHandlerDispatcher.ts");
 const prettyPrint_1 = __webpack_require__(/*! ../utils/prettyPrint */ "./src/utils/prettyPrint.ts");
+const writer_1 = __webpack_require__(/*! ../generator/writer/writer */ "./src/generator/writer/writer.ts");
+const fs_1 = __importDefault(__webpack_require__(/*! fs */ "fs"));
+const head_1 = __webpack_require__(/*! ../generator/writable/head */ "./src/generator/writable/head.ts");
 class ZrSemanticAnalyzer {
     constructor(context) {
         this.context = context;
@@ -7575,6 +7617,13 @@ class ZrSemanticAnalyzer {
             return handler.assignType([]);
         });
         (0, prettyPrint_1.prettyPrintSymbolTables)(this.topSymbol);
+        // todo: multi module bundle support
+        const head = new head_1.ZrIntermediateHead();
+        const writable = this.topSymbol.childScope.toWritable();
+        head.addModule(writable);
+        const writer = new writer_1.ZrIntermediateWriter();
+        writer.writeAll(head);
+        fs_1.default.writeFileSync("./test.zr", writer.buffer);
     }
 }
 exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
@@ -7911,6 +7960,504 @@ class ZrSyntaxError extends zrError_1.ZrError {
     }
 }
 exports.ZrSyntaxError = ZrSyntaxError;
+
+
+/***/ }),
+
+/***/ "./src/generator/type/valueType.ts":
+/*!*****************************************!*\
+  !*** ./src/generator/type/valueType.ts ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.IntermediateValueType = void 0;
+var IntermediateValueType;
+(function (IntermediateValueType) {
+    IntermediateValueType[IntermediateValueType["Writable"] = 0] = "Writable";
+    IntermediateValueType[IntermediateValueType["Null"] = 1] = "Null";
+    IntermediateValueType[IntermediateValueType["String"] = 2] = "String";
+    IntermediateValueType[IntermediateValueType["Bool"] = 3] = "Bool";
+    IntermediateValueType[IntermediateValueType["Int8"] = 4] = "Int8";
+    IntermediateValueType[IntermediateValueType["Int16"] = 5] = "Int16";
+    IntermediateValueType[IntermediateValueType["Int32"] = 6] = "Int32";
+    IntermediateValueType[IntermediateValueType["Int64"] = 7] = "Int64";
+    IntermediateValueType[IntermediateValueType["UInt8"] = 8] = "UInt8";
+    IntermediateValueType[IntermediateValueType["UInt16"] = 9] = "UInt16";
+    IntermediateValueType[IntermediateValueType["UInt32"] = 10] = "UInt32";
+    IntermediateValueType[IntermediateValueType["UInt64"] = 11] = "UInt64";
+    IntermediateValueType[IntermediateValueType["Float"] = 12] = "Float";
+    IntermediateValueType[IntermediateValueType["Double"] = 13] = "Double";
+    IntermediateValueType[IntermediateValueType["Binary"] = 14] = "Binary";
+})(IntermediateValueType || (exports.IntermediateValueType = IntermediateValueType = {}));
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/function.ts":
+/*!********************************************!*\
+  !*** ./src/generator/writable/function.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateFunction = void 0;
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateFunction extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.instructions = [];
+        this.localVariables = [];
+        this.constantVariables = [];
+        this.closureVariables = [];
+        this.debugInfos = [];
+        this.toWriteData = [
+            ["name", valueType_1.IntermediateValueType.String],
+            ["startLine", valueType_1.IntermediateValueType.UInt64],
+            ["endLine", valueType_1.IntermediateValueType.UInt64],
+            ["parameterLength", valueType_1.IntermediateValueType.UInt64],
+            ["hasVarArgs", valueType_1.IntermediateValueType.UInt64],
+            ["instructions", valueType_1.IntermediateValueType.Writable],
+            ["localVariables", valueType_1.IntermediateValueType.Writable],
+            ["constantVariables", valueType_1.IntermediateValueType.Writable],
+            ["closureVariables", valueType_1.IntermediateValueType.Writable],
+            ["debugInfos", valueType_1.IntermediateValueType.Writable]
+        ];
+    }
+}
+exports.ZrIntermediateFunction = ZrIntermediateFunction;
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/head.ts":
+/*!****************************************!*\
+  !*** ./src/generator/writable/head.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateHead = void 0;
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateHead extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super();
+        this.signature = "\x01ZR\x02";
+        this.versionMajor = 0;
+        this.versionMinor = 0;
+        this.versionPatch = 1;
+        this.nativeIntSize = 8;
+        this.sizeTypeSize = 8;
+        this.instructionSize = 8;
+        this.endianness = false;
+        this.debug = false;
+        this.opt1 = 0;
+        this.opt2 = 0;
+        this.opt3 = 0;
+        this.modules = [];
+        this.toWriteData = [
+            ["signature", valueType_1.IntermediateValueType.Binary, 4],
+            ["versionMajor", valueType_1.IntermediateValueType.Int32],
+            ["versionMinor", valueType_1.IntermediateValueType.Int32],
+            ["versionPatch", valueType_1.IntermediateValueType.Int32],
+            ["format", valueType_1.IntermediateValueType.Int64],
+            ["nativeIntSize", valueType_1.IntermediateValueType.Int8],
+            ["sizeTypeSize", valueType_1.IntermediateValueType.Int8],
+            ["instructionSize", valueType_1.IntermediateValueType.Int8],
+            ["endianness", valueType_1.IntermediateValueType.Bool],
+            ["debug", valueType_1.IntermediateValueType.Bool],
+            ["opt1", valueType_1.IntermediateValueType.Int32],
+            ["opt2", valueType_1.IntermediateValueType.Int32],
+            ["opt3", valueType_1.IntermediateValueType.Int32],
+            ["modules", valueType_1.IntermediateValueType.Writable]
+        ];
+        this.format = BigInt(this.versionMajor) << BigInt(32) | BigInt(this.versionMinor);
+    }
+    addModule(module) {
+        this.modules.push(module);
+    }
+}
+exports.ZrIntermediateHead = ZrIntermediateHead;
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/module.ts":
+/*!******************************************!*\
+  !*** ./src/generator/writable/module.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateDeclare = exports.ZrIntermediateDeclareType = exports.ZrIntermediateImport = exports.ZrIntermediateModule = void 0;
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+const writer_1 = __webpack_require__(/*! ../writer/writer */ "./src/generator/writer/writer.ts");
+const CryptoJS = __importStar(__webpack_require__(/*! crypto-js */ "crypto-js"));
+class ZrIntermediateModule extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.imports = [];
+        this.declares = [];
+        this.toWriteData = [
+            ["name", valueType_1.IntermediateValueType.String],
+            ["md5", valueType_1.IntermediateValueType.String],
+            ["imports", valueType_1.IntermediateValueType.Writable],
+            ["declares", valueType_1.IntermediateValueType.Writable]
+        ];
+    }
+    _preprocess() {
+        this.md5 = "";
+        const writer = new writer_1.ZrIntermediateWriter();
+        writer.writeAll(this);
+        const wordArray = CryptoJS.lib.WordArray.create(writer.buffer);
+        this.md5 = CryptoJS.MD5(wordArray).toString();
+    }
+}
+exports.ZrIntermediateModule = ZrIntermediateModule;
+class ZrIntermediateImport extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.toWriteData = [
+            ["name", valueType_1.IntermediateValueType.String],
+            ["md5", valueType_1.IntermediateValueType.String]
+        ];
+    }
+}
+exports.ZrIntermediateImport = ZrIntermediateImport;
+var ZrIntermediateDeclareType;
+(function (ZrIntermediateDeclareType) {
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Class"] = 0] = "Class";
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Struct"] = 1] = "Struct";
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Interface"] = 2] = "Interface";
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Function"] = 3] = "Function";
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Enum"] = 4] = "Enum";
+    ZrIntermediateDeclareType[ZrIntermediateDeclareType["Field"] = 5] = "Field";
+})(ZrIntermediateDeclareType || (exports.ZrIntermediateDeclareType = ZrIntermediateDeclareType = {}));
+class ZrIntermediateDeclare extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.toWriteData = [
+            ["type", valueType_1.IntermediateValueType.Int32],
+            ["data", valueType_1.IntermediateValueType.Writable, true]
+        ];
+    }
+}
+exports.ZrIntermediateDeclare = ZrIntermediateDeclare;
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/writable.ts":
+/*!********************************************!*\
+  !*** ./src/generator/writable/writable.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateWritable = void 0;
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateWritable {
+    constructor() {
+        this.toWriteData = [];
+    }
+    preprocess() {
+        for (const writeData of this.toWriteData) {
+            if (writeData[1] === valueType_1.IntermediateValueType.Writable) {
+                const isArray = !writeData[2];
+                const data = this[writeData[0]];
+                if (isArray) {
+                    const dataArr = data;
+                    for (let i = 0; i < dataArr.length; i++) {
+                        dataArr[i].preprocess();
+                    }
+                }
+                else {
+                    const dataSingle = data;
+                    dataSingle.preprocess();
+                }
+            }
+        }
+        this._preprocess();
+    }
+    _preprocess() {
+    }
+}
+exports.ZrIntermediateWritable = ZrIntermediateWritable;
+
+
+/***/ }),
+
+/***/ "./src/generator/writer/writer.ts":
+/*!****************************************!*\
+  !*** ./src/generator/writer/writer.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateWriter = void 0;
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateWriter {
+    constructor(littleEndian = true) {
+        this._size = 0;
+        this._capacity = 0;
+        this._buffer = null;
+        this._size = 0;
+        this._capacity = 0;
+        this._littleEndian = littleEndian;
+    }
+    get buffer() {
+        return new Uint8Array(this._buffer.buffer, 0, this._size);
+    }
+    writeAll(writable) {
+        for (const data of writable.toWriteData) {
+            this.write(data, writable[data[0]]);
+        }
+    }
+    clear() {
+        this._buffer = null;
+        this._size = 0;
+        this._capacity = 0;
+    }
+    write(data, raw) {
+        const type = data[1];
+        const args = data[2];
+        const field = raw;
+        switch (type) {
+            case valueType_1.IntermediateValueType.Writable:
+                {
+                    if (args) {
+                        // single field
+                        const writableField = field;
+                        this.writeAll(writableField);
+                    }
+                    else {
+                        // array field
+                        const writableFields = field;
+                        this.writeUInt64(BigInt(writableFields.length));
+                        for (const writableField of writableFields) {
+                            this.writeAll(writableField);
+                        }
+                    }
+                }
+                break;
+            case valueType_1.IntermediateValueType.Binary:
+                {
+                    this.writeBinary(field, args);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Null:
+                {
+                    this.writeBool(false);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Bool:
+                {
+                    this.writeBool(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Int8:
+                {
+                    this.writeInt8(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Int16:
+                {
+                    this.writeInt16(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Int32:
+                {
+                    this.writeInt32(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Int64:
+                {
+                    this.writeInt64(BigInt(field));
+                }
+                break;
+            case valueType_1.IntermediateValueType.String:
+                {
+                    this.writeString(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.UInt8:
+                {
+                    this.writeUInt8(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.UInt16:
+                {
+                    this.writeUInt16(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.UInt32:
+                {
+                    this.writeUInt32(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.UInt64:
+                {
+                    this.writeUInt64(BigInt(field));
+                }
+                break;
+            case valueType_1.IntermediateValueType.Float:
+                {
+                    this.writeFloat(field);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Double:
+                {
+                    this.writeDouble(field);
+                }
+                break;
+            default: {
+                throw new Error("Unknown type");
+            }
+        }
+    }
+    ensureCapacity(required) {
+        if (this._size + required > this._capacity) {
+            this._capacity = this._capacity * 2 + required;
+            const prevBuffer = this._buffer;
+            const newBuffer = Buffer.alloc(this._capacity);
+            if (prevBuffer) {
+                prevBuffer.copy(newBuffer, 0, 0, this._size);
+            }
+            this._buffer = newBuffer;
+        }
+        return this._buffer;
+    }
+    writeUInt8(value) {
+        this._size = this.ensureCapacity(1).writeUInt8(value, this._size);
+    }
+    writeUInt16(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(2).writeUInt16LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(2).writeUInt16BE(value, this._size);
+        }
+    }
+    writeUInt32(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(4).writeUInt32LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(4).writeUInt32BE(value, this._size);
+        }
+    }
+    writeUInt64(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(8).writeBigUInt64LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(8).writeBigUInt64BE(value, this._size);
+        }
+    }
+    writeInt8(value) {
+        this._size = this.ensureCapacity(1).writeInt8(value, this._size);
+    }
+    writeInt16(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(2).writeInt16LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(2).writeInt16BE(value, this._size);
+        }
+    }
+    writeInt32(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(4).writeInt32LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(4).writeInt32BE(value, this._size);
+        }
+    }
+    writeInt64(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(8).writeBigInt64LE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(8).writeBigInt64BE(value, this._size);
+        }
+    }
+    writeBinary(value, length) {
+        for (let i = 0; i < length; i++) {
+            this.writeUInt8(value.charCodeAt(i));
+        }
+    }
+    writeString(value) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(value);
+        const length = data.length;
+        this.writeUInt64(BigInt(length));
+        for (let i = 0; i < length; i++) {
+            this.writeUInt8(data[i]);
+        }
+    }
+    writeBool(value) {
+        this.writeUInt8(value ? 1 : 0);
+    }
+    writeFloat(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(4).writeFloatLE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(4).writeFloatBE(value, this._size);
+        }
+    }
+    writeDouble(value) {
+        if (this._littleEndian) {
+            this._size = this.ensureCapacity(8).writeDoubleLE(value, this._size);
+        }
+        else {
+            this._size = this.ensureCapacity(8).writeDoubleBE(value, this._size);
+        }
+    }
+}
+exports.ZrIntermediateWriter = ZrIntermediateWriter;
 
 
 /***/ }),
@@ -25073,6 +25620,16 @@ class ZrCompiler {
 }
 exports.ZrCompiler = ZrCompiler;
 
+
+/***/ }),
+
+/***/ "crypto-js":
+/*!****************************!*\
+  !*** external "crypto-js" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("crypto-js");
 
 /***/ }),
 

@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    {
+      "name": "@zr/math",
+      "url": "https://example.com/zr/math",
+      "version": "1.0.0"
+    }
+  ]
+}

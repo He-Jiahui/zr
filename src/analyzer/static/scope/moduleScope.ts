@@ -9,6 +9,14 @@ import {Scope} from "./scope";
 import {TestSymbol} from "../symbol/testSymbol";
 import {Keywords, ScopeKeywords} from "../../../types/keywords";
 import {IntermediateSymbol} from "../symbol/intermediateSymbol";
+import {TNullable} from "../../utils/zrCompilerTypes";
+import {ZrIntermediateWritable} from "../../../generator/writable/writable";
+import {
+    ZrIntermediateDeclare,
+    ZrIntermediateDeclareType,
+    ZrIntermediateModule
+} from "../../../generator/writable/module";
+import type {ModuleSymbol} from "../symbol/moduleSymbol";
 
 export class ModuleScope extends Scope {
     public readonly type: string = ScopeKeywords.ModuleScope;
@@ -67,6 +75,25 @@ export class ModuleScope extends Scope {
     protected _getSymbol(name: string) {
         const symbol = this.variables.getSymbol(name) || this.functions.getSymbol(name) || this.classes.getSymbol(name) || this.interfaces.getSymbol(name) || this.structs.getSymbol(name) || this.enums.getSymbol(name);
         return symbol;
+    }
+
+    protected _toWritable(): TNullable<ZrIntermediateWritable> {
+        const module = new ZrIntermediateModule();
+        const owner = this.ownerSymbol as ModuleSymbol;
+        module.name = owner.name || "";
+
+        // todo: only intermediate supports now
+        for (const intermediate of this.intermediate.getAllSymbols()) {
+            const scope = intermediate.childScope;
+            if (scope) {
+                const declareData = new ZrIntermediateDeclare();
+                declareData.type = ZrIntermediateDeclareType.Function;
+                declareData.data = scope.toWritable();
+                module.declares.push(declareData);
+            }
+        }
+
+        return module;
     }
 }
 

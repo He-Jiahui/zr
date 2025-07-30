@@ -46,8 +46,11 @@ export class IntermediateScope extends Scope {
 
 
     protected _toWritable(): TNullable<ZrIntermediateWritable> {
+
         const writable = new ZrIntermediateFunction();
         const owner = this.ownerSymbol as IntermediateSymbol;
+        const handler = owner.handler!;
+
         writable.name = owner.name || "";
         writable.startLine = owner.location!.start.line;
         writable.endLine = owner.location!.end.line;

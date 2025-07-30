@@ -14,6 +14,7 @@ import {TypePlaceholder} from "../../../static/type/typePlaceholder";
 import {IntermediateScope} from "../../../static/scope/intermediateScope";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
+import {ZrIntermediateWritable} from "../../../../generator/writable/writable";
 
 export type IntermediateType = {
     type: Keywords.Intermediate,
@@ -167,6 +168,10 @@ export class IntermediateHandler extends Handler {
         return scope.ownerSymbol;
     }
 
+
+    protected _generateWritable(): TNullable<ZrIntermediateWritable> {
+        return super._generateWritable();
+    }
 }
 
 Handler.registerHandler(Keywords.IntermediateStatement, IntermediateHandler);

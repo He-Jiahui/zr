@@ -262,15 +262,15 @@ intermediate TestIntermediate(i:int, j:int):int
     var2: int
 )
 {
-    get_constant num;
-    set_stack var1; // load num
-    get_constant num2;
-    set_stack var2; // load num2
-    add_int var1 var2; // num + num2
-    set_stack var1; // var1 = num + num2
-    add_int i j; // i + j
-    set_stack var2; // var2 = i + j
-    add_int var1 var2; // var1 + var2
-    set_stack 1;
-    function_return 0 1;
+    GetConstant num;
+    SetStack var1; // load num
+    GetConstant num2;
+    SetStack var2; // load num2
+    AddInt var1 var2; // num + num2
+    SetStack var1; // var1 = num + num2
+    AddInt i j; // i + j
+    SetStack var2; // var2 = i + j
+    AddInt var1 var2; // var1 + var2
+    SetStack 1;
+    FunctionReturn 0 1;
 }

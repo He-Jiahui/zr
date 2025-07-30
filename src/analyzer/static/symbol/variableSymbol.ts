@@ -11,6 +11,11 @@ export class VariableSymbol extends Symbol {
 
     public typeRef: TypeReference;
 
+    public startLine: number;
+    public endLine: number;
+
+    public index: number;
+
     public defaultValue: any;//TODO: type
 }
 

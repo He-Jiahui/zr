@@ -7,6 +7,7 @@ import {TMaybeArray, TNullable, TSemanticType} from "../../utils/zrCompilerTypes
 import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeAssignContext} from "../../static/type/typeAssignContext";
 import {TypeDefinition} from "../../static/type/typeDefinition";
+import {ZrIntermediateWritable} from "../../../generator/writable/writable";
 
 export type AnyNode = {
     type: string;
@@ -18,6 +19,7 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     private static readonly handlers: Map<string, typeof Handler> = new Map();
     public value: TSemanticType<any>;
     public location: FileRange;
+    public generatedWritable: TNullable<ZrIntermediateWritable> = null;
     protected _currentScope: TNullable<Scope>;
 
     public constructor(context: ScriptContext) {
@@ -80,6 +82,10 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return this._assignType(childrenContexts);
     }
 
+    public generateWritable() {
+        return this._generateWritable();
+    }
+
     protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
         const createdSymbol = SymbolDeclaration.createSymbol<T>(symbolName, symbolType, this, parentScope);
         const createdScope = Scope.createScope(symbolType, parentScope, createdSymbol);
@@ -132,6 +138,10 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
     }
 
     protected _assignType(childrenContexts: Array<TypeAssignContext>): TNullable<TMaybeArray<TypeAssignContext>> {
+        return null;
+    }
+
+    protected _generateWritable(): TNullable<ZrIntermediateWritable> {
         return null;
     }
 

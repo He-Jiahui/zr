@@ -18,6 +18,7 @@ const symbol_1 = __webpack_require__(/*! ../../static/symbol/symbol */ "./src/an
 class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     constructor(context) {
         super(context);
+        this.generatedWritable = null;
     }
     get symbol() {
         return this.context.getSymbolFromHandler(this);
@@ -64,6 +65,9 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     assignType(childrenContexts) {
         return this._assignType(childrenContexts);
     }
+    generateWritable() {
+        return this._generateWritable();
+    }
     declareSymbol(symbolName, symbolType, parentScope) {
         const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
         const createdScope = scope_1.Scope.createScope(symbolType, parentScope, createdSymbol);
@@ -107,6 +111,9 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
         return null;
     }
     _assignType(childrenContexts) {
+        return null;
+    }
+    _generateWritable() {
         return null;
     }
     _handleInternal(node) {
@@ -2015,6 +2022,9 @@ class IntermediateHandler extends handler_1.Handler {
             }
         }
         return scope.ownerSymbol;
+    }
+    _generateWritable() {
+        return super._generateWritable();
     }
 }
 exports.IntermediateHandler = IntermediateHandler;
@@ -5645,6 +5655,7 @@ class IntermediateScope extends scope_1.Scope {
     _toWritable() {
         const writable = new function_1.ZrIntermediateFunction();
         const owner = this.ownerSymbol;
+        const handler = owner.handler;
         writable.name = owner.name || "";
         writable.startLine = owner.location.start.line;
         writable.endLine = owner.location.end.line;
@@ -7623,7 +7634,7 @@ class ZrSemanticAnalyzer {
         head.addModule(writable);
         const writer = new writer_1.ZrIntermediateWriter();
         writer.writeAll(head);
-        fs_1.default.writeFileSync("./test.zr", writer.buffer);
+        fs_1.default.writeFileSync("./test.zrb", writer.buffer);
     }
 }
 exports.ZrSemanticAnalyzer = ZrSemanticAnalyzer;
@@ -8011,7 +8022,7 @@ class ZrIntermediateFunction extends writable_1.ZrIntermediateWritable {
         super(...arguments);
         this.instructions = [];
         this.localVariables = [];
-        this.constantVariables = [];
+        this.constantValues = [];
         this.closureVariables = [];
         this.debugInfos = [];
         this.toWriteData = [
@@ -8022,7 +8033,7 @@ class ZrIntermediateFunction extends writable_1.ZrIntermediateWritable {
             ["hasVarArgs", valueType_1.IntermediateValueType.UInt64],
             ["instructions", valueType_1.IntermediateValueType.Writable],
             ["localVariables", valueType_1.IntermediateValueType.Writable],
-            ["constantVariables", valueType_1.IntermediateValueType.Writable],
+            ["constantValues", valueType_1.IntermediateValueType.Writable],
             ["closureVariables", valueType_1.IntermediateValueType.Writable],
             ["debugInfos", valueType_1.IntermediateValueType.Writable]
         ];

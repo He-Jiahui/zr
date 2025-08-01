@@ -16,6 +16,8 @@ import {TestSymbol} from "../static/symbol/testSymbol";
 import {Keywords} from "../../types/keywords";
 import type {TopLevelStatementType} from "./statements/types";
 import {IntermediateSymbol} from "../static/symbol/intermediateSymbol";
+import {ZrIntermediateWritable} from "../../generator/writable/writable";
+import {ZrIntermediateDeclare, ZrIntermediateDeclareType, ZrIntermediateModule} from "../../generator/writable/module";
 
 export type ScriptType = {
     type: Keywords.Script,
@@ -117,6 +119,32 @@ export class ScriptHandler extends Handler {
         // TODO: debug only
         // prettyPrintSymbolTables(this._symbol);
         return currentScope.ownerSymbol;
+    }
+
+    protected _generateWritable(parent: TNullable<ZrIntermediateWritable>) {
+        const module = new ZrIntermediateModule();
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        const scope = this.scope as ModuleScope;
+        if (scope === null) {
+            return null;
+        }
+        module.name = symbol.name || "";
+
+        // todo: only intermediate supports now
+        for (const intermediate of scope.intermediates) {
+            const scope = intermediate.childScope;
+            if (scope) {
+                const declareData = new ZrIntermediateDeclare();
+                declareData.type = ZrIntermediateDeclareType.Function;
+                declareData.data = scope.toWritable();
+                module.declares.push(declareData);
+            }
+        }
+
+        return module;
     }
 }
 

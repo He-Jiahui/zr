@@ -31,6 +31,7 @@ export class ModuleDeclarationHandler extends Handler {
             name: this.nameHandler?.value
         };
     }
+
 }
 
 Handler.registerHandler(Keywords.ModuleDeclaration, ModuleDeclarationHandler);

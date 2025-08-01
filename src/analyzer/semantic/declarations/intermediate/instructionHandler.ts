@@ -31,6 +31,8 @@ export class InstructionHandler extends Handler {
             }
         }
     }
+
+
 }
 
 Handler.registerHandler(Keywords.IntermediateInstruction, InstructionHandler);

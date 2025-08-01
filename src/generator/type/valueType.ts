@@ -18,5 +18,6 @@ export const enum IntermediateValueType {
     Float,
     Double,
     Binary,
+    Empty
 
 }

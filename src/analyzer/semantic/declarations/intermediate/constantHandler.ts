@@ -7,6 +7,7 @@ import {IntermediateConstant} from "../../../../parser/generated/parser";
 import {Scope} from "../../../static/scope/scope";
 import {Symbol} from "../../../static/symbol/symbol";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
+import {ZrIntermediateType} from "../../../../generator/instruction/literals";
 
 export type ConstantType = {
     type: Keywords.Constant,
@@ -38,6 +39,32 @@ export class ConstantHandler extends Handler {
         const symbol = this.declareSymbol<VariableSymbol>(this.value.name.name, Keywords.Variable, parentScope);
         if (symbol) {
             symbol.invariant = Keywords.Constant;
+            const value = this.value.value;
+            const type = value.type;
+            switch (type) {
+                case Keywords.StringLiteral:
+                    symbol.basicType = ZrIntermediateType.String;
+                    break;
+                case Keywords.IntegerLiteral:
+                    symbol.basicType = ZrIntermediateType.Int64;
+                    break;
+                case Keywords.FloatLiteral:
+                    symbol.basicType = ZrIntermediateType.Float;
+                    break;
+                case Keywords.BooleanLiteral:
+                    symbol.basicType = ZrIntermediateType.Bool;
+                    break;
+                case Keywords.NullLiteral:
+                    symbol.basicType = ZrIntermediateType.Null;
+                    break;
+                case Keywords.CharLiteral:
+                    symbol.basicType = ZrIntermediateType.Int64;
+                    break;
+                default:
+                    symbol.basicType = ZrIntermediateType.Unknown;
+                    throw new Error(`Unexpected value type: ${type}`);
+            }
+            symbol.defaultValue = value.value;
         }
         return symbol;
     }

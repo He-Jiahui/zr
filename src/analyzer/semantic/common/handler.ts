@@ -8,6 +8,7 @@ import {TypeInferContext} from "../../static/type/typeInferContext";
 import {TypeAssignContext} from "../../static/type/typeAssignContext";
 import {TypeDefinition} from "../../static/type/typeDefinition";
 import {ZrIntermediateWritable} from "../../../generator/writable/writable";
+import {ZrInstructionContext} from "../../../generator/instruction/instruction";
 
 export type AnyNode = {
     type: string;
@@ -26,8 +27,16 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         super(context);
     }
 
-    public get symbol() {
+    public get symbol(): TNullable<SymbolDeclaration> {
         return this.context.getSymbolFromHandler(this);
+    }
+
+    public get scope(): TNullable<Scope> {
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        return symbol.childScope;
     }
 
     public get children(): Array<Handler> {
@@ -82,8 +91,12 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return this._assignType(childrenContexts);
     }
 
-    public generateWritable() {
-        return this._generateWritable();
+    public generateInstruction(children: Array<ZrInstructionContext>): TNullable<TMaybeArray<ZrInstructionContext>> {
+        return this._generateInstruction(children);
+    }
+
+    public generateWritable(parent: TNullable<ZrIntermediateWritable>) {
+        return this._generateWritable(parent);
     }
 
     protected declareSymbol<T extends SymbolDeclaration>(symbolName: string, symbolType: string, parentScope: TNullable<Scope>): TNullable<T> {
@@ -141,7 +154,11 @@ export class Handler extends ScriptContextAccessibleObject<ScriptContext> {
         return null;
     }
 
-    protected _generateWritable(): TNullable<ZrIntermediateWritable> {
+    protected _generateInstruction(children: Array<ZrInstructionContext>): TNullable<TMaybeArray<ZrInstructionContext>> {
+        return null;
+    }
+
+    protected _generateWritable(parent: TNullable<ZrIntermediateWritable>): TNullable<ZrIntermediateWritable> {
         return null;
     }
 

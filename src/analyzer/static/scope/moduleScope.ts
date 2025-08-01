@@ -11,12 +11,7 @@ import {Keywords, ScopeKeywords} from "../../../types/keywords";
 import {IntermediateSymbol} from "../symbol/intermediateSymbol";
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {ZrIntermediateWritable} from "../../../generator/writable/writable";
-import {
-    ZrIntermediateDeclare,
-    ZrIntermediateDeclareType,
-    ZrIntermediateModule
-} from "../../../generator/writable/module";
-import type {ModuleSymbol} from "../symbol/moduleSymbol";
+
 
 export class ModuleScope extends Scope {
     public readonly type: string = ScopeKeywords.ModuleScope;
@@ -31,6 +26,10 @@ export class ModuleScope extends Scope {
     protected readonly tests: SymbolTable<TestSymbol> = new SymbolTable();
 
     protected symbolTableList: SymbolTable<Symbol>[] = [this.functions, this.intermediate, this.variables, this.classes, this.interfaces, this.structs, this.enums, this.tests];
+
+    public get intermediates() {
+        return this.intermediate.getAllSymbols();
+    }
 
     public addFunction($function: TSymbolOrSymbolArray<FunctionSymbol>): boolean {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
@@ -78,22 +77,7 @@ export class ModuleScope extends Scope {
     }
 
     protected _toWritable(): TNullable<ZrIntermediateWritable> {
-        const module = new ZrIntermediateModule();
-        const owner = this.ownerSymbol as ModuleSymbol;
-        module.name = owner.name || "";
-
-        // todo: only intermediate supports now
-        for (const intermediate of this.intermediate.getAllSymbols()) {
-            const scope = intermediate.childScope;
-            if (scope) {
-                const declareData = new ZrIntermediateDeclare();
-                declareData.type = ZrIntermediateDeclareType.Function;
-                declareData.data = scope.toWritable();
-                module.declares.push(declareData);
-            }
-        }
-
-        return module;
+        return null;
     }
 }
 

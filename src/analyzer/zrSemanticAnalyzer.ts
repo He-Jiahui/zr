@@ -14,6 +14,8 @@ import {ZrIntermediateWriter} from "../generator/writer/writer";
 import fs from "fs";
 import {ZrIntermediateHead} from "../generator/writable/head";
 import {ZrIntermediateModule} from "../generator/writable/module";
+import {ZrIntermediateWritable} from "../generator/writable/writable";
+import {ZrInstructionContext} from "../generator/instruction/instruction";
 
 export class ZrSemanticAnalyzer {
     private context: ScriptContext;
@@ -57,10 +59,24 @@ export class ZrSemanticAnalyzer {
         });
         prettyPrintSymbolTables(this.topSymbol);
 
+        this.handlerDispatcher.runTaskBottomUp((handler, lowerResult: TNullable<TMaybeArray<ZrInstructionContext>>) => {
+            if (lowerResult instanceof Array) {
+                return handler.generateInstruction(lowerResult);
+            } else if (lowerResult) {
+                return handler.generateInstruction([lowerResult]);
+            }
+            return handler.generateInstruction([]);
+        });
+
+        const moduleWritable = this.handlerDispatcher.runTaskTopDown<ZrIntermediateWritable>((handler, upperResult: TNullable<ZrIntermediateWritable>) => {
+            return handler.generateWritable(upperResult);
+        });
         // todo: multi module bundle support
         const head = new ZrIntermediateHead();
-        const writable = this.topSymbol.childScope!.toWritable();
-        head.addModule(writable! as ZrIntermediateModule);
+        // const writable = this.topSymbol.childScope!.toWritable();
+        if (moduleWritable) {
+            head.addModule(moduleWritable as ZrIntermediateModule);
+        }
         const writer = new ZrIntermediateWriter();
 
         writer.writeAll(head);

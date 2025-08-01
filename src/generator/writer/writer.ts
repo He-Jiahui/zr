@@ -57,6 +57,10 @@ export class ZrIntermediateWriter {
                 this.writeBinary(field, args);
             }
                 break;
+            case IntermediateValueType.Empty: {
+                // do nothing
+            }
+                break;
             case IntermediateValueType.Null: {
                 this.writeBool(false);
             }

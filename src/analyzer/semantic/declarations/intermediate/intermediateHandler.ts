@@ -15,6 +15,10 @@ import {IntermediateScope} from "../../../static/scope/intermediateScope";
 import {VariableSymbol} from "../../../static/symbol/variableSymbol";
 import {ParameterSymbol} from "../../../static/symbol/parameterSymbol";
 import {ZrIntermediateWritable} from "../../../../generator/writable/writable";
+import {ZrIntermediateFunction} from "../../../../generator/writable/function";
+import {ZrIntermediateDeclareType, ZrIntermediateModule} from "../../../../generator/writable/module";
+import {ZrIntermediateConstantValue} from "../../../../generator/writable/constantValue";
+import {ZrIntermediateLocalVariable} from "../../../../generator/writable/localVariable";
 
 export type IntermediateType = {
     type: Keywords.Intermediate,
@@ -169,8 +173,48 @@ export class IntermediateHandler extends Handler {
     }
 
 
-    protected _generateWritable(): TNullable<ZrIntermediateWritable> {
-        return super._generateWritable();
+    protected _generateWritable(parent: TNullable<ZrIntermediateWritable>): TNullable<ZrIntermediateWritable> {
+        const writable = new ZrIntermediateFunction();
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        const scope = this.scope as IntermediateScope;
+        if (scope === null) {
+            return null;
+        }
+
+        writable.name = symbol.name || "";
+        const location = symbol.location;
+        if (location) {
+            writable.startLine = location.start.line;
+            writable.endLine = location.end.line;
+        }
+
+        const parameters = scope.getParameters();
+        for (const constant of scope.getConstants()) {
+            const constantWritable = new ZrIntermediateConstantValue();
+            constantWritable.type = constant.basicType;
+            constantWritable.data = constant.defaultValue;
+            const location = constant.location;
+            if (location) {
+                constantWritable.startLine = location.start.line;
+                constantWritable.endLine = location.end.line;
+            }
+        }
+
+        for (const local of scope.getLocals()) {
+            const localWritable = new ZrIntermediateLocalVariable();
+
+        }
+        writable.parameterLength = parameters.length;
+        // todo:
+        writable.hasVarArgs = 0;
+        // todo
+        if (parent && parent instanceof ZrIntermediateModule) {
+            parent.addDeclare(ZrIntermediateDeclareType.Function, writable);
+        }
+        return writable;
     }
 }
 

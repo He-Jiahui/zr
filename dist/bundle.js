@@ -23,6 +23,13 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     get symbol() {
         return this.context.getSymbolFromHandler(this);
     }
+    get scope() {
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        return symbol.childScope;
+    }
     get children() {
         return this._children.filter(child => child !== null).map(child => child);
     }
@@ -65,8 +72,11 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     assignType(childrenContexts) {
         return this._assignType(childrenContexts);
     }
-    generateWritable() {
-        return this._generateWritable();
+    generateInstruction(children) {
+        return this._generateInstruction(children);
+    }
+    generateWritable(parent) {
+        return this._generateWritable(parent);
     }
     declareSymbol(symbolName, symbolType, parentScope) {
         const createdSymbol = symbol_1.Symbol.createSymbol(symbolName, symbolType, this, parentScope);
@@ -113,7 +123,10 @@ class Handler extends scriptContext_1.ScriptContextAccessibleObject {
     _assignType(childrenContexts) {
         return null;
     }
-    _generateWritable() {
+    _generateInstruction(children) {
+        return null;
+    }
+    _generateWritable(parent) {
         return null;
     }
     _handleInternal(node) {
@@ -1784,6 +1797,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConstantHandler = void 0;
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const literals_1 = __webpack_require__(/*! ../../../../generator/instruction/literals */ "./src/generator/instruction/literals.ts");
 class ConstantHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1807,6 +1821,32 @@ class ConstantHandler extends handler_1.Handler {
         const symbol = this.declareSymbol(this.value.name.name, keywords_1.Keywords.Variable, parentScope);
         if (symbol) {
             symbol.invariant = keywords_1.Keywords.Constant;
+            const value = this.value.value;
+            const type = value.type;
+            switch (type) {
+                case keywords_1.Keywords.StringLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.String;
+                    break;
+                case keywords_1.Keywords.IntegerLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.Int64;
+                    break;
+                case keywords_1.Keywords.FloatLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.Float;
+                    break;
+                case keywords_1.Keywords.BooleanLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.Bool;
+                    break;
+                case keywords_1.Keywords.NullLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.Null;
+                    break;
+                case keywords_1.Keywords.CharLiteral:
+                    symbol.basicType = literals_1.ZrIntermediateType.Int64;
+                    break;
+                default:
+                    symbol.basicType = literals_1.ZrIntermediateType.Unknown;
+                    throw new Error(`Unexpected value type: ${type}`);
+            }
+            symbol.defaultValue = value.value;
         }
         return symbol;
     }
@@ -1881,6 +1921,10 @@ exports.IntermediateHandler = void 0;
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const typePlaceholder_1 = __webpack_require__(/*! ../../../static/type/typePlaceholder */ "./src/analyzer/static/type/typePlaceholder.ts");
+const function_1 = __webpack_require__(/*! ../../../../generator/writable/function */ "./src/generator/writable/function.ts");
+const module_1 = __webpack_require__(/*! ../../../../generator/writable/module */ "./src/generator/writable/module.ts");
+const constantValue_1 = __webpack_require__(/*! ../../../../generator/writable/constantValue */ "./src/generator/writable/constantValue.ts");
+const localVariable_1 = __webpack_require__(/*! ../../../../generator/writable/localVariable */ "./src/generator/writable/localVariable.ts");
 class IntermediateHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -2023,8 +2067,44 @@ class IntermediateHandler extends handler_1.Handler {
         }
         return scope.ownerSymbol;
     }
-    _generateWritable() {
-        return super._generateWritable();
+    _generateWritable(parent) {
+        const writable = new function_1.ZrIntermediateFunction();
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        const scope = this.scope;
+        if (scope === null) {
+            return null;
+        }
+        writable.name = symbol.name || "";
+        const location = symbol.location;
+        if (location) {
+            writable.startLine = location.start.line;
+            writable.endLine = location.end.line;
+        }
+        const parameters = scope.getParameters();
+        for (const constant of scope.getConstants()) {
+            const constantWritable = new constantValue_1.ZrIntermediateConstantValue();
+            constantWritable.type = constant.basicType;
+            constantWritable.data = constant.defaultValue;
+            const location = constant.location;
+            if (location) {
+                constantWritable.startLine = location.start.line;
+                constantWritable.endLine = location.end.line;
+            }
+        }
+        for (const local of scope.getLocals()) {
+            const localWritable = new localVariable_1.ZrIntermediateLocalVariable();
+        }
+        writable.parameterLength = parameters.length;
+        // todo:
+        writable.hasVarArgs = 0;
+        // todo
+        if (parent && parent instanceof module_1.ZrIntermediateModule) {
+            parent.addDeclare(module_1.ZrIntermediateDeclareType.Function, writable);
+        }
+        return writable;
     }
 }
 exports.IntermediateHandler = IntermediateHandler;
@@ -4323,6 +4403,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScriptHandler = void 0;
 const handler_1 = __webpack_require__(/*! ./common/handler */ "./src/analyzer/semantic/common/handler.ts");
 const keywords_1 = __webpack_require__(/*! ../../types/keywords */ "./src/types/keywords.ts");
+const module_1 = __webpack_require__(/*! ../../generator/writable/module */ "./src/generator/writable/module.ts");
 class ScriptHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -4426,6 +4507,29 @@ class ScriptHandler extends handler_1.Handler {
         // TODO: debug only
         // prettyPrintSymbolTables(this._symbol);
         return currentScope.ownerSymbol;
+    }
+    _generateWritable(parent) {
+        const module = new module_1.ZrIntermediateModule();
+        const symbol = this.symbol;
+        if (symbol === null) {
+            return null;
+        }
+        const scope = this.scope;
+        if (scope === null) {
+            return null;
+        }
+        module.name = symbol.name || "";
+        // todo: only intermediate supports now
+        for (const intermediate of scope.intermediates) {
+            const scope = intermediate.childScope;
+            if (scope) {
+                const declareData = new module_1.ZrIntermediateDeclare();
+                declareData.type = module_1.ZrIntermediateDeclareType.Function;
+                declareData.data = scope.toWritable();
+                module.declares.push(declareData);
+            }
+        }
+        return module;
     }
 }
 exports.ScriptHandler = ScriptHandler;
@@ -5620,7 +5724,6 @@ exports.IntermediateScope = void 0;
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
-const function_1 = __webpack_require__(/*! ../../../generator/writable/function */ "./src/generator/writable/function.ts");
 class IntermediateScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
@@ -5636,13 +5739,22 @@ class IntermediateScope extends scope_1.Scope {
         const success = this.checkSymbolUnique(parameterSymbol) && this.parameters.addSymbol(parameterSymbol);
         return success;
     }
+    getParameters() {
+        return this.parameters.getAllSymbols();
+    }
     addLocal(localSymbol) {
         const success = this.checkSymbolUnique(localSymbol) && this.locals.addSymbol(localSymbol);
         return success;
     }
+    getLocals() {
+        return this.locals.getAllSymbols();
+    }
     addConstant(constantSymbol) {
         const success = this.checkSymbolUnique(constantSymbol) && this.constants.addSymbol(constantSymbol);
         return success;
+    }
+    getConstants() {
+        return this.constants.getAllSymbols();
     }
     addVariable(variableSymbol) {
         const success = this.checkSymbolUnique(variableSymbol) && this.variables.addSymbol(variableSymbol);
@@ -5653,17 +5765,7 @@ class IntermediateScope extends scope_1.Scope {
         return success;
     }
     _toWritable() {
-        const writable = new function_1.ZrIntermediateFunction();
-        const owner = this.ownerSymbol;
-        const handler = owner.handler;
-        writable.name = owner.name || "";
-        writable.startLine = owner.location.start.line;
-        writable.endLine = owner.location.end.line;
-        writable.parameterLength = this.parameters.getAllSymbols().length;
-        // todo:
-        writable.hasVarArgs = 0;
-        // todo
-        return writable;
+        return null;
     }
 }
 exports.IntermediateScope = IntermediateScope;
@@ -5684,7 +5786,6 @@ exports.ModuleScope = void 0;
 const symbol_1 = __webpack_require__(/*! ../symbol/symbol */ "./src/analyzer/static/symbol/symbol.ts");
 const scope_1 = __webpack_require__(/*! ./scope */ "./src/analyzer/static/scope/scope.ts");
 const keywords_1 = __webpack_require__(/*! ../../../types/keywords */ "./src/types/keywords.ts");
-const module_1 = __webpack_require__(/*! ../../../generator/writable/module */ "./src/generator/writable/module.ts");
 class ModuleScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
@@ -5698,6 +5799,9 @@ class ModuleScope extends scope_1.Scope {
         this.enums = new symbol_1.SymbolTable();
         this.tests = new symbol_1.SymbolTable();
         this.symbolTableList = [this.functions, this.intermediate, this.variables, this.classes, this.interfaces, this.structs, this.enums, this.tests];
+    }
+    get intermediates() {
+        return this.intermediate.getAllSymbols();
     }
     addFunction($function) {
         const success = this.checkSymbolUnique($function) && this.functions.addSymbol($function);
@@ -5736,20 +5840,7 @@ class ModuleScope extends scope_1.Scope {
         return symbol;
     }
     _toWritable() {
-        const module = new module_1.ZrIntermediateModule();
-        const owner = this.ownerSymbol;
-        module.name = owner.name || "";
-        // todo: only intermediate supports now
-        for (const intermediate of this.intermediate.getAllSymbols()) {
-            const scope = intermediate.childScope;
-            if (scope) {
-                const declareData = new module_1.ZrIntermediateDeclare();
-                declareData.type = module_1.ZrIntermediateDeclareType.Function;
-                declareData.data = scope.toWritable();
-                module.declares.push(declareData);
-            }
-        }
-        return module;
+        return null;
     }
 }
 exports.ModuleScope = ModuleScope;
@@ -7628,10 +7719,24 @@ class ZrSemanticAnalyzer {
             return handler.assignType([]);
         });
         (0, prettyPrint_1.prettyPrintSymbolTables)(this.topSymbol);
+        this.handlerDispatcher.runTaskBottomUp((handler, lowerResult) => {
+            if (lowerResult instanceof Array) {
+                return handler.generateInstruction(lowerResult);
+            }
+            else if (lowerResult) {
+                return handler.generateInstruction([lowerResult]);
+            }
+            return handler.generateInstruction([]);
+        });
+        const moduleWritable = this.handlerDispatcher.runTaskTopDown((handler, upperResult) => {
+            return handler.generateWritable(upperResult);
+        });
         // todo: multi module bundle support
         const head = new head_1.ZrIntermediateHead();
-        const writable = this.topSymbol.childScope.toWritable();
-        head.addModule(writable);
+        // const writable = this.topSymbol.childScope!.toWritable();
+        if (moduleWritable) {
+            head.addModule(moduleWritable);
+        }
         const writer = new writer_1.ZrIntermediateWriter();
         writer.writeAll(head);
         fs_1.default.writeFileSync("./test.zrb", writer.buffer);
@@ -7975,6 +8080,46 @@ exports.ZrSyntaxError = ZrSyntaxError;
 
 /***/ }),
 
+/***/ "./src/generator/instruction/literals.ts":
+/*!***********************************************!*\
+  !*** ./src/generator/instruction/literals.ts ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateType = void 0;
+var ZrIntermediateType;
+(function (ZrIntermediateType) {
+    ZrIntermediateType[ZrIntermediateType["Null"] = 0] = "Null";
+    ZrIntermediateType[ZrIntermediateType["Bool"] = 1] = "Bool";
+    ZrIntermediateType[ZrIntermediateType["Int8"] = 2] = "Int8";
+    ZrIntermediateType[ZrIntermediateType["Int16"] = 3] = "Int16";
+    ZrIntermediateType[ZrIntermediateType["Int32"] = 4] = "Int32";
+    ZrIntermediateType[ZrIntermediateType["Int64"] = 5] = "Int64";
+    ZrIntermediateType[ZrIntermediateType["UInt8"] = 6] = "UInt8";
+    ZrIntermediateType[ZrIntermediateType["UInt16"] = 7] = "UInt16";
+    ZrIntermediateType[ZrIntermediateType["UInt32"] = 8] = "UInt32";
+    ZrIntermediateType[ZrIntermediateType["UInt64"] = 9] = "UInt64";
+    ZrIntermediateType[ZrIntermediateType["Float"] = 10] = "Float";
+    ZrIntermediateType[ZrIntermediateType["Double"] = 11] = "Double";
+    ZrIntermediateType[ZrIntermediateType["String"] = 12] = "String";
+    ZrIntermediateType[ZrIntermediateType["Buffer"] = 13] = "Buffer";
+    ZrIntermediateType[ZrIntermediateType["Array"] = 14] = "Array";
+    ZrIntermediateType[ZrIntermediateType["Function"] = 15] = "Function";
+    ZrIntermediateType[ZrIntermediateType["ClosureValue"] = 16] = "ClosureValue";
+    ZrIntermediateType[ZrIntermediateType["Closure"] = 17] = "Closure";
+    ZrIntermediateType[ZrIntermediateType["Object"] = 18] = "Object";
+    ZrIntermediateType[ZrIntermediateType["Thread"] = 19] = "Thread";
+    ZrIntermediateType[ZrIntermediateType["NativePointer"] = 20] = "NativePointer";
+    ZrIntermediateType[ZrIntermediateType["NativeData"] = 21] = "NativeData";
+    ZrIntermediateType[ZrIntermediateType["VmMemory"] = 22] = "VmMemory";
+    ZrIntermediateType[ZrIntermediateType["Unknown"] = 23] = "Unknown";
+})(ZrIntermediateType || (exports.ZrIntermediateType = ZrIntermediateType = {}));
+
+
+/***/ }),
+
 /***/ "./src/generator/type/valueType.ts":
 /*!*****************************************!*\
   !*** ./src/generator/type/valueType.ts ***!
@@ -8001,7 +8146,83 @@ var IntermediateValueType;
     IntermediateValueType[IntermediateValueType["Float"] = 12] = "Float";
     IntermediateValueType[IntermediateValueType["Double"] = 13] = "Double";
     IntermediateValueType[IntermediateValueType["Binary"] = 14] = "Binary";
+    IntermediateValueType[IntermediateValueType["Empty"] = 15] = "Empty";
 })(IntermediateValueType || (exports.IntermediateValueType = IntermediateValueType = {}));
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/constantValue.ts":
+/*!*************************************************!*\
+  !*** ./src/generator/writable/constantValue.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateConstantValue = void 0;
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+const literals_1 = __webpack_require__(/*! ../instruction/literals */ "./src/generator/instruction/literals.ts");
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateConstantValue extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.startLine = 0;
+        this.endLine = 0;
+        this.toWriteData = [
+            ["type", valueType_1.IntermediateValueType.UInt64],
+            ["data", valueType_1.IntermediateValueType.Null],
+            ["startLine", valueType_1.IntermediateValueType.UInt64],
+            ["endLine", valueType_1.IntermediateValueType.UInt64]
+        ];
+    }
+    _preprocess() {
+        const dataIndex = this.toWriteData[1];
+        switch (this.type) {
+            case literals_1.ZrIntermediateType.Null:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.Empty;
+                }
+                break;
+            case literals_1.ZrIntermediateType.Bool:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.Bool;
+                }
+                break;
+            case literals_1.ZrIntermediateType.Int64:
+            case literals_1.ZrIntermediateType.Int32:
+            case literals_1.ZrIntermediateType.Int16:
+            case literals_1.ZrIntermediateType.Int8:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.Int64;
+                }
+                break;
+            case literals_1.ZrIntermediateType.UInt64:
+            case literals_1.ZrIntermediateType.UInt32:
+            case literals_1.ZrIntermediateType.UInt16:
+            case literals_1.ZrIntermediateType.UInt8:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.UInt64;
+                }
+                break;
+            case literals_1.ZrIntermediateType.Float:
+            case literals_1.ZrIntermediateType.Double:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.Double;
+                }
+                break;
+            case literals_1.ZrIntermediateType.String:
+                {
+                    dataIndex[1] = valueType_1.IntermediateValueType.String;
+                }
+                break;
+            default: {
+                // todo unsupported type
+            }
+        }
+    }
+}
+exports.ZrIntermediateConstantValue = ZrIntermediateConstantValue;
 
 
 /***/ }),
@@ -8098,6 +8319,33 @@ exports.ZrIntermediateHead = ZrIntermediateHead;
 
 /***/ }),
 
+/***/ "./src/generator/writable/localVariable.ts":
+/*!*************************************************!*\
+  !*** ./src/generator/writable/localVariable.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateLocalVariable = void 0;
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+class ZrIntermediateLocalVariable extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        this.toWriteData = [
+            ["startLine", valueType_1.IntermediateValueType.UInt64],
+            ["endLine", valueType_1.IntermediateValueType.UInt64],
+            ["instructionStart", valueType_1.IntermediateValueType.UInt64],
+            ["instructionEnd", valueType_1.IntermediateValueType.UInt64]
+        ];
+    }
+}
+exports.ZrIntermediateLocalVariable = ZrIntermediateLocalVariable;
+
+
+/***/ }),
+
 /***/ "./src/generator/writable/module.ts":
 /*!******************************************!*\
   !*** ./src/generator/writable/module.ts ***!
@@ -8155,6 +8403,12 @@ class ZrIntermediateModule extends writable_1.ZrIntermediateWritable {
             ["imports", valueType_1.IntermediateValueType.Writable],
             ["declares", valueType_1.IntermediateValueType.Writable]
         ];
+    }
+    addDeclare(type, declare) {
+        const declareWritable = new ZrIntermediateDeclare();
+        declareWritable.type = type;
+        declareWritable.data = declare;
+        this.declares.push(declareWritable);
     }
     _preprocess() {
         this.md5 = "";
@@ -8296,6 +8550,11 @@ class ZrIntermediateWriter {
             case valueType_1.IntermediateValueType.Binary:
                 {
                     this.writeBinary(field, args);
+                }
+                break;
+            case valueType_1.IntermediateValueType.Empty:
+                {
+                    // do nothing
                 }
                 break;
             case valueType_1.IntermediateValueType.Null:

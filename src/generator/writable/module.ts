@@ -15,6 +15,13 @@ export class ZrIntermediateModule extends ZrIntermediateWritable {
         ["declares", IntermediateValueType.Writable]
     ];
 
+    public addDeclare(type: ZrIntermediateDeclareType, declare: ZrIntermediateWritable): void {
+        const declareWritable = new ZrIntermediateDeclare();
+        declareWritable.type = type;
+        declareWritable.data = declare;
+        this.declares.push(declareWritable);
+    }
+
     protected _preprocess() {
         this.md5 = "";
         const writer = new ZrIntermediateWriter();

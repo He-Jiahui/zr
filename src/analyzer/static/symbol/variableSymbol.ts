@@ -19,7 +19,23 @@ export class VariableSymbol extends Symbol {
 
     public index: number;
 
+    public startInstructionIndex: number = -1;
+    public endInstructionIndex: number = -1;
+
     public defaultValue: any;//TODO: type
+
+    public registerInstructionUsage(instructionIndex: number) {
+        if (this.startInstructionIndex < 0) {
+            this.startInstructionIndex = instructionIndex;
+        }
+        if (this.endInstructionIndex < 0) {
+            this.endInstructionIndex = instructionIndex;
+        }
+
+        this.startInstructionIndex = Math.min(this.startInstructionIndex, instructionIndex);
+        this.endInstructionIndex = Math.max(this.endInstructionIndex, instructionIndex);
+    }
+
 }
 
 Symbol.registerSymbol(Keywords.Variable, VariableSymbol);

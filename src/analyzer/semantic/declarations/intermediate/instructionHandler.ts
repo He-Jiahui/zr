@@ -2,8 +2,11 @@ import {Keywords} from "../../../../types/keywords";
 import {IdentifierType} from "../identifierHandler";
 import {IntegerType} from "../../literals/integerHandler";
 import {Handler} from "../../common/handler";
-import {TNullable} from "../../../utils/zrCompilerTypes";
+import {TMaybeArray, TNullable} from "../../../utils/zrCompilerTypes";
 import {IntermediateInstruction} from "../../../../parser/generated/parser";
+import {ZrInstructionContext, ZrInstructionParam} from "../../../../generator/instruction/instruction";
+import {ZrInstructionTypeNameMap} from "../../../../generator/instruction/instructions";
+import {ZrInternalError} from "../../../../errors/zrInternalError";
 
 export type InstructionType = {
     type: Keywords.Instruction,
@@ -29,6 +32,30 @@ export class InstructionHandler extends Handler {
             for (const value of node.values) {
                 this.valueHandlers.push(Handler.handle(value.value, this.context));
             }
+        }
+        this.value = {
+            type: Keywords.Instruction,
+            name: this.nameHandler.value,
+            values: this.valueHandlers.map(v => v.value)
+        };
+    }
+
+    protected _generateInstruction(children: ZrInstructionContext[]): TNullable<TMaybeArray<ZrInstructionContext>> {
+        const instructionName = this.value.name.name.toLowerCase();
+        if (ZrInstructionTypeNameMap.has(instructionName)) {
+            const instruction = ZrInstructionTypeNameMap.get(instructionName)!;
+            const value = this.value.values.map(v => {
+                if (v.type === Keywords.Identifier) {
+                    return new ZrInstructionParam(Keywords.Identifier, v.name);
+                } else if (v.type === Keywords.IntegerLiteral) {
+                    return new ZrInstructionParam(Keywords.Integer, Number(v.value));
+                }
+                return null;
+            }).filter(v => v !== null);
+            return ZrInstructionContext.createSingle(instruction, ...value);
+        } else {
+            new ZrInternalError(`Instruction ${instructionName} not found`, this.context).report();
+            return null;
         }
     }
 

@@ -109,7 +109,7 @@ export class ScriptContext {
     }
 
     public getSymbolFromHandler(handler: Handler): TNullable<SymbolDeclaration> {
-        return this._handlerSymbolMap.get(handler.value) ?? null;
+        return this._handlerSymbolMap.get(handler) ?? null;
     }
 
     public getTypeFromSymbol(symbol: SymbolDeclaration): TNullable<TypeDefinition<ScriptContext>> {

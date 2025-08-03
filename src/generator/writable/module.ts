@@ -2,17 +2,20 @@ import {ZrIntermediateWritable} from "./writable";
 import {IntermediateHeadType, IntermediateValueType} from "../type/valueType";
 import {ZrIntermediateWriter} from "../writer/writer";
 import * as CryptoJS from 'crypto-js';
+import {ZrIntermediateFunction} from "./function";
 
 export class ZrIntermediateModule extends ZrIntermediateWritable {
     public name: string;
     public md5: string;
     public readonly imports: ZrIntermediateImport[] = [];
     public readonly declares: ZrIntermediateDeclare[] = [];
+    public entry: ZrIntermediateFunction;
     toWriteData: IntermediateHeadType[] = [
         ["name", IntermediateValueType.String],
         ["md5", IntermediateValueType.String],
         ["imports", IntermediateValueType.Writable],
-        ["declares", IntermediateValueType.Writable]
+        ["declares", IntermediateValueType.Writable],
+        ["entry", IntermediateValueType.Writable, true]
     ];
 
     public addDeclare(type: ZrIntermediateDeclareType, declare: ZrIntermediateWritable): void {
@@ -20,6 +23,17 @@ export class ZrIntermediateModule extends ZrIntermediateWritable {
         declareWritable.type = type;
         declareWritable.data = declare;
         this.declares.push(declareWritable);
+    }
+
+    public setEntry(f: ZrIntermediateFunction) {
+        // const functionWritable = new ZrIntermediateFunction();
+        // functionWritable.name = "entry";
+        // functionWritable.parameterLength = 0;
+        // functionWritable.hasVarArgs = 0;
+        // functionWritable.startLine = 0;
+        // functionWritable.endLine = 0;
+        // todo: use constant test
+        this.entry = f;
     }
 
     protected _preprocess() {

@@ -9,7 +9,7 @@
     "copyright": "2023 He Jiahui",
     "binary": "bin",
     "source": "src",
-    "entry": "simple",
+    "entry": "test",
     "redirects": {
         "src": "source",
         "bin": "binary",

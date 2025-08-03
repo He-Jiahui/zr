@@ -54,6 +54,10 @@ export class VariableHandler extends Handler {
     protected _createSymbolAndScope(parentScope: TNullable<Scope>): TNullable<SymbolDeclaration> {
         const getDeclaration = (identifier: IdentifierType) => {
             const symbol = this.declareSymbol<VariableSymbol>(identifier.name, Keywords.Variable, parentScope);
+            if (symbol) {
+                symbol.startLine = this.location.start.line;
+                symbol.endLine = this.location.end.line;
+            }
             return symbol;
         };
         const collect = () => {

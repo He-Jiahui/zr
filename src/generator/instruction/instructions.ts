@@ -1,3 +1,11 @@
+export const enum ZrInstructionParamType {
+    None,
+    Variable,
+    Constant,
+    Closure,
+}
+
+
 export const enum ZrInstructionType {
     GetStack,
     SetStack,
@@ -59,6 +67,68 @@ export const enum ZrInstructionType {
     Throw,
     Catch
 }
+
+export const ZrInstructionParamsFormat = {
+    [ZrInstructionType.GetStack]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.SetStack]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.GetConstant]: [ZrInstructionParamType.Constant],
+    [ZrInstructionType.SetConstant]: [ZrInstructionParamType.Constant],
+    [ZrInstructionType.GetClosure]: [ZrInstructionParamType.Closure],
+    [ZrInstructionType.SetClosure]: [ZrInstructionParamType.Closure],
+    [ZrInstructionType.AddInt]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.AddFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.AddString]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.SubInt]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.SubFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ShiftLeft]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ShiftRight]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalNot]: [ZrInstructionParamType.Variable, ZrInstructionParamType.None],
+    [ZrInstructionType.LogicalAnd]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalOr]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalEqual]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalNotEqual]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseNot]: [ZrInstructionParamType.Variable, ZrInstructionParamType.None],
+    [ZrInstructionType.BitwiseAnd]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseOr]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseXor]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseShiftLeft]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseShiftRight]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionCall]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionTailCall]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionReturn]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.GetValue]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.SetValue]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Jump]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.JumpIf]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.CreateClosure]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.Try]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Throw]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Catch]: [ZrInstructionParamType.Variable]
+};
 
 export const ZrInstructionTypeMap = {
     [ZrInstructionType.GetStack]: "GetStack",
@@ -124,5 +194,5 @@ export const ZrInstructionTypeMap = {
 
 export const ZrInstructionTypeNameMap: Map<string, ZrInstructionType> = new Map();
 for (const [key, value] of Object.entries(ZrInstructionTypeMap)) {
-    ZrInstructionTypeNameMap.set(value, key as any as ZrInstructionType);
+    ZrInstructionTypeNameMap.set(value.toLowerCase(), key as any as ZrInstructionType);
 }

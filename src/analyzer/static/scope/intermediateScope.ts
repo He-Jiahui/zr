@@ -4,21 +4,22 @@ import {Keywords, ScopeKeywords} from "../../../types/keywords";
 import {SymbolTable} from "../symbol/symbol";
 import type {ParameterSymbol} from "../symbol/parameterSymbol";
 import {VariableSymbol} from "../symbol/variableSymbol";
-import {ZrIntermediateWritable} from "../../../generator/writable/writable";
-import {TNullable} from "../../utils/zrCompilerTypes";
 
 export class IntermediateScope extends Scope {
     public readonly type = ScopeKeywords.IntermediateScope;
-
+    public readonly localStartList: number[] = [];
+    public readonly localEndList: number[] = [];
     protected readonly parameters: SymbolTable<ParameterSymbol> = new SymbolTable();
     protected readonly locals: SymbolTable<VariableSymbol> = new SymbolTable();
-    protected readonly variables: SymbolTable<VariableSymbol> = new SymbolTable();
     protected readonly closures: SymbolTable<VariableSymbol> = new SymbolTable();
     protected readonly constants: SymbolTable<VariableSymbol> = new SymbolTable();
-    protected symbolTableList = [this.parameters, this.locals, this.variables, this.closures, this.constants];
+    protected symbolTableList = [this.parameters, this.locals, this.closures, this.constants];
 
     public addParameter(parameterSymbol: ParameterSymbol): boolean {
         const success = this.checkSymbolUnique(parameterSymbol) && this.parameters.addSymbol(parameterSymbol);
+        if (success) {
+            parameterSymbol.index = this.parameters.getAllSymbols().length - 1;
+        }
         return success;
     }
 
@@ -28,6 +29,9 @@ export class IntermediateScope extends Scope {
 
     public addLocal(localSymbol: VariableSymbol): boolean {
         const success = this.checkSymbolUnique(localSymbol) && this.locals.addSymbol(localSymbol);
+        if (success) {
+            localSymbol.index = this.locals.getAllSymbols().length - 1;
+        }
         return success;
     }
 
@@ -37,6 +41,9 @@ export class IntermediateScope extends Scope {
 
     public addConstant(constantSymbol: VariableSymbol): boolean {
         const success = this.checkSymbolUnique(constantSymbol) && this.constants.addSymbol(constantSymbol);
+        if (success) {
+            constantSymbol.index = this.constants.getAllSymbols().length - 1;
+        }
         return success;
     }
 
@@ -44,20 +51,16 @@ export class IntermediateScope extends Scope {
         return this.constants.getAllSymbols();
     }
 
-    public addVariable(variableSymbol: VariableSymbol): boolean {
-        const success = this.checkSymbolUnique(variableSymbol) && this.variables.addSymbol(variableSymbol);
-        return success;
-    }
-
     public addClosure(closureSymbol: VariableSymbol): boolean {
         const success = this.checkSymbolUnique(closureSymbol) && this.closures.addSymbol(closureSymbol);
+        if (success) {
+            closureSymbol.index = this.closures.getAllSymbols().length - 1;
+        }
         return success;
     }
 
-
-    protected _toWritable(): TNullable<ZrIntermediateWritable> {
-
-        return null;
+    public getClosures() {
+        return this.closures.getAllSymbols();
     }
 }
 

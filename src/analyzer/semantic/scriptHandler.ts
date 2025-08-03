@@ -17,7 +17,7 @@ import {Keywords} from "../../types/keywords";
 import type {TopLevelStatementType} from "./statements/types";
 import {IntermediateSymbol} from "../static/symbol/intermediateSymbol";
 import {ZrIntermediateWritable} from "../../generator/writable/writable";
-import {ZrIntermediateDeclare, ZrIntermediateDeclareType, ZrIntermediateModule} from "../../generator/writable/module";
+import {ZrIntermediateModule} from "../../generator/writable/module";
 
 export type ScriptType = {
     type: Keywords.Script,
@@ -133,17 +133,18 @@ export class ScriptHandler extends Handler {
         }
         module.name = symbol.name || "";
 
-        // todo: only intermediate supports now
-        for (const intermediate of scope.intermediates) {
-            const scope = intermediate.childScope;
-            if (scope) {
-                const declareData = new ZrIntermediateDeclare();
-                declareData.type = ZrIntermediateDeclareType.Function;
-                declareData.data = scope.toWritable();
-                module.declares.push(declareData);
-            }
-        }
-
+        // // todo: only intermediate supports now
+        // for (const intermediate of scope.intermediates) {
+        //     const scope = intermediate.childScope;
+        //     if (scope) {
+        //         const declareData = new ZrIntermediateDeclare();
+        //         declareData.type = ZrIntermediateDeclareType.Function;
+        //         declareData.data = intermediate.
+        //         module.declares.push(declareData);
+        //     }
+        // }
+        //
+        // return module;
         return module;
     }
 }

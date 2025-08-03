@@ -9,8 +9,6 @@ import {Scope} from "./scope";
 import {TestSymbol} from "../symbol/testSymbol";
 import {Keywords, ScopeKeywords} from "../../../types/keywords";
 import {IntermediateSymbol} from "../symbol/intermediateSymbol";
-import {TNullable} from "../../utils/zrCompilerTypes";
-import {ZrIntermediateWritable} from "../../../generator/writable/writable";
 
 
 export class ModuleScope extends Scope {
@@ -76,9 +74,6 @@ export class ModuleScope extends Scope {
         return symbol;
     }
 
-    protected _toWritable(): TNullable<ZrIntermediateWritable> {
-        return null;
-    }
 }
 
 Scope.registerScope(Keywords.Module, ModuleScope);

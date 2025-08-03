@@ -77,6 +77,7 @@ export class ZrSemanticAnalyzer {
         if (moduleWritable) {
             head.addModule(moduleWritable as ZrIntermediateModule);
         }
+        head.preprocess();
         const writer = new ZrIntermediateWriter();
 
         writer.writeAll(head);

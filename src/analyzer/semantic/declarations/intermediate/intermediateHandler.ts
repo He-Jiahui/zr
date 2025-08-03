@@ -3,7 +3,7 @@ import {IdentifierType} from "../identifierHandler";
 import {AllType} from "../../types/types";
 import {ParameterType} from "../../types/parameterHandler";
 import {Handler} from "../../common/handler";
-import {TNullable} from "../../../utils/zrCompilerTypes";
+import {TMaybeArray, TNullable} from "../../../utils/zrCompilerTypes";
 import {IntermediateStatement} from "../../../../parser/generated/parser";
 import {Scope} from "../../../static/scope/scope";
 import {Symbol as SymbolDeclaration} from "../../../static/symbol/symbol";
@@ -19,6 +19,10 @@ import {ZrIntermediateFunction} from "../../../../generator/writable/function";
 import {ZrIntermediateDeclareType, ZrIntermediateModule} from "../../../../generator/writable/module";
 import {ZrIntermediateConstantValue} from "../../../../generator/writable/constantValue";
 import {ZrIntermediateLocalVariable} from "../../../../generator/writable/localVariable";
+import {ZrInstruction, ZrInstructionContext} from "../../../../generator/instruction/instruction";
+import {ZrInstructionParamsFormat, ZrInstructionParamType} from "../../../../generator/instruction/instructions";
+import {ZrInternalError} from "../../../../errors/zrInternalError";
+import {ZrIntermediateInstruction} from "../../../../generator/writable/instruction";
 
 export type IntermediateType = {
     type: Keywords.Intermediate,
@@ -42,6 +46,8 @@ export class IntermediateHandler extends Handler {
     private readonly constantHandlers: Handler[] = [];
     private readonly localHandlers: Handler[] = [];
     private readonly instructionHandlers: Handler[] = [];
+
+    private readonly instructions: ZrInstruction[] = [];
 
     protected get _children(): Array<TNullable<Handler>> {
         return [
@@ -161,10 +167,6 @@ export class IntermediateHandler extends Handler {
                     scope.addClosure(child as ParameterSymbol);
                 }
                     break;
-                case Keywords.Variable: {
-                    scope.addVariable(child as VariableSymbol);
-                }
-                    break;
                 default:
                     break;
             }
@@ -172,6 +174,54 @@ export class IntermediateHandler extends Handler {
         return scope.ownerSymbol;
     }
 
+    protected _generateInstruction(children: ZrInstructionContext[]): TNullable<TMaybeArray<ZrInstructionContext>> {
+        const intermediateInstructions = new ZrInstructionContext();
+        intermediateInstructions.merge(...children);
+
+        // variable
+        const scope = this.scope as IntermediateScope;
+
+
+        const instructions = intermediateInstructions.instructions;
+        for (let i = 0; i < instructions.length; i++) {
+            const instruction = instructions[i];
+            const formats = ZrInstructionParamsFormat[instruction.type];
+            for (let j = 0; j < formats.length; j++) {
+                const format = formats[j];
+                if (format === ZrInstructionParamType.None) {
+                    continue;
+                }
+                const op = instruction.op[j];
+                if (!op) {
+                    new ZrInternalError(`Missing op in instruction ${instruction.type} at index ${j}`, this.context).report();
+                    continue;
+                }
+                if (op.type === Keywords.Identifier) {
+                    this._registerAsUsed(op.value as string, scope, i, format);
+                }
+            }
+        }
+
+        // sort locals
+        const localSize = this._rearrangeLocals(scope);
+
+        for (let i = 0; i < instructions.length; i++) {
+            const instruction = instructions[i];
+            const formats = ZrInstructionParamsFormat[instruction.type];
+            instruction.finalOp.length = formats.length;
+            for (let j = 0; j < formats.length; j++) {
+                const format = formats[j];
+                if (format === ZrInstructionParamType.None) {
+                    instruction.finalOp[j] = 0;
+                } else {
+                    this._writeBackInstructionOp(instruction, scope, j, format);
+                }
+            }
+        }
+        this.instructions.length = 0;
+        this.instructions.push(...instructions);
+        return intermediateInstructions;
+    }
 
     protected _generateWritable(parent: TNullable<ZrIntermediateWritable>): TNullable<ZrIntermediateWritable> {
         const writable = new ZrIntermediateFunction();
@@ -203,9 +253,21 @@ export class IntermediateHandler extends Handler {
             }
         }
 
-        for (const local of scope.getLocals()) {
+        for (let i = 0; i < scope.localStartList.length; i++) {
             const localWritable = new ZrIntermediateLocalVariable();
 
+            localWritable.instructionStart = BigInt(scope.localStartList[i]);
+            localWritable.instructionEnd = BigInt(scope.localEndList[i]);
+            localWritable.startLine = BigInt(0);
+            localWritable.endLine = BigInt(0);
+            writable.localVariables.push(localWritable);
+        }
+
+        for (const instruction of this.instructions) {
+            const instructionWritable = new ZrIntermediateInstruction();
+            instructionWritable.type = instruction.type;
+            instructionWritable.value = instruction.finalOp;
+            writable.instructions.push(instructionWritable);
         }
         writable.parameterLength = parameters.length;
         // todo:
@@ -213,8 +275,114 @@ export class IntermediateHandler extends Handler {
         // todo
         if (parent && parent instanceof ZrIntermediateModule) {
             parent.addDeclare(ZrIntermediateDeclareType.Function, writable);
+            if (symbol.name === "__entry") {
+                parent.setEntry(writable);
+            }
         }
         return writable;
+    }
+
+    private _registerAsUsed(keyword: string, scope: IntermediateScope, index: number, format: ZrInstructionParamType = ZrInstructionParamType.None): boolean {
+        if (format === ZrInstructionParamType.None) {
+            return false;
+        }
+        const parameters = scope.getParameters();
+        const locals = scope.getLocals();
+        const constants = scope.getConstants();
+        const closures = scope.getClosures();
+
+        const parameter = parameters.find(parameter => parameter.name === keyword);
+        if (parameter && format === ZrInstructionParamType.Variable) {
+            parameter.registerInstructionUsage(index);
+            return true;
+        }
+        const local = locals.find(local => local.name === keyword);
+        if (local && format === ZrInstructionParamType.Variable) {
+            local.registerInstructionUsage(index);
+            return true;
+        }
+        const constant = constants.find(constant => constant.name === keyword);
+        if (constant && format === ZrInstructionParamType.Constant) {
+            constant.registerInstructionUsage(index);
+            return true;
+        }
+        const closure = closures.find(closure => closure.name === keyword);
+        if (closure && format === ZrInstructionParamType.Closure) {
+            closure.registerInstructionUsage(index);
+            return true;
+        }
+        new ZrInternalError(`${keyword} is not defined`, this.context).report();
+        return false;
+    }
+
+    private _rearrangeLocals(scope: IntermediateScope) {
+        const maxEndInstructions: number[] = [];
+        const minStartInstructions: number[] = [];
+        const locals = scope.getLocals();
+        for (let i = 0; i < locals.length; i++) {
+            const local = locals[i];
+            const indexLength = maxEndInstructions.length;
+            let createNew = true;
+            const instructionStart = local.startInstructionIndex;
+            if (instructionStart < 0) {
+                // unused parameter
+                local.index = -1;
+                break;
+            }
+            for (let j = 0; j < indexLength; j++) {
+                const instructionEnd = maxEndInstructions[j];
+                if (instructionStart > instructionEnd) {
+                    createNew = false;
+                    maxEndInstructions[j] = local.endInstructionIndex;
+                    local.index = j;
+                    break;
+                }
+            }
+            if (createNew) {
+                maxEndInstructions.push(local.endInstructionIndex);
+                minStartInstructions.push(local.startInstructionIndex);
+                local.index = indexLength;
+            }
+        }
+        scope.localStartList.length = 0;
+        scope.localEndList.length = 0;
+        scope.localStartList.push(...minStartInstructions);
+        scope.localEndList.push(...maxEndInstructions);
+        return maxEndInstructions.length;
+    }
+
+    private _writeBackInstructionOp(instruction: ZrInstruction, scope: IntermediateScope, index: number, format: ZrInstructionParamType = ZrInstructionParamType.None) {
+        if (format === ZrInstructionParamType.None) {
+            return false;
+        }
+        const parameters = scope.getParameters();
+        const locals = scope.getLocals();
+        const constants = scope.getConstants();
+        const closures = scope.getClosures();
+
+        const op = instruction.op[index];
+        const parameter = parameters.find(parameter => parameter.name === op.value);
+        if (parameter && format === ZrInstructionParamType.Variable) {
+            instruction.finalOp[index] = parameter.index;
+            return true;
+        }
+        const local = locals.find(local => local.name === op.value);
+        if (local && format === ZrInstructionParamType.Variable) {
+            // todo: args & parameters is behind locals
+            instruction.finalOp[index] = local.index + parameters.length + 1;
+            return true;
+        }
+        const constant = constants.find(constant => constant.name === op.value);
+        if (constant && format === ZrInstructionParamType.Constant) {
+            instruction.finalOp[index] = constant.index;
+            return true;
+        }
+        const closure = closures.find(closure => closure.name === op.value);
+        if (closure && format === ZrInstructionParamType.Closure) {
+            instruction.finalOp[index] = closure.index;
+            return true;
+        }
+        return false;
     }
 }
 

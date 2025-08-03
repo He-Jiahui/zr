@@ -1,10 +1,11 @@
 import {ZrInstructionType} from "./instructions";
 import {TNullable} from "../../analyzer/utils/zrCompilerTypes";
+import {Keywords} from "../../types/keywords";
 
 export class ZrInstructionContext {
     public readonly instructions: ZrInstruction[] = [];
 
-    public static createSingle(type: ZrInstructionType, ...params: any[]) {
+    public static createSingle(type: ZrInstructionType, ...params: ZrInstructionParam[]) {
         const ins = new ZrInstruction();
         ins.type = type;
         ins.op.push(...params);
@@ -24,10 +25,24 @@ export class ZrInstructionContext {
             }
         }
     }
+
+
 }
 
 export class ZrInstruction {
     public type: ZrInstructionType;
 
-    public readonly op: any[] = [];
+    public readonly op: ZrInstructionParam[] = [];
+
+    public readonly finalOp: number[] = [];
+}
+
+export class ZrInstructionParam {
+    public type: Keywords.Identifier | Keywords.Integer;
+    public value: string | number;
+
+    public constructor(type: Keywords.Identifier | Keywords.Integer, value: string | number) {
+        this.type = type;
+        this.value = value;
+    }
 }

@@ -2,7 +2,6 @@ import {reportDuplicatedSymbol, Symbol, SymbolOrSymbolArray, SymbolTable} from "
 import {TNullable} from "../../utils/zrCompilerTypes";
 import {TypeDefinition} from "../type/typeDefinition";
 import {PredefinedType} from "../type/predefined/predefinedType";
-import {ZrIntermediateWritable} from "../../../generator/writable/writable";
 
 type SymbolGetter = () => TNullable<Symbol>;
 
@@ -65,10 +64,6 @@ export class Scope {
         return PredefinedType.getPredefinedType(typeName) as T;
     }
 
-    public toWritable(): TNullable<ZrIntermediateWritable> {
-        return this._toWritable();
-    }
-
     protected checkSymbolUnique(symbol: SymbolOrSymbolArray): boolean {
         if (!symbol) {
             return false;
@@ -111,10 +106,6 @@ export class Scope {
     }
 
     protected _getType(type: string): TNullable<TypeDefinition<any>> {
-        return null;
-    }
-
-    protected _toWritable(): TNullable<ZrIntermediateWritable> {
         return null;
     }
 

@@ -30,9 +30,9 @@ export class ZrIntermediateHead extends ZrIntermediateWritable {
         ["instructionSize", IntermediateValueType.Int8],
         ["endianness", IntermediateValueType.Bool],
         ["debug", IntermediateValueType.Bool],
-        ["opt1", IntermediateValueType.Int32],
-        ["opt2", IntermediateValueType.Int32],
-        ["opt3", IntermediateValueType.Int32],
+        ["opt1", IntermediateValueType.Int8],
+        ["opt2", IntermediateValueType.Int8],
+        ["opt3", IntermediateValueType.Int8],
         ["modules", IntermediateValueType.Writable]
     ];
 

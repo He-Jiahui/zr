@@ -1883,6 +1883,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InstructionHandler = void 0;
 const keywords_1 = __webpack_require__(/*! ../../../../types/keywords */ "./src/types/keywords.ts");
 const handler_1 = __webpack_require__(/*! ../../common/handler */ "./src/analyzer/semantic/common/handler.ts");
+const instruction_1 = __webpack_require__(/*! ../../../../generator/instruction/instruction */ "./src/generator/instruction/instruction.ts");
+const instructions_1 = __webpack_require__(/*! ../../../../generator/instruction/instructions */ "./src/generator/instruction/instructions.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
 class InstructionHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1900,6 +1903,31 @@ class InstructionHandler extends handler_1.Handler {
             for (const value of node.values) {
                 this.valueHandlers.push(handler_1.Handler.handle(value.value, this.context));
             }
+        }
+        this.value = {
+            type: keywords_1.Keywords.Instruction,
+            name: this.nameHandler.value,
+            values: this.valueHandlers.map(v => v.value)
+        };
+    }
+    _generateInstruction(children) {
+        const instructionName = this.value.name.name.toLowerCase();
+        if (instructions_1.ZrInstructionTypeNameMap.has(instructionName)) {
+            const instruction = instructions_1.ZrInstructionTypeNameMap.get(instructionName);
+            const value = this.value.values.map(v => {
+                if (v.type === keywords_1.Keywords.Identifier) {
+                    return new instruction_1.ZrInstructionParam(keywords_1.Keywords.Identifier, v.name);
+                }
+                else if (v.type === keywords_1.Keywords.IntegerLiteral) {
+                    return new instruction_1.ZrInstructionParam(keywords_1.Keywords.Integer, Number(v.value));
+                }
+                return null;
+            }).filter(v => v !== null);
+            return instruction_1.ZrInstructionContext.createSingle(instruction, ...value);
+        }
+        else {
+            new zrInternalError_1.ZrInternalError(`Instruction ${instructionName} not found`, this.context).report();
+            return null;
         }
     }
 }
@@ -1925,6 +1953,10 @@ const function_1 = __webpack_require__(/*! ../../../../generator/writable/functi
 const module_1 = __webpack_require__(/*! ../../../../generator/writable/module */ "./src/generator/writable/module.ts");
 const constantValue_1 = __webpack_require__(/*! ../../../../generator/writable/constantValue */ "./src/generator/writable/constantValue.ts");
 const localVariable_1 = __webpack_require__(/*! ../../../../generator/writable/localVariable */ "./src/generator/writable/localVariable.ts");
+const instruction_1 = __webpack_require__(/*! ../../../../generator/instruction/instruction */ "./src/generator/instruction/instruction.ts");
+const instructions_1 = __webpack_require__(/*! ../../../../generator/instruction/instructions */ "./src/generator/instruction/instructions.ts");
+const zrInternalError_1 = __webpack_require__(/*! ../../../../errors/zrInternalError */ "./src/errors/zrInternalError.ts");
+const instruction_2 = __webpack_require__(/*! ../../../../generator/writable/instruction */ "./src/generator/writable/instruction.ts");
 class IntermediateHandler extends handler_1.Handler {
     constructor() {
         super(...arguments);
@@ -1936,6 +1968,7 @@ class IntermediateHandler extends handler_1.Handler {
         this.constantHandlers = [];
         this.localHandlers = [];
         this.instructionHandlers = [];
+        this.instructions = [];
     }
     get _children() {
         return [
@@ -2056,16 +2089,55 @@ class IntermediateHandler extends handler_1.Handler {
                         scope.addClosure(child);
                     }
                     break;
-                case keywords_1.Keywords.Variable:
-                    {
-                        scope.addVariable(child);
-                    }
-                    break;
                 default:
                     break;
             }
         }
         return scope.ownerSymbol;
+    }
+    _generateInstruction(children) {
+        const intermediateInstructions = new instruction_1.ZrInstructionContext();
+        intermediateInstructions.merge(...children);
+        // variable
+        const scope = this.scope;
+        const instructions = intermediateInstructions.instructions;
+        for (let i = 0; i < instructions.length; i++) {
+            const instruction = instructions[i];
+            const formats = instructions_1.ZrInstructionParamsFormat[instruction.type];
+            for (let j = 0; j < formats.length; j++) {
+                const format = formats[j];
+                if (format === instructions_1.ZrInstructionParamType.None) {
+                    continue;
+                }
+                const op = instruction.op[j];
+                if (!op) {
+                    new zrInternalError_1.ZrInternalError(`Missing op in instruction ${instruction.type} at index ${j}`, this.context).report();
+                    continue;
+                }
+                if (op.type === keywords_1.Keywords.Identifier) {
+                    this._registerAsUsed(op.value, scope, i, format);
+                }
+            }
+        }
+        // sort locals
+        const localSize = this._rearrangeLocals(scope);
+        for (let i = 0; i < instructions.length; i++) {
+            const instruction = instructions[i];
+            const formats = instructions_1.ZrInstructionParamsFormat[instruction.type];
+            instruction.finalOp.length = formats.length;
+            for (let j = 0; j < formats.length; j++) {
+                const format = formats[j];
+                if (format === instructions_1.ZrInstructionParamType.None) {
+                    instruction.finalOp[j] = 0;
+                }
+                else {
+                    this._writeBackInstructionOp(instruction, scope, j, format);
+                }
+            }
+        }
+        this.instructions.length = 0;
+        this.instructions.push(...instructions);
+        return intermediateInstructions;
     }
     _generateWritable(parent) {
         const writable = new function_1.ZrIntermediateFunction();
@@ -2094,8 +2166,19 @@ class IntermediateHandler extends handler_1.Handler {
                 constantWritable.endLine = location.end.line;
             }
         }
-        for (const local of scope.getLocals()) {
+        for (let i = 0; i < scope.localStartList.length; i++) {
             const localWritable = new localVariable_1.ZrIntermediateLocalVariable();
+            localWritable.instructionStart = BigInt(scope.localStartList[i]);
+            localWritable.instructionEnd = BigInt(scope.localEndList[i]);
+            localWritable.startLine = BigInt(0);
+            localWritable.endLine = BigInt(0);
+            writable.localVariables.push(localWritable);
+        }
+        for (const instruction of this.instructions) {
+            const instructionWritable = new instruction_2.ZrIntermediateInstruction();
+            instructionWritable.type = instruction.type;
+            instructionWritable.value = instruction.finalOp;
+            writable.instructions.push(instructionWritable);
         }
         writable.parameterLength = parameters.length;
         // todo:
@@ -2103,8 +2186,109 @@ class IntermediateHandler extends handler_1.Handler {
         // todo
         if (parent && parent instanceof module_1.ZrIntermediateModule) {
             parent.addDeclare(module_1.ZrIntermediateDeclareType.Function, writable);
+            if (symbol.name === "__entry") {
+                parent.setEntry(writable);
+            }
         }
         return writable;
+    }
+    _registerAsUsed(keyword, scope, index, format = instructions_1.ZrInstructionParamType.None) {
+        if (format === instructions_1.ZrInstructionParamType.None) {
+            return false;
+        }
+        const parameters = scope.getParameters();
+        const locals = scope.getLocals();
+        const constants = scope.getConstants();
+        const closures = scope.getClosures();
+        const parameter = parameters.find(parameter => parameter.name === keyword);
+        if (parameter && format === instructions_1.ZrInstructionParamType.Variable) {
+            parameter.registerInstructionUsage(index);
+            return true;
+        }
+        const local = locals.find(local => local.name === keyword);
+        if (local && format === instructions_1.ZrInstructionParamType.Variable) {
+            local.registerInstructionUsage(index);
+            return true;
+        }
+        const constant = constants.find(constant => constant.name === keyword);
+        if (constant && format === instructions_1.ZrInstructionParamType.Constant) {
+            constant.registerInstructionUsage(index);
+            return true;
+        }
+        const closure = closures.find(closure => closure.name === keyword);
+        if (closure && format === instructions_1.ZrInstructionParamType.Closure) {
+            closure.registerInstructionUsage(index);
+            return true;
+        }
+        new zrInternalError_1.ZrInternalError(`${keyword} is not defined`, this.context).report();
+        return false;
+    }
+    _rearrangeLocals(scope) {
+        const maxEndInstructions = [];
+        const minStartInstructions = [];
+        const locals = scope.getLocals();
+        for (let i = 0; i < locals.length; i++) {
+            const local = locals[i];
+            const indexLength = maxEndInstructions.length;
+            let createNew = true;
+            const instructionStart = local.startInstructionIndex;
+            if (instructionStart < 0) {
+                // unused parameter
+                local.index = -1;
+                break;
+            }
+            for (let j = 0; j < indexLength; j++) {
+                const instructionEnd = maxEndInstructions[j];
+                if (instructionStart > instructionEnd) {
+                    createNew = false;
+                    maxEndInstructions[j] = local.endInstructionIndex;
+                    local.index = j;
+                    break;
+                }
+            }
+            if (createNew) {
+                maxEndInstructions.push(local.endInstructionIndex);
+                minStartInstructions.push(local.startInstructionIndex);
+                local.index = indexLength;
+            }
+        }
+        scope.localStartList.length = 0;
+        scope.localEndList.length = 0;
+        scope.localStartList.push(...minStartInstructions);
+        scope.localEndList.push(...maxEndInstructions);
+        return maxEndInstructions.length;
+    }
+    _writeBackInstructionOp(instruction, scope, index, format = instructions_1.ZrInstructionParamType.None) {
+        if (format === instructions_1.ZrInstructionParamType.None) {
+            return false;
+        }
+        const parameters = scope.getParameters();
+        const locals = scope.getLocals();
+        const constants = scope.getConstants();
+        const closures = scope.getClosures();
+        const op = instruction.op[index];
+        const parameter = parameters.find(parameter => parameter.name === op.value);
+        if (parameter && format === instructions_1.ZrInstructionParamType.Variable) {
+            instruction.finalOp[index] = parameter.index;
+            return true;
+        }
+        const local = locals.find(local => local.name === op.value);
+        if (local && format === instructions_1.ZrInstructionParamType.Variable) {
+            // todo: args & parameters is behind locals
+            instruction.finalOp[index] = local.index + parameters.length + 1;
+            return true;
+        }
+        const constant = constants.find(constant => constant.name === op.value);
+        if (constant && format === instructions_1.ZrInstructionParamType.Constant) {
+            instruction.finalOp[index] = constant.index;
+            return true;
+        }
+        const closure = closures.find(closure => closure.name === op.value);
+        if (closure && format === instructions_1.ZrInstructionParamType.Closure) {
+            instruction.finalOp[index] = closure.index;
+            return true;
+        }
+        return false;
     }
 }
 exports.IntermediateHandler = IntermediateHandler;
@@ -2850,6 +3034,10 @@ class VariableHandler extends handler_1.Handler {
     _createSymbolAndScope(parentScope) {
         const getDeclaration = (identifier) => {
             const symbol = this.declareSymbol(identifier.name, keywords_1.Keywords.Variable, parentScope);
+            if (symbol) {
+                symbol.startLine = this.location.start.line;
+                symbol.endLine = this.location.end.line;
+            }
             return symbol;
         };
         const collect = () => {
@@ -4519,16 +4707,18 @@ class ScriptHandler extends handler_1.Handler {
             return null;
         }
         module.name = symbol.name || "";
-        // todo: only intermediate supports now
-        for (const intermediate of scope.intermediates) {
-            const scope = intermediate.childScope;
-            if (scope) {
-                const declareData = new module_1.ZrIntermediateDeclare();
-                declareData.type = module_1.ZrIntermediateDeclareType.Function;
-                declareData.data = scope.toWritable();
-                module.declares.push(declareData);
-            }
-        }
+        // // todo: only intermediate supports now
+        // for (const intermediate of scope.intermediates) {
+        //     const scope = intermediate.childScope;
+        //     if (scope) {
+        //         const declareData = new ZrIntermediateDeclare();
+        //         declareData.type = ZrIntermediateDeclareType.Function;
+        //         declareData.data = intermediate.
+        //         module.declares.push(declareData);
+        //     }
+        // }
+        //
+        // return module;
         return module;
     }
 }
@@ -5728,15 +5918,19 @@ class IntermediateScope extends scope_1.Scope {
     constructor() {
         super(...arguments);
         this.type = keywords_1.ScopeKeywords.IntermediateScope;
+        this.localStartList = [];
+        this.localEndList = [];
         this.parameters = new symbol_1.SymbolTable();
         this.locals = new symbol_1.SymbolTable();
-        this.variables = new symbol_1.SymbolTable();
         this.closures = new symbol_1.SymbolTable();
         this.constants = new symbol_1.SymbolTable();
-        this.symbolTableList = [this.parameters, this.locals, this.variables, this.closures, this.constants];
+        this.symbolTableList = [this.parameters, this.locals, this.closures, this.constants];
     }
     addParameter(parameterSymbol) {
         const success = this.checkSymbolUnique(parameterSymbol) && this.parameters.addSymbol(parameterSymbol);
+        if (success) {
+            parameterSymbol.index = this.parameters.getAllSymbols().length - 1;
+        }
         return success;
     }
     getParameters() {
@@ -5744,6 +5938,9 @@ class IntermediateScope extends scope_1.Scope {
     }
     addLocal(localSymbol) {
         const success = this.checkSymbolUnique(localSymbol) && this.locals.addSymbol(localSymbol);
+        if (success) {
+            localSymbol.index = this.locals.getAllSymbols().length - 1;
+        }
         return success;
     }
     getLocals() {
@@ -5751,21 +5948,23 @@ class IntermediateScope extends scope_1.Scope {
     }
     addConstant(constantSymbol) {
         const success = this.checkSymbolUnique(constantSymbol) && this.constants.addSymbol(constantSymbol);
+        if (success) {
+            constantSymbol.index = this.constants.getAllSymbols().length - 1;
+        }
         return success;
     }
     getConstants() {
         return this.constants.getAllSymbols();
     }
-    addVariable(variableSymbol) {
-        const success = this.checkSymbolUnique(variableSymbol) && this.variables.addSymbol(variableSymbol);
-        return success;
-    }
     addClosure(closureSymbol) {
         const success = this.checkSymbolUnique(closureSymbol) && this.closures.addSymbol(closureSymbol);
+        if (success) {
+            closureSymbol.index = this.closures.getAllSymbols().length - 1;
+        }
         return success;
     }
-    _toWritable() {
-        return null;
+    getClosures() {
+        return this.closures.getAllSymbols();
     }
 }
 exports.IntermediateScope = IntermediateScope;
@@ -5838,9 +6037,6 @@ class ModuleScope extends scope_1.Scope {
     _getSymbol(name) {
         const symbol = this.variables.getSymbol(name) || this.functions.getSymbol(name) || this.classes.getSymbol(name) || this.interfaces.getSymbol(name) || this.structs.getSymbol(name) || this.enums.getSymbol(name);
         return symbol;
-    }
-    _toWritable() {
-        return null;
     }
 }
 exports.ModuleScope = ModuleScope;
@@ -5950,9 +6146,6 @@ class Scope {
         }
         return predefinedType_1.PredefinedType.getPredefinedType(typeName);
     }
-    toWritable() {
-        return this._toWritable();
-    }
     checkSymbolUnique(symbol) {
         if (!symbol) {
             return false;
@@ -5995,9 +6188,6 @@ class Scope {
         return null;
     }
     _getType(type) {
-        return null;
-    }
-    _toWritable() {
         return null;
     }
 }
@@ -6769,6 +6959,18 @@ class VariableSymbol extends symbol_1.Symbol {
         super(...arguments);
         this.type = keywords_1.Keywords.Variable;
         this.invariant = "";
+        this.startInstructionIndex = -1;
+        this.endInstructionIndex = -1;
+    }
+    registerInstructionUsage(instructionIndex) {
+        if (this.startInstructionIndex < 0) {
+            this.startInstructionIndex = instructionIndex;
+        }
+        if (this.endInstructionIndex < 0) {
+            this.endInstructionIndex = instructionIndex;
+        }
+        this.startInstructionIndex = Math.min(this.startInstructionIndex, instructionIndex);
+        this.endInstructionIndex = Math.max(this.endInstructionIndex, instructionIndex);
     }
 }
 exports.VariableSymbol = VariableSymbol;
@@ -7737,6 +7939,7 @@ class ZrSemanticAnalyzer {
         if (moduleWritable) {
             head.addModule(moduleWritable);
         }
+        head.preprocess();
         const writer = new writer_1.ZrIntermediateWriter();
         writer.writeAll(head);
         fs_1.default.writeFileSync("./test.zrb", writer.buffer);
@@ -7826,7 +8029,7 @@ class ScriptContext {
         return this._symbolHandlerMap.get(symbol) ?? null;
     }
     getSymbolFromHandler(handler) {
-        return this._handlerSymbolMap.get(handler.value) ?? null;
+        return this._handlerSymbolMap.get(handler) ?? null;
     }
     getTypeFromSymbol(symbol) {
         return this._symbolTypeMap.get(symbol) ?? null;
@@ -8080,6 +8283,265 @@ exports.ZrSyntaxError = ZrSyntaxError;
 
 /***/ }),
 
+/***/ "./src/generator/instruction/instruction.ts":
+/*!**************************************************!*\
+  !*** ./src/generator/instruction/instruction.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrInstructionParam = exports.ZrInstruction = exports.ZrInstructionContext = void 0;
+class ZrInstructionContext {
+    constructor() {
+        this.instructions = [];
+    }
+    static createSingle(type, ...params) {
+        const ins = new ZrInstruction();
+        ins.type = type;
+        ins.op.push(...params);
+        const insSet = new ZrInstructionContext();
+        insSet.addInstruction(ins);
+        return insSet;
+    }
+    addInstruction(instruction) {
+        this.instructions.push(instruction);
+    }
+    merge(...params) {
+        for (const set of params) {
+            if (set) {
+                this.instructions.push(...set.instructions);
+            }
+        }
+    }
+}
+exports.ZrInstructionContext = ZrInstructionContext;
+class ZrInstruction {
+    constructor() {
+        this.op = [];
+        this.finalOp = [];
+    }
+}
+exports.ZrInstruction = ZrInstruction;
+class ZrInstructionParam {
+    constructor(type, value) {
+        this.type = type;
+        this.value = value;
+    }
+}
+exports.ZrInstructionParam = ZrInstructionParam;
+
+
+/***/ }),
+
+/***/ "./src/generator/instruction/instructions.ts":
+/*!***************************************************!*\
+  !*** ./src/generator/instruction/instructions.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrInstructionTypeNameMap = exports.ZrInstructionTypeMap = exports.ZrInstructionParamsFormat = exports.ZrInstructionType = exports.ZrInstructionParamType = void 0;
+var ZrInstructionParamType;
+(function (ZrInstructionParamType) {
+    ZrInstructionParamType[ZrInstructionParamType["None"] = 0] = "None";
+    ZrInstructionParamType[ZrInstructionParamType["Variable"] = 1] = "Variable";
+    ZrInstructionParamType[ZrInstructionParamType["Constant"] = 2] = "Constant";
+    ZrInstructionParamType[ZrInstructionParamType["Closure"] = 3] = "Closure";
+})(ZrInstructionParamType || (exports.ZrInstructionParamType = ZrInstructionParamType = {}));
+var ZrInstructionType;
+(function (ZrInstructionType) {
+    ZrInstructionType[ZrInstructionType["GetStack"] = 0] = "GetStack";
+    ZrInstructionType[ZrInstructionType["SetStack"] = 1] = "SetStack";
+    ZrInstructionType[ZrInstructionType["GetConstant"] = 2] = "GetConstant";
+    ZrInstructionType[ZrInstructionType["SetConstant"] = 3] = "SetConstant";
+    ZrInstructionType[ZrInstructionType["GetClosure"] = 4] = "GetClosure";
+    ZrInstructionType[ZrInstructionType["SetClosure"] = 5] = "SetClosure";
+    ZrInstructionType[ZrInstructionType["AddInt"] = 6] = "AddInt";
+    ZrInstructionType[ZrInstructionType["AddFloat"] = 7] = "AddFloat";
+    ZrInstructionType[ZrInstructionType["AddString"] = 8] = "AddString";
+    ZrInstructionType[ZrInstructionType["SubInt"] = 9] = "SubInt";
+    ZrInstructionType[ZrInstructionType["SubFloat"] = 10] = "SubFloat";
+    ZrInstructionType[ZrInstructionType["MulSigned"] = 11] = "MulSigned";
+    ZrInstructionType[ZrInstructionType["MulUnsigned"] = 12] = "MulUnsigned";
+    ZrInstructionType[ZrInstructionType["MulFloat"] = 13] = "MulFloat";
+    ZrInstructionType[ZrInstructionType["DivSigned"] = 14] = "DivSigned";
+    ZrInstructionType[ZrInstructionType["DivUnsigned"] = 15] = "DivUnsigned";
+    ZrInstructionType[ZrInstructionType["DivFloat"] = 16] = "DivFloat";
+    ZrInstructionType[ZrInstructionType["ModSigned"] = 17] = "ModSigned";
+    ZrInstructionType[ZrInstructionType["ModUnsigned"] = 18] = "ModUnsigned";
+    ZrInstructionType[ZrInstructionType["ModFloat"] = 19] = "ModFloat";
+    ZrInstructionType[ZrInstructionType["PowSigned"] = 20] = "PowSigned";
+    ZrInstructionType[ZrInstructionType["PowUnsigned"] = 21] = "PowUnsigned";
+    ZrInstructionType[ZrInstructionType["PowFloat"] = 22] = "PowFloat";
+    ZrInstructionType[ZrInstructionType["ShiftLeft"] = 23] = "ShiftLeft";
+    ZrInstructionType[ZrInstructionType["ShiftRight"] = 24] = "ShiftRight";
+    ZrInstructionType[ZrInstructionType["LogicalNot"] = 25] = "LogicalNot";
+    ZrInstructionType[ZrInstructionType["LogicalAnd"] = 26] = "LogicalAnd";
+    ZrInstructionType[ZrInstructionType["LogicalOr"] = 27] = "LogicalOr";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterSigned"] = 28] = "LogicalGreaterSigned";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterUnsigned"] = 29] = "LogicalGreaterUnsigned";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterFloat"] = 30] = "LogicalGreaterFloat";
+    ZrInstructionType[ZrInstructionType["LogicalLessSigned"] = 31] = "LogicalLessSigned";
+    ZrInstructionType[ZrInstructionType["LogicalLessUnsigned"] = 32] = "LogicalLessUnsigned";
+    ZrInstructionType[ZrInstructionType["LogicalLessFloat"] = 33] = "LogicalLessFloat";
+    ZrInstructionType[ZrInstructionType["LogicalEqual"] = 34] = "LogicalEqual";
+    ZrInstructionType[ZrInstructionType["LogicalNotEqual"] = 35] = "LogicalNotEqual";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterEqualSigned"] = 36] = "LogicalGreaterEqualSigned";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterEqualUnsigned"] = 37] = "LogicalGreaterEqualUnsigned";
+    ZrInstructionType[ZrInstructionType["LogicalGreaterEqualFloat"] = 38] = "LogicalGreaterEqualFloat";
+    ZrInstructionType[ZrInstructionType["LogicalLessEqualSigned"] = 39] = "LogicalLessEqualSigned";
+    ZrInstructionType[ZrInstructionType["LogicalLessEqualUnsigned"] = 40] = "LogicalLessEqualUnsigned";
+    ZrInstructionType[ZrInstructionType["LogicalLessEqualFloat"] = 41] = "LogicalLessEqualFloat";
+    ZrInstructionType[ZrInstructionType["BitwiseNot"] = 42] = "BitwiseNot";
+    ZrInstructionType[ZrInstructionType["BitwiseAnd"] = 43] = "BitwiseAnd";
+    ZrInstructionType[ZrInstructionType["BitwiseOr"] = 44] = "BitwiseOr";
+    ZrInstructionType[ZrInstructionType["BitwiseXor"] = 45] = "BitwiseXor";
+    ZrInstructionType[ZrInstructionType["BitwiseShiftLeft"] = 46] = "BitwiseShiftLeft";
+    ZrInstructionType[ZrInstructionType["BitwiseShiftRight"] = 47] = "BitwiseShiftRight";
+    ZrInstructionType[ZrInstructionType["FunctionCall"] = 48] = "FunctionCall";
+    ZrInstructionType[ZrInstructionType["FunctionTailCall"] = 49] = "FunctionTailCall";
+    ZrInstructionType[ZrInstructionType["FunctionReturn"] = 50] = "FunctionReturn";
+    ZrInstructionType[ZrInstructionType["GetValue"] = 51] = "GetValue";
+    ZrInstructionType[ZrInstructionType["SetValue"] = 52] = "SetValue";
+    ZrInstructionType[ZrInstructionType["Jump"] = 53] = "Jump";
+    ZrInstructionType[ZrInstructionType["JumpIf"] = 54] = "JumpIf";
+    ZrInstructionType[ZrInstructionType["CreateClosure"] = 55] = "CreateClosure";
+    ZrInstructionType[ZrInstructionType["Try"] = 56] = "Try";
+    ZrInstructionType[ZrInstructionType["Throw"] = 57] = "Throw";
+    ZrInstructionType[ZrInstructionType["Catch"] = 58] = "Catch";
+})(ZrInstructionType || (exports.ZrInstructionType = ZrInstructionType = {}));
+exports.ZrInstructionParamsFormat = {
+    [ZrInstructionType.GetStack]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.SetStack]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.GetConstant]: [ZrInstructionParamType.Constant],
+    [ZrInstructionType.SetConstant]: [ZrInstructionParamType.Constant],
+    [ZrInstructionType.GetClosure]: [ZrInstructionParamType.Closure],
+    [ZrInstructionType.SetClosure]: [ZrInstructionParamType.Closure],
+    [ZrInstructionType.AddInt]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.AddFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.AddString]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.SubInt]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.SubFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.MulFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.DivFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ModFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.PowFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ShiftLeft]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.ShiftRight]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalNot]: [ZrInstructionParamType.Variable, ZrInstructionParamType.None],
+    [ZrInstructionType.LogicalAnd]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalOr]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalEqual]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalNotEqual]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalGreaterEqualFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualSigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualUnsigned]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.LogicalLessEqualFloat]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseNot]: [ZrInstructionParamType.Variable, ZrInstructionParamType.None],
+    [ZrInstructionType.BitwiseAnd]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseOr]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseXor]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseShiftLeft]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.BitwiseShiftRight]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionCall]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionTailCall]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.FunctionReturn]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.GetValue]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.SetValue]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Jump]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.JumpIf]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.CreateClosure]: [ZrInstructionParamType.Variable, ZrInstructionParamType.Variable],
+    [ZrInstructionType.Try]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Throw]: [ZrInstructionParamType.Variable],
+    [ZrInstructionType.Catch]: [ZrInstructionParamType.Variable]
+};
+exports.ZrInstructionTypeMap = {
+    [ZrInstructionType.GetStack]: "GetStack",
+    [ZrInstructionType.SetStack]: "SetStack",
+    [ZrInstructionType.GetConstant]: "GetConstant",
+    [ZrInstructionType.SetConstant]: "SetConstant",
+    [ZrInstructionType.GetClosure]: "GetClosure",
+    [ZrInstructionType.SetClosure]: "SetClosure",
+    [ZrInstructionType.AddInt]: "AddInt",
+    [ZrInstructionType.AddFloat]: "AddFloat",
+    [ZrInstructionType.AddString]: "AddString",
+    [ZrInstructionType.SubInt]: "SubInt",
+    [ZrInstructionType.SubFloat]: "SubFloat",
+    [ZrInstructionType.MulSigned]: "MulSigned",
+    [ZrInstructionType.MulUnsigned]: "MulUnsigned",
+    [ZrInstructionType.MulFloat]: "MulFloat",
+    [ZrInstructionType.DivSigned]: "DivSigned",
+    [ZrInstructionType.DivUnsigned]: "DivUnsigned",
+    [ZrInstructionType.DivFloat]: "DivFloat",
+    [ZrInstructionType.ModSigned]: "ModSigned",
+    [ZrInstructionType.ModUnsigned]: "ModUnsigned",
+    [ZrInstructionType.ModFloat]: "ModFloat",
+    [ZrInstructionType.PowSigned]: "PowSigned",
+    [ZrInstructionType.PowUnsigned]: "PowUnsigned",
+    [ZrInstructionType.PowFloat]: "PowFloat",
+    [ZrInstructionType.ShiftLeft]: "ShiftLeft",
+    [ZrInstructionType.ShiftRight]: "ShiftRight",
+    [ZrInstructionType.LogicalNot]: "LogicalNot",
+    [ZrInstructionType.LogicalAnd]: "LogicalAnd",
+    [ZrInstructionType.LogicalOr]: "LogicalOr",
+    [ZrInstructionType.LogicalGreaterSigned]: "LogicalGreaterSigned",
+    [ZrInstructionType.LogicalGreaterUnsigned]: "LogicalGreaterUnsigned",
+    [ZrInstructionType.LogicalGreaterFloat]: "LogicalGreaterFloat",
+    [ZrInstructionType.LogicalLessSigned]: "LogicalLessSigned",
+    [ZrInstructionType.LogicalLessUnsigned]: "LogicalLessUnsigned",
+    [ZrInstructionType.LogicalLessFloat]: "LogicalLessFloat",
+    [ZrInstructionType.LogicalEqual]: "LogicalEqual",
+    [ZrInstructionType.LogicalNotEqual]: "LogicalNotEqual",
+    [ZrInstructionType.LogicalGreaterEqualSigned]: "LogicalGreaterEqualSigned",
+    [ZrInstructionType.LogicalGreaterEqualUnsigned]: "LogicalGreaterEqualUnsigned",
+    [ZrInstructionType.LogicalGreaterEqualFloat]: "LogicalGreaterEqualFloat",
+    [ZrInstructionType.LogicalLessEqualSigned]: "LogicalLessEqualSigned",
+    [ZrInstructionType.LogicalLessEqualUnsigned]: "LogicalLessEqualUnsigned",
+    [ZrInstructionType.LogicalLessEqualFloat]: "LogicalLessEqualFloat",
+    [ZrInstructionType.BitwiseNot]: "BitwiseNot",
+    [ZrInstructionType.BitwiseAnd]: "BitwiseAnd",
+    [ZrInstructionType.BitwiseOr]: "BitwiseOr",
+    [ZrInstructionType.BitwiseXor]: "BitwiseXor",
+    [ZrInstructionType.BitwiseShiftLeft]: "BitwiseShiftLeft",
+    [ZrInstructionType.BitwiseShiftRight]: "BitwiseShiftRight",
+    [ZrInstructionType.FunctionCall]: "FunctionCall",
+    [ZrInstructionType.FunctionTailCall]: "FunctionTailCall",
+    [ZrInstructionType.FunctionReturn]: "FunctionReturn",
+    [ZrInstructionType.GetValue]: "GetValue",
+    [ZrInstructionType.SetValue]: "SetValue",
+    [ZrInstructionType.Jump]: "Jump",
+    [ZrInstructionType.JumpIf]: "JumpIf",
+    [ZrInstructionType.CreateClosure]: "CreateClosure",
+    [ZrInstructionType.Try]: "Try",
+    [ZrInstructionType.Throw]: "Throw",
+    [ZrInstructionType.Catch]: "Catch"
+};
+exports.ZrInstructionTypeNameMap = new Map();
+for (const [key, value] of Object.entries(exports.ZrInstructionTypeMap)) {
+    exports.ZrInstructionTypeNameMap.set(value.toLowerCase(), key);
+}
+
+
+/***/ }),
+
 /***/ "./src/generator/instruction/literals.ts":
 /*!***********************************************!*\
   !*** ./src/generator/instruction/literals.ts ***!
@@ -8303,9 +8765,9 @@ class ZrIntermediateHead extends writable_1.ZrIntermediateWritable {
             ["instructionSize", valueType_1.IntermediateValueType.Int8],
             ["endianness", valueType_1.IntermediateValueType.Bool],
             ["debug", valueType_1.IntermediateValueType.Bool],
-            ["opt1", valueType_1.IntermediateValueType.Int32],
-            ["opt2", valueType_1.IntermediateValueType.Int32],
-            ["opt3", valueType_1.IntermediateValueType.Int32],
+            ["opt1", valueType_1.IntermediateValueType.Int8],
+            ["opt2", valueType_1.IntermediateValueType.Int8],
+            ["opt3", valueType_1.IntermediateValueType.Int8],
             ["modules", valueType_1.IntermediateValueType.Writable]
         ];
         this.format = BigInt(this.versionMajor) << BigInt(32) | BigInt(this.versionMinor);
@@ -8315,6 +8777,54 @@ class ZrIntermediateHead extends writable_1.ZrIntermediateWritable {
     }
 }
 exports.ZrIntermediateHead = ZrIntermediateHead;
+
+
+/***/ }),
+
+/***/ "./src/generator/writable/instruction.ts":
+/*!***********************************************!*\
+  !*** ./src/generator/writable/instruction.ts ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZrIntermediateInstruction = void 0;
+const writable_1 = __webpack_require__(/*! ./writable */ "./src/generator/writable/writable.ts");
+const instructions_1 = __webpack_require__(/*! ../instruction/instructions */ "./src/generator/instruction/instructions.ts");
+const valueType_1 = __webpack_require__(/*! ../type/valueType */ "./src/generator/type/valueType.ts");
+class ZrIntermediateInstruction extends writable_1.ZrIntermediateWritable {
+    constructor() {
+        super(...arguments);
+        // only support little endian now
+        this.value = [];
+        this.toWriteData = [
+            ["type", valueType_1.IntermediateValueType.UInt32]
+        ];
+    }
+    _preprocess() {
+        const valueLength = instructions_1.ZrInstructionParamsFormat[this.type].length;
+        // little endian
+        let type = valueType_1.IntermediateValueType.Int32;
+        this.value1 = this.value[0] || 0;
+        if (valueLength === 2) {
+            type = valueType_1.IntermediateValueType.UInt16;
+            this.value2 = this.value[1] || 0;
+            this.value3 = this.value[2] || 0;
+        }
+        else if (valueLength === 4) {
+            type = valueType_1.IntermediateValueType.UInt8;
+            this.value2 = this.value[1] || 0;
+            this.value3 = this.value[2] || 0;
+            this.value4 = this.value[3] || 0;
+        }
+        this.toWriteData.length = 1;
+        for (let i = 0; i < valueLength; i++) {
+            this.toWriteData.push([`value${i + 1}`, type]);
+        }
+    }
+}
+exports.ZrIntermediateInstruction = ZrIntermediateInstruction;
 
 
 /***/ }),
@@ -8401,7 +8911,8 @@ class ZrIntermediateModule extends writable_1.ZrIntermediateWritable {
             ["name", valueType_1.IntermediateValueType.String],
             ["md5", valueType_1.IntermediateValueType.String],
             ["imports", valueType_1.IntermediateValueType.Writable],
-            ["declares", valueType_1.IntermediateValueType.Writable]
+            ["declares", valueType_1.IntermediateValueType.Writable],
+            ["entry", valueType_1.IntermediateValueType.Writable, true]
         ];
     }
     addDeclare(type, declare) {
@@ -8409,6 +8920,16 @@ class ZrIntermediateModule extends writable_1.ZrIntermediateWritable {
         declareWritable.type = type;
         declareWritable.data = declare;
         this.declares.push(declareWritable);
+    }
+    setEntry(f) {
+        // const functionWritable = new ZrIntermediateFunction();
+        // functionWritable.name = "entry";
+        // functionWritable.parameterLength = 0;
+        // functionWritable.hasVarArgs = 0;
+        // functionWritable.startLine = 0;
+        // functionWritable.endLine = 0;
+        // todo: use constant test
+        this.entry = f;
     }
     _preprocess() {
         this.md5 = "";
